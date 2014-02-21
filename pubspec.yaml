@@ -5,3 +5,4 @@ description: "A microframework for Dart"
 homepage: https://github.com/luizmineo/bloodless
 dependencies:
   route_hierarchical: any
+  http_server: ">=0.9.1 <0.10.0"

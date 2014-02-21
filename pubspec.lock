@@ -9,10 +9,22 @@ packages:
     description: collection
     source: hosted
     version: "0.9.1"
+  http_server:
+    description: http_server
+    source: hosted
+    version: "0.9.1"
   logging:
     description: logging
     source: hosted
     version: "0.9.1+1"
+  mime:
+    description: mime
+    source: hosted
+    version: "0.9.0"
+  path:
+    description: path
+    source: hosted
+    version: "1.0.0"
   route_hierarchical:
     description: route_hierarchical
     source: hosted
