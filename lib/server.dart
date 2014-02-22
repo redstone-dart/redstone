@@ -34,6 +34,10 @@ class Route {
   const Route(String this.urlTemplate, 
               {this.methods: const [GET],
                this.responseType});
+
+  Route._fromGroup(String this.urlTemplate, 
+              this.methods, this.responseType);
+
 }
 
 class Body {
@@ -62,9 +66,12 @@ class QueryParam {
 
 class Interceptor {
 
-  final String url;
+  final String urlPattern;
+  final int chainIdx;
 
-  const Interceptor(String this.url);
+  const Interceptor(String this.urlPattern, {int this.chainIdx: 0});
+
+  Interceptor._fromGroup(String this.urlPattern, int this.chainIdx);
 
 }
 
@@ -76,21 +83,25 @@ class ErrorHandler {
 
 }
 
+class Group {
+
+  final String urlPrefix;
+
+  const Group(String this.urlPrefix);
+
+}
+
 class Request {
 
   HttpRequestBody _reqBody;
-  Map<String, String> _pathParams;
   Map<String, String> _queryParams;
 
-  Request(HttpRequestBody this._reqBody, 
-          Map<String, String> this._pathParams,
+  Request(HttpRequestBody this._reqBody,
           Map<String, String> this._queryParams);
 
   String get method => _reqBody.request.method;
 
   Map<String, String> get queryParams => _queryParams;
-
-  Map<String, String> get pathParams => _pathParams;
 
   String get bodyType => _reqBody.type;
 
@@ -105,6 +116,66 @@ class Request {
   HttpRequest get httpRequest => _reqBody.request;
 
 }
+
+abstract class Chain {
+
+  Future next();
+
+  void interrupt(int statusCode, {Object response, String responseType});
+
+}
+
+class _ChainImpl implements Chain {
+
+  List<_Interceptor> _interceptors;
+  _Interceptor _currentInterceptor;
+  
+  bool _targetInvoked = false;
+  bool _interrupted = false;
+
+  List _completers = [];
+
+  _ChainImpl(List<_Interceptor> this._interceptors);
+
+  Future next() {
+    return new Future.sync(() {
+      if (_interrupted) {
+        var name = _currentInterceptor != null ? _currentInterceptor.interceptorName : null;
+        throw new ChainException(request.httpRequest.uri.path, 
+                                 "invalid state: chain already interrupted",
+                                 interceptorName: name);
+      }
+      if (_interceptors.isEmpty && _targetInvoked) {
+        throw new ChainException(request.httpRequest.uri.path, "chain.next() must be called from an interceptor.");
+      }
+
+      Completer completer = new Completer();
+      _completers.add(completer);
+
+      if (!_interceptors.isEmpty) {
+        _currentInterceptor = _interceptors.removeAt(0);
+        new Future(() {
+          _currentInterceptor.runInterceptor();
+        });
+      } else {
+        _targetInvoked = true;
+        _runTarget(request._reqBody).then((_) {
+          _completers.reversed.forEach((c) => c.complete());
+        });
+      }
+
+      return completer.future;
+    });
+  }
+
+  void interrupt(int statusCode, {Object response, String responseType}) {
+    _interrupted = true;
+
+    _writeResponse(response, request.response, responseType, statusCode: statusCode);
+  }
+
+}
+
 
 class SetupException implements Exception {
 
@@ -127,26 +198,45 @@ class RequestException implements Exception {
   String toString() => "RequestException: [$handler] $message";
 }
 
+class ChainException implements Exception {
+  
+  final String urlPath;
+  final String interceptorName;
+  final String message;
+
+  ChainException(String this.urlPath, String this.message, {String this.interceptorName});
+
+  String toString() => message;
+
+}
+
+
 
 Request get request => Zone.current[#request];
+
+Chain get chain => Zone.current[#chain];
 
 
 Future<HttpServer> start([address = _DEFAULT_ADDRESS, int port = _DEFAULT_PORT]) {
   return new Future(() {
     
     try {
-      _scanTargets();
+      _scanHandlers();
     } catch (e) {
-      _handleError("Failed to configure targets.", e);
+      _handleError("Failed to configure handlers.", e);
       throw e;
     }
 
     return HttpServer.bind(address, port).then((server) {
       server.transform(new HttpBodyHandler())
           .listen((HttpRequestBody req) {
+
+            _logger.fine("Received request for: ${req.request.uri}");
             _handleRequest(req);
+
           });
 
+      _logger.info("Running on $address:$port");
       return server;
     });
   });
@@ -164,25 +254,28 @@ var _dynamicType = reflectType(dynamic);
 var _voidType = currentMirrorSystem().voidType;
 
 final List<_Target> _targets = [];
+final List<_Interceptor> _interceptors = [];
 
 void _handleRequest(HttpRequestBody req) {
-  bool found = false;
-  for (var target in _targets) {
-    if (target.handleRequest(req)) {
-      found = true;
-      break;
-    }
-  }
 
-  if (!found) {
-    try {
-      var resp = req.request.response;
-      resp.statusCode = HttpStatus.NOT_FOUND;
-      resp.close();
-    } catch(e) {
-      _handleError("Failed to send response to user.", e);
-    }
-  }
+  var queryParams = req.request.uri.queryParameters;
+  var path = req.request.uri.path;
+  var handlers = _interceptors.where((i) => i.urlPattern.firstMatch(path)[0] == path);
+  var chain = new _ChainImpl(new List.from(handlers));
+
+  runZoned(() {
+
+    chain.next().then((_) {
+      request.response.close();
+      _logger.finer("Closed request for: ${request.httpRequest.uri}");
+    });
+
+  }, zoneValues: {
+    #request: new Request(req, queryParams),
+    #chain: chain
+  }, onError: (e, s) {
+    _handleError("Failed to handle request.", e, stack: s, req: req);
+  });
 }
 
 void _handleError(String message, Object error, {StackTrace stack, HttpRequestBody req}) {
@@ -205,7 +298,37 @@ void _handleError(String message, Object error, {StackTrace stack, HttpRequestBo
   }
 }
 
-typedef void _RequestHandler(UrlMatch match, HttpRequestBody request);
+Future _runTarget(HttpRequestBody req) {
+
+  return new Future.sync(() {
+
+    Future f = null;
+    for (var target in _targets) {
+      f = target.handleRequest(req);
+      if (f != null) {
+        break;
+      }
+    }
+
+    if (f == null) {
+      try {
+        var resp = req.request.response;
+        resp.statusCode = HttpStatus.NOT_FOUND;
+
+        _logger.fine("Resource not found: ${req.request.uri}");
+      } catch(e) {
+        _handleError("Failed to send response to user.", e);
+      }
+    }
+
+    return f;
+
+  });
+
+}
+
+typedef Future _RequestHandler(UrlMatch match, HttpRequestBody request);
+typedef void _RunInterceptor();
 
 typedef _TargetParam _ParamProcessor(Map<String, String> urlParams,
                                      Map<String, String> queryParams, 
@@ -220,14 +343,13 @@ class _Target {
 
   _Target(this.urlTemplate, this.handler);
 
-  bool handleRequest(HttpRequestBody req) {
+  Future handleRequest(HttpRequestBody req) {
     UrlMatch match = urlTemplate.match(req.request.uri.path);
     if (match == null || !match.tail.isEmpty) {
-      return false;
+      return null;
     }
 
-    handler(match, req);
-    return true; 
+    return handler(match, req);
   }
 }
 
@@ -240,33 +362,137 @@ class _TargetParam {
 
 }
 
-void _scanTargets() {
+class _Interceptor {
+  
+  final RegExp urlPattern;
+  final String interceptorName;
+  final int chainIdx;
+  final _RunInterceptor runInterceptor;
+
+  _Interceptor(this.urlPattern, this.interceptorName, 
+               this.chainIdx, this.runInterceptor);
+
+}
+
+
+void _scanHandlers() {
   currentMirrorSystem().libraries.values.forEach((LibraryMirror lib) {
+
     lib.topLevelMembers.values.forEach((MethodMirror method) {
       method.metadata.forEach((InstanceMirror metadata) {
         if (metadata.reflectee is Route) {
           _configureTarget(metadata.reflectee as Route, lib, method);
+        } else if (metadata.reflectee is Interceptor) {
+          _configureInterceptor(metadata.reflectee as Interceptor, lib, method);
         }
       });
     });
+
+    lib.declarations.values.forEach((DeclarationMirror declaration) {
+      if (declaration is ClassMirror) {
+        ClassMirror clazz = declaration as ClassMirror;
+
+        clazz.metadata.forEach((InstanceMirror metadata) {
+          if (metadata.reflectee is Group) {
+            _configureGroup(metadata.reflectee as Group, clazz);
+          }
+        });
+      }
+    });
+  });
+
+  _interceptors.sort((i1, i2) => i1.chainIdx - i2.chainIdx);
+}
+
+void _configureGroup(Group group, ClassMirror clazz) {
+
+  var className = MirrorSystem.getName(clazz.qualifiedName);
+  _logger.info("Found group: " + className);
+
+  InstanceMirror instance = null;
+  try {
+    instance = clazz.newInstance(new Symbol(""), []);
+  } catch(e) {
+    throw new SetupException(className, "Failed to create a instance of the group. Does $className have a default constructor with no arguments?");
+  }
+
+  String prefix = group.urlPrefix;
+  if (prefix.endsWith("/")) {
+    prefix = prefix.substring(0, prefix.length - 1);
+  }
+
+  clazz.instanceMembers.values.forEach((MethodMirror method) {
+
+    method.metadata.forEach((InstanceMirror metadata) {
+      if (metadata.reflectee is Route) {
+        
+        Route route = metadata.reflectee as Route;
+        String urlTemplate = route.urlTemplate;
+        if (!urlTemplate.startsWith("/")) {
+          urlTemplate = "$prefix/$urlTemplate";
+        } else {
+          urlTemplate = "$prefix$urlTemplate";
+        }
+        var newRoute = new Route._fromGroup(urlTemplate, route.methods, route.responseType);
+
+        _configureTarget(newRoute, instance, method);
+      } else if (metadata.reflectee is Interceptor) {
+
+        Interceptor interceptor = metadata.reflectee as Interceptor;
+        String urlPattern = interceptor.urlPattern;
+        if (!urlPattern.startsWith("/")) {
+          urlPattern = "$prefix/$urlPattern";
+        } else {
+          urlPattern = "$prefix$urlPattern";
+        }
+        var newInterceptor = new Interceptor._fromGroup(urlPattern, interceptor.chainIdx);
+
+        _configureInterceptor(newInterceptor, instance, method);
+      }
+    });
+
   });
 }
 
-void _configureTarget(Route route, LibraryMirror lib, MethodMirror handler) {
+void _configureInterceptor(Interceptor interceptor, ObjectMirror owner, MethodMirror handler) {
+
+  var handlerName = MirrorSystem.getName(handler.qualifiedName);
+  if (!handler.parameters.where((p) => !p.isOptional).isEmpty) {
+    throw new SetupException(handlerName, "Interceptors must have no required arguments.");
+  }
+
+  var caller = () {
+
+    _logger.finer("Invoking interceptor: $handlerName");
+    owner.invoke(handler.simpleName, []);
+
+  };
+
+  var name = MirrorSystem.getName(handler.qualifiedName);
+  _interceptors.add(new _Interceptor(new RegExp(interceptor.urlPattern), name,
+                                     interceptor.chainIdx, caller));
+
+  _logger.info("Configured interceptor for ${interceptor.urlPattern} : $handlerName");
+}
+
+void _configureTarget(Route route, ObjectMirror owner, MethodMirror handler) {
 
   var paramProcessors = _buildParamProcesors(handler);
+  var handlerName = MirrorSystem.getName(handler.qualifiedName);
 
   var caller = (UrlMatch match, HttpRequestBody request) {
     
-    var httpResp = request.request.response;
-    var pathParams = match.parameters;
-    var queryParams = request.request.uri.queryParameters;
+    _logger.finer("Preparing to execute target: $handlerName");
 
-    runZoned(() {
+    return new Future.sync(() {
+
+      var httpResp = request.request.response;
+      var pathParams = match.parameters;
+      var queryParams = request.request.uri.queryParameters;
+
       if (!route.methods.contains(request.request.method)) {
         httpResp.statusCode = HttpStatus.METHOD_NOT_ALLOWED;
-        httpResp.close();
-        return;
+        return null;
       }
       
       var posParams = [];
@@ -281,53 +507,74 @@ void _configureTarget(Route route, LibraryMirror lib, MethodMirror handler) {
               }
             });
 
-      InstanceMirror resp = lib.invoke(handler.simpleName, posParams, namedParams);
+      _logger.finer("Invoking target $handlerName");
+      InstanceMirror resp = owner.invoke(handler.simpleName, posParams, namedParams);
 
       if (resp.type == _voidType) {
-        httpResp.close();
-        return;
+        return null;
       }
 
       var respValue = resp.reflectee;
-      _writeResponse(respValue, httpResp, route);
 
-    }, zoneValues: {
-      #request: new Request(request, pathParams, queryParams)
-    }, onError: (e, s) {
-      _handleError("Failed to handle request.", e, stack: s, req: request);
-    });
+      _logger.finer("Writing response for target $handlerName");
+      return _writeResponse(respValue, httpResp, route.responseType);
+
+    });    
 
   };
 
   _targets.add(new _Target(new UrlTemplate(route.urlTemplate), caller));
+
+  _logger.info("Configured target for ${route.urlTemplate} : $handlerName");
 }
 
-void _writeResponse(respValue, HttpResponse httpResp, Route route) {
+Future _writeResponse(respValue, HttpResponse httpResp, String responseType, {int statusCode}) {
 
-  if (respValue == null) {
-    httpResp.close();
-  } else if (respValue is Future) {
-    (respValue as Future).then((fValue) {
-      _writeResponse(fValue, httpResp, route);
-    });
-  } else if (respValue is Map || respValue is List) {
-    respValue = conv.JSON.encode(respValue);
-    if (route.responseType != null) {
-      httpResp.headers.add(HttpHeaders.CONTENT_TYPE, route.responseType);
+  return new Future.sync(() {
+
+    if (respValue == null) {
+
+      if (statusCode != null) {
+        httpResp.statusCode = statusCode;
+      }
+      return null;
+
+    } else if (respValue is Future) {
+
+      return (respValue as Future).then((fValue) {
+        _writeResponse(fValue, httpResp, responseType);
+      });
+
+    } else if (respValue is Map || respValue is List) {
+
+      if (statusCode != null) {
+        httpResp.statusCode = statusCode;
+      }
+      respValue = conv.JSON.encode(respValue);
+      if (responseType != null) {
+        httpResp.headers.add(HttpHeaders.CONTENT_TYPE, responseType);
+      } else {
+        httpResp.headers.contentType = new ContentType("application", "json", charset: "UTF-8");
+      }
+      httpResp.write(respValue);
+      return null;
+
     } else {
-      httpResp.headers.contentType = new ContentType("application", "json", charset: "UTF-8");
+
+      if (statusCode != null) {
+        httpResp.statusCode = statusCode;
+      }
+      if (responseType != null) {
+        httpResp.headers.add(HttpHeaders.CONTENT_TYPE, responseType);
+      } else {
+        httpResp.headers.contentType = new ContentType("text", "plain");
+      }
+      httpResp.write(respValue);
+      return null;
+
     }
-    httpResp.write(respValue);
-    httpResp.close();
-  } else {
-    if (route.responseType != null) {
-      httpResp.headers.add(HttpHeaders.CONTENT_TYPE, route.responseType);
-    } else {
-      httpResp.headers.contentType = new ContentType("text", "plain");
-    }
-    httpResp.write(respValue);
-    httpResp.close();
-  }
+
+  });
 
 }
 
