@@ -771,22 +771,24 @@ void _writeErrorPage(HttpResponse resp, String resource, [Object error, StackTra
 <html>
 <head>
   <title>Bloodless Server - ${description != null ? description : statusCode}</title>
-
   <style>
-    body {
+    body, html {
       margin: 0px;
+      padding: 0px;
+      border: 0px;
     }
     .header {
       height:100px;
       background-color:steelblue;
       color:#F8F8F8;
+      overflow: hidden;
     }
     .header p {
       font-family:Helvetica,Arial;
-      font-size:46px;
+      font-size:36px;
       font-weight:bold;
       padding-left:10px;
-      padding-top:20px;
+      line-height: 30px;
     }
     .footer {
       margin-top:50px;
