@@ -1,6 +1,7 @@
 library test_lib;
 
 import 'dart:async';
+import 'dart:io';
 
 import 'package:logging/logging.dart';
 import 'package:bloodless/server.dart' as app;
@@ -27,15 +28,7 @@ class Group {
 
 main() {
 
-  Logger.root.level = Level.ALL;
-  Logger.root.onRecord.listen((LogRecord rec) {
-    if (rec.level >= Level.SEVERE) {
-      print('${rec.level.name}: ${rec.time}: ${rec.message} - ${rec.error}');
-    } else {
-      print('${rec.level.name}: ${rec.time}: ${rec.message}');
-    }
-  });
-
+  app.setupConsoleLog(Level.INFO);
   app.start();
   
 }
