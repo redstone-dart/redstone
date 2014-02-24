@@ -11,10 +11,8 @@ import 'package:bloodless/server.dart' as app;
 helloWorld() => "Hello, World!";
 
 main() {
-
   app.setupConsoleLog();
   app.start();
-  
 }
 
 ```
@@ -50,10 +48,8 @@ import 'package:bloodless/server.dart' as app;
 helloWorld() => "Hello, World!";
 
 main() {
-
   app.setupConsoleLog();
   app.start();
-  
 }
 
 ```
@@ -291,7 +287,7 @@ You can define error handlers with the `ErrorHandler` annotation:
 handleNotFoundError() => app.redirect("/error/not_found.html");
 ```
 
-## Configuring the server
+## Server configuration
 
 If you invoke the `start()` method with no arguments, the server will be configured with default values:
 
@@ -301,6 +297,37 @@ host           | "0.0.0.0"
 port           | 8080
 staticDir      | "../web"
 indexFiles     | ["index.html"]
+
+## Logging
+
+Bloodless provides a helper method to set a simple log handler, that outputs the messages to the console:
+
+```Dart
+app.setupConsoleLog();
+```
+
+By default, the log level is setted to INFO, which logs the startup process and errors. If you want to see all the log messages, you can set the level to ALL:
+
+```Dart
+import 'package:logging/logging.dart'
+
+...
+
+main() {
+  ...
+  app.setupConsoleLog(Level.ALL);
+  ...
+}
+```
+
+If you want to output the messages to a different locale (for example, a file), you can define your own log handler:
+
+```dart
+Logger.root.level = Level.ALL;
+Logger.root.onRecord.listen((LogRecord rec) {
+  ...
+});
+```
 
 ## Deploying the app
 
@@ -316,7 +343,7 @@ When you run `pub build`, a `build` directory will be created with the following
 
 Basically, the content of the `build` directory can be deployed in any server.
 
-**NOTE: At least for now, the `pub build` command is creating the bin and web folders inside the build folder, but the .dart files inside bin are being filtered out. If you use Dart Editor, you can solve this by creating a `build.dart` file at the root of your project. **
+** NOTE: At least for now, the `pub build` command is creating the bin and web folders inside the build folder, but the .dart files inside bin are being filtered out. If you use Dart Editor, you can solve this by creating a `build.dart` file at the root of your project. **
 
 ```Dart
 import "dart:io";
