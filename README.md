@@ -311,10 +311,8 @@ By default, the log level is setted to INFO, which logs the startup process and 
 ```Dart
 import 'package:logging/logging.dart'
 
-...
 
 main() {
-  ...
   app.setupConsoleLog(Level.ALL);
   ...
 }
