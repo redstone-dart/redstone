@@ -309,7 +309,7 @@ app.setupConsoleLog();
 By default, the log level is setted to INFO, which logs the startup process and errors. If you want to see all the log messages, you can set the level to ALL:
 
 ```Dart
-import 'package:logging/logging.dart'
+import 'package:logging/logging.dart';
 
 
 main() {
