@@ -101,7 +101,7 @@ abstract class Chain {
 /**
  * The request's information and content.
  *
- * Since every request run in it's own [Zone], it's completely safe
+ * Since each request run in it's own [Zone], it's completely safe
  * to access this object at any time, even in async callbacks.
  */
 Request get request => Zone.current[#request];
@@ -109,7 +109,7 @@ Request get request => Zone.current[#request];
 /**
  * The request's chain.
  *
- * Since every request run in it's own [Zone], it's completely safe
+ * Since each request run in it's own [Zone], it's completely safe
  * to access this object at any time, even in async callbacks.
  */
 Chain get chain => Zone.current[#chain];

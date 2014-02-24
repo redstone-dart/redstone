@@ -155,13 +155,177 @@ addUser(@app.Body(app.JSON) Map json) {
 };
 ```
 
+```Dart
+@app.Route("/adduser", methods: const [app.POST])
+addUser(@app.Body(app.FORM) Map form) {
+  ...
+};
+```
+
 ### The request object
+
+You can use the global `request` object to access the request's information and content:
+
+```Dart
+@app.Route("/user", methods: const [app.GET, app.POST])
+user() {
+  if (app.request.method == app.GET) {
+    ...
+  } else if (app.request.method == app.POST) {
+    
+    if (app.request.bodyType == app.JSON) {
+      var json = app.request.body;
+      ...
+    } else {
+      ...
+    }
+  }
+};
+```
+
+Actually, the `request` object is a get method, that retrieves the request object from the current Zone. Since each request runs in its own zone, it's completely safe to use `request` at any time, even in async callbacks.
 
 ## Interceptors
 
+Each request is actually a chain, composed by 0 or more interceptors, and a target. A target is a method annotated with `Route`, or a static file handled by a VirtualDirectory instance. An interceptor is a structure that allows you to apply a common behaviour to a group of targets. For example, you can use a interceptor to change the response of a group of targets, or to apply a security constraint.
+
+```Dart
+@app.Interceptor(r'/.*')
+handleResponseHeader() {
+  app.request.response.headers.add("Access-Control-Allow-Origin", "*");
+  app.chain.next();
+}
+```
+
+```Dart
+@app.Interceptor(r'/admin/.*')
+adminFilter() {
+  if (app.request.session["username"] != null) {
+    app.chain.next();
+  } else {
+    app.chain.interrupt(HttpStatus.UNAUTHORIZED);
+    //or app.redirect("/login.html");
+  }
+}
+```
+
+When a request is received, the framework will execute all interceptors that matchs the URL, and then will look for a valid route. If a route is found, it will be executed, otherwise the request will be fowarded to the VirtualDirectory, which will look for a static file.
+
+Each interceptor must execute the `chain.next()` or `chain.interrupt()` methods, otherwise, the request will be stucked. The `chain.next()` method returns a `Future`, that completes when the target completes. The interceptors are notified in the reverse order they are executed.
+
+For example, consider this script:
+
+```Dart
+@app.Route("/")
+helloWorld() => "target\n";
+
+@app.Interceptor(r'/.*', chainIdx: 0)
+interceptor1() {
+  app.request.response.write("interceptor 1 - before target\n");
+  app.chain.next().then((_) {
+    app.request.response.write("interceptor 1 - after target\n");
+  });
+}
+
+@app.Interceptor(r'/.*', chainIdx: 1)
+interceptor2() {
+  app.request.response.write("interceptor 2 - before target\n");
+  app.chain.next().then((_) {
+    app.request.response.write("interceptor 2 - after target\n");
+  });
+}
+
+main() {
+
+  app.setupConsoleLog();
+  app.start();
+  
+}
+```
+
+When you access http://127.0.0.1:8080/, the result is:
+
+```
+interceptor 1 - before target
+interceptor 2 - before target
+target
+interceptor 2 - after target
+interceptor 1 - after target
+```
+
+**NOTE: Like the `request` object, the `chain` object is also a get method, that returns the chain of the current zone.**
+
+**NOTE: You can also call `redirect()` or `abort()` instead of `chain.interrupt()`. The `abort()` call will invoke the corresponding error handler.**
+
 ## Groups
+
+You can use classes to group routes and interceptors:
+
+@Group("/user")
+class UserService {
+  
+  @app.Route("/find")
+  findUser(@app.QueryParam("n") String name,
+           @app.QueryParam("c") String city) {
+    ...
+  }
+
+  @app.Route("/add", methods: const [app.POST])
+  addUser(@app.Body(app.JSON) Map json) {
+    ...
+  }
+}
+
+The prefix defined with the `Group` annotation, will be prepended in every route and interceptor inside the group.
+
+**NOTE: The class must provide a default constructor, with no required arguments.**
 
 ## Error handlers
 
+You can define error handlers with the `ErrorHandler` annotation:
+
+```Dart
+@app.ErrorHandler(HttpStatus.NOT_FOUND)
+handleNotFoundError() => app.redirect("/error/not_found.html");
+```
+
 ## Configuring the server
 
+If you invoke the `start()` method with no arguments, the server will be configured with default values:
+
+Argument       | Default Value
+---------------|---------------
+host           | "0.0.0.0"
+port           | 8080
+staticDir      | "../web"
+indexFiles     | ["index.html"]
+
+## Deploying the app
+
+When you run `pub build`, a `build` directory will be created with the following structure:
+
+```
+- build
+  -- bin
+     - server.dart
+  -- web
+     -- (static files)
+```
+
+Basically, he content of the `build` directory can be deployed in any server.
+
+**NOTE: At least for now, the `pub build` command is creating the bin and web folders inside the build folder, but the .dart files inside bin are being filtered out. If you use Dart Editor, you can solve this by creating a `build.dart` file at the root of your project: **
+
+```Dart
+import "dart:io";
+
+main() {
+  Directory dir = new Directory("build/bin");
+  dir.exists().then((exists) {
+     if (exists) {
+       File serverFile = new File("bin/server.dart");
+       serverFile.copy("build/bin/server.dart");
+     }
+  }); 
+}
+```

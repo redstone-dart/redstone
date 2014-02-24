@@ -13,7 +13,7 @@ doge() {
   app.request.response.write("wow! such user!\n\n");
   app.chain.next().then((_) {
     app.request.response.write("\n\nmuch smart!");
-  });;
+  });
 }
 
 @app.Group("/group")
