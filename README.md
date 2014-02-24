@@ -318,7 +318,7 @@ main() {
 }
 ```
 
-If you want to output the messages to a different locale (for example, a file), you can define your own log handler:
+If you want to output the messages to a different place (for example, a file), you can define your own log handler:
 
 ```Dart
 Logger.root.level = Level.ALL;
