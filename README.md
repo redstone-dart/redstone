@@ -253,7 +253,7 @@ interceptor 2 - after target
 interceptor 1 - after target
 ```
 
-**NOTE: Like the `request` object, the `chain` object is also a get method, that returns the chain of the current zone.**
+Like the `request` object, the `chain` object is also a get method, that returns the chain of the current zone.
 
 **NOTE: You can also call `redirect()` or `abort()` instead of `chain.interrupt()`. The `abort()` call will invoke the corresponding error handler.**
 
@@ -261,6 +261,7 @@ interceptor 1 - after target
 
 You can use classes to group routes and interceptors:
 
+```Dart
 @Group("/user")
 class UserService {
   
@@ -275,6 +276,7 @@ class UserService {
     ...
   }
 }
+```
 
 The prefix defined with the `Group` annotation, will be prepended in every route and interceptor inside the group.
 
@@ -312,9 +314,9 @@ When you run `pub build`, a `build` directory will be created with the following
      -- (static files)
 ```
 
-Basically, he content of the `build` directory can be deployed in any server.
+Basically, the content of the `build` directory can be deployed in any server.
 
-**NOTE: At least for now, the `pub build` command is creating the bin and web folders inside the build folder, but the .dart files inside bin are being filtered out. If you use Dart Editor, you can solve this by creating a `build.dart` file at the root of your project: **
+**NOTE: At least for now, the `pub build` command is creating the bin and web folders inside the build folder, but the .dart files inside bin are being filtered out. If you use Dart Editor, you can solve this by creating a `build.dart` file at the root of your project. **
 
 ```Dart
 import "dart:io";
