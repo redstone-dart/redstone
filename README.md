@@ -67,6 +67,8 @@ INFO: 2014-02-24 13:16:19.102: Setting up VirtualDirectory for /home/user/projec
 INFO: 2014-02-24 13:16:19.121: Running on 0.0.0.0:8080
 ```
 
+- Now head over to http://127.0.0.1:8080/, and you should see your hello world greeting.
+
 ## Routing
 
 Just use the `Route` annotation to bind a method with a URL:
@@ -76,7 +78,7 @@ Just use the `Route` annotation to bind a method with a URL:
 helloWorld() => "Hello, World!";
 ```
 
-The returned value will be serialized to the client according to his type. For example, if the value is a String, the client will receive a *text/plain* response.
+The returned value will be serialized to the client according to its type. For example, if the value is a String, the client will receive a *text/plain* response.
 
 Returned Value | Response type
 ---------------|---------------
@@ -122,9 +124,36 @@ The supported types are: int, double and bool
 
 ### Retrieving query parameters
 
+Use the `QueryParam` annotation to access a query parameter
+
+```Dart
+@app.Route("/user")
+getUser(@app.QueryParam("id") int userId) {
+  ...
+};
+```
+
+Like path parameters, the argument doesn't need to be a String. 
+
 ### HTTP Methods
 
+By default, a target only respond to GET requests. You can change that with the `methods` arguments:
+
+```Dart
+@app.Route("/user/:username", methods: const [app.GET, app.POST])
+helloUser(String username) => "hello $username";
+```
+
 ### Retrieving request's body
+
+You can retrieve the requests's body as a form, json or text
+
+```Dart
+@app.Route("/adduser", methods: const [app.POST])
+addUser(@app.Body(app.JSON) Map json) {
+  ...
+};
+```
 
 ### The request object
 
