@@ -341,7 +341,7 @@ When you run `pub build`, a `build` directory will be created with the following
 
 Basically, the content of the `build` directory can be deployed in any server.
 
-** NOTE: At least for now, the `pub build` command is creating the bin and web folders inside the build folder, but the .dart files inside bin are being filtered out. If you use Dart Editor, you can solve this by creating a `build.dart` file at the root of your project. **
+**NOTE: At least for now, the `pub build` command is creating the bin and web folders inside the build folder, but the .dart files inside bin are being filtered out. If you use Dart Editor, you can solve this by creating a `build.dart` file at the root of your project.**
 
 ```Dart
 import "dart:io";
