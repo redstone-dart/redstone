@@ -133,7 +133,7 @@ Like path parameters, the argument doesn't need to be a String.
 
 ### HTTP Methods
 
-By default, a target only respond to GET requests. You can change that with the `methods` arguments:
+By default, a route only respond to GET requests. You can change that with the `methods` arguments:
 
 ```Dart
 @app.Route("/user/:username", methods: const [app.GET, app.POST])
@@ -322,7 +322,7 @@ main() {
 
 If you want to output the messages to a different locale (for example, a file), you can define your own log handler:
 
-```dart
+```Dart
 Logger.root.level = Level.ALL;
 Logger.root.onRecord.listen((LogRecord rec) {
   ...
