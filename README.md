@@ -79,7 +79,7 @@ helloWorld() => "Hello, World!";
 The returned value will be serialized to the client according to his type. For example, if the value is a String, the client will receive a *text/plain* response.
 
 Returned Value | Response type
--------------------------------
+---------------|---------------
 String         | text/plain
 Map or List    | application/json
 File           | (MimeType of the file)
