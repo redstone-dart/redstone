@@ -139,7 +139,7 @@ void redirect(String url) {
  * Start the server.
  *
  * The [address] can be a [String] or an [InternetAddress]. The [staticDir] is an
- * absolute or relative path to static files, witch defaults to the 'web' directory
+ * absolute or relative path to static files, which defaults to the 'web' directory
  * of the project or build. If no static files will be handled by this server, the [staticDir]
  * can be setted to null. 
  */
@@ -159,7 +159,9 @@ Future<HttpServer> start({address: _DEFAULT_ADDRESS, int port: _DEFAULT_PORT,
       String dir = Platform.script.resolve(staticDir).toFilePath();
       _logger.info("Setting up VirtualDirectory for ${dir} - index files: $indexFiles");
       _virtualDirectory = new VirtualDirectory(dir);
-      _virtualDirectory.allowDirectoryListing = true;
+      _virtualDirectory..followLinks = true
+                       ..jailRoot = false
+                       ..allowDirectoryListing = true;
       if (indexFiles != null && !indexFiles.isEmpty) {
         _virtualDirectory.directoryHandler = (dir, req) {
           int count = 0;

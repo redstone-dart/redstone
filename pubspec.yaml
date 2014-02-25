@@ -1,6 +1,6 @@
 name: bloodless
 author: Luiz Mineo <luiz.mineo@gmail.com>
-version: 0.0.1
+version: 0.0.2
 description: "A microframework for Dart"
 homepage: https://github.com/luizmineo/bloodless
 dependencies:
