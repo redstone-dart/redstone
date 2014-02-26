@@ -26,7 +26,7 @@ INFO: 2014-02-24 13:16:19.121: Running on 0.0.0.0:8080
 
 ## Installation
 
-**NOTE: It's recommended to use Dart 1.2 or above, which is currently available only at the [dev channel](http://gsdview.appspot.com/dart-archive/channels/dev/release/latest/) (bloodless works better with the [new layout of build directory](https://groups.google.com/a/dartlang.org/forum/?fromgroups#!topic/announce/JjilMA9pQXE)).**
+**NOTE: It's recommended to use Dart 1.2 or above, ~~which is currently available only at the [dev channel](http://gsdview.appspot.com/dart-archive/channels/dev/release/latest/)~~ (Dart 1.2 is stable now).**
 
 * Create a new Dart package ([manually](http://pub.dartlang.org/doc/) or through Dart Editor)
 * Add bloodless as a dependency in `pubspec.yaml` file
