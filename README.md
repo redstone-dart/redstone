@@ -346,11 +346,9 @@ main(List<String> args) {
 }
 ```
 
-* Instead of running `pub build` directly, you can call `build.dart` to properly build you app:
+* Instead of running `pub build` directly, you can call `build.dart` to properly build you app.
 
-** Through Dart Editor:
-
-*** Create a command-line launch configuration, with the following parameters:
+* To run `build.dart` through Dart Editor, you need to create a command-line launch configuration, with the following parameters:
 
 Parameter         | Value
 ------------------|----------
@@ -358,7 +356,7 @@ Dart Script       | bin/build.dart
 Working directory | (root path of your project)
 Script arguments  | all
 
-** Through command line:
+* To run `build.dart` through command line, you need to set the DART_SDK environment variable:
 
 ```
 $ export DART_SDK=(path to dart-sdk)
