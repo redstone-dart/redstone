@@ -329,30 +329,40 @@ Logger.root.onRecord.listen((LogRecord rec) {
 
 ## Deploying the app
 
-When you run `pub build`, a `build` directory will be created with the following structure:
+The easiest way to build your app is using the [grinder](http://pub.dartlang.org/packages/grinder) library. Bloodless provides a simples task to properly copy the server's files to the build folder, which you can use in your build script. For example:
 
-```
-- build
-  -- bin
-     - server.dart
-  -- web
-     -- (static files)
-```
-
-Basically, the content of the `build` directory can be deployed in any server.
-
-**NOTE: At least for now, the `pub build` command is creating the bin and web folders inside the build folder, but the .dart files inside bin are being filtered out. If you use Dart Editor, you can solve this by creating a `build.dart` file at the root of your project.**
-
+* Create a `build.dart` file inside the `bin` folder
 ```Dart
-import "dart:io";
+import 'package:grinder/grinder.dart';
+import 'package:grinder/grinder_utils.dart';
+import 'package:bloodless/tasks.dart';
 
-main() {
-  Directory dir = new Directory("build/bin");
-  dir.exists().then((exists) {
-     if (exists) {
-       File serverFile = new File("bin/server.dart");
-       serverFile.copy("build/bin/server.dart");
-     }
-  }); 
+main(List<String> args) {
+  defineTask('build', taskFunction: (GrinderContext ctx) => new PubTools().build(ctx));
+  defineTask('deploy_server', taskFunction: deployServer, depends: ['build']);
+  defineTask('all', depends: ['build', 'deploy_server']);
+  
+  startGrinder(args);
 }
 ```
+
+* Instead of running `pub build` directly, you can call `build.dart` to properly build you app:
+
+** Through Dart Editor:
+
+*** Create a command-line launch configuration, with the following parameters:
+
+Parameter         | Value
+------------------|----------
+Dart Script       | bin/build.dart
+Working directory | (root path of your project)
+Script arguments  | all
+
+** Through command line:
+
+```
+$ export DART_SDK=(path to dart-sdk)
+$ dart bin/build.dart all
+```
+
+**NOTE: You can improve your build script according to your needs.**
