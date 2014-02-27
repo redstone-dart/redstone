@@ -346,7 +346,7 @@ main(List<String> args) {
 }
 ```
 
-* Instead of running `pub build` directly, you can call `build.dart` to properly build you app.
+* Instead of running `pub build` directly, you can call `build.dart` to properly build your app.
 
 * To run `build.dart` through Dart Editor, you need to create a command-line launch configuration, with the following parameters:
 
