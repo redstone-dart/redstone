@@ -207,9 +207,20 @@ class _ChainImpl implements Chain {
   }
 
   void interrupt(int statusCode, {Object response, String responseType}) {
+    if (_interrupted) {
+      var name = _currentInterceptor != null ? _currentInterceptor.interceptorName : null;
+      throw new ChainException(request.httpRequest.uri.path, 
+                               "invalid state: chain already interrupted",
+                               interceptorName: name);
+    }
+    if (_targetInvoked) {
+      throw new ChainException(request.httpRequest.uri.path, "Invalid state: target already invoked.");
+    }
+
     _interrupted = true;
 
     _writeResponse(response, request.response, responseType, statusCode: statusCode);
+    _completers[0].complete(true);
   }
 
 }
