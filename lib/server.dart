@@ -10,6 +10,7 @@ import 'package:mime/mime.dart';
 import 'package:route_hierarchical/url_matcher.dart';
 import 'package:route_hierarchical/url_template.dart';
 import 'package:logging/logging.dart';
+import 'package:path/path.dart' as path;
 
 part 'package:bloodless/src/metadata.dart';
 part 'package:bloodless/src/logger.dart';
@@ -166,8 +167,8 @@ Future<HttpServer> start({address: _DEFAULT_ADDRESS, int port: _DEFAULT_PORT,
         _virtualDirectory.directoryHandler = (dir, req) {
           int count = 0;
           for (String index in indexFiles) {
-            var indexUri = new Uri.file(dir.path).resolve(index);
-            File f = new File(indexUri.toFilePath());
+            var indexPath = path.join(dir.path, index);
+            File f = new File(indexPath);
             if (f.existsSync() || count++ == indexFiles.length - 1) {
               _virtualDirectory.serveFile(f, req);
               break;
