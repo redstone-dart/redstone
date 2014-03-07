@@ -510,7 +510,7 @@ List<_ParamProcessor> _buildParamProcesors(MethodMirror handler) {
         var convertFunc = _buildConvertFunction(param.type);
 
         return (urlParams, queryParams, reqBodyType, reqBody) {
-          var value = (reqBody as Map)[(metadata.reflectee as QueryParam).name];
+          var value = (queryParams as Map)[(metadata.reflectee as QueryParam).name];
           if (value != null) {
             try {
               value = convertFunc(value);
