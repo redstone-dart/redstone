@@ -149,12 +149,7 @@ Future<HttpServer> start({address: _DEFAULT_ADDRESS, int port: _DEFAULT_PORT,
                           List<String> indexFiles: _DEFAULT_INDEX_FILES}) {
   return new Future(() {
     
-    try {
-      _scanHandlers();
-    } catch (e) {
-      _handleError("Failed to configure handlers.", e);
-      throw e;
-    }
+    setUp();
 
     if (staticDir != null) {
       String dir = Platform.script.resolve(staticDir).toFilePath();
@@ -197,3 +192,22 @@ Future<HttpServer> start({address: _DEFAULT_ADDRESS, int port: _DEFAULT_PORT,
     });
   });
 }
+
+///API for tests. TODO: documentation for unit tests
+void setUp([List<Symbol> libraries]) {
+  try {
+    _scanHandlers(libraries);
+  } catch (e) {
+    _handleError("Failed to configure handlers.", e);
+    throw e;
+  }
+}
+
+///API for tests. TODO: documentation for unit tests
+void tearDown() {
+  _clearHandlers();
+}
+
+///API for tests. TODO: documentation for unit tests
+Future<HttpResponse> dispatch(Request request) => _dispatchRequest(request);
+

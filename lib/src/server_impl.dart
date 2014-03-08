@@ -1,6 +1,6 @@
 part of bloodless_server;
 
-typedef Future _RequestHandler(UrlMatch match, HttpRequestBody request);
+typedef Future _RequestHandler(UrlMatch match, Request request);
 typedef void _RunInterceptor();
 typedef void _HandleError();
 typedef _TargetParam _ParamProcessor(Map<String, String> urlParams,
@@ -22,11 +22,17 @@ final Map<int, _ErrorHandler> _errorHandlers = {};
 VirtualDirectory _virtualDirectory;
 
 void _handleRequest(HttpRequestBody req) {
+  _dispatchRequest(new Request(req, req.request.uri.queryParameters));
+}
 
+Future<HttpResponse> _dispatchRequest(Request req) {
+  
+  var completer = new Completer();
+  
   var queryParams, path, chain;
   try {
-    queryParams = req.request.uri.queryParameters;
-    path = req.request.uri.path;
+    queryParams = req.queryParams;
+    path = req.httpRequest.uri.path;
     var handlers = _interceptors.where((i) {
       var match = i.urlPattern.firstMatch(path);
       if (match != null) {
@@ -36,8 +42,9 @@ void _handleRequest(HttpRequestBody req) {
     });
     chain = new _ChainImpl(new List.from(handlers));
   } catch(e, s) {
-    _handleError("Failed to handle request.", e, stack: s, req: req);
-    return;
+    _handleError("Failed to handle request.", e, stack: s, req: req.httpRequest);
+    completer.completeError(e, s);
+    return completer.future;
   }
 
   runZoned(() {
@@ -47,21 +54,25 @@ void _handleRequest(HttpRequestBody req) {
         request.response.close();
       }
       _logger.finer("Closed request for: ${request.httpRequest.uri}");
+      completer.complete(req.response);
     });
 
   }, zoneValues: {
-    #request: new Request(req, queryParams),
+    #request: req,
     #chain: chain
   }, onError: (e, s) {
-    _handleError("Failed to handle request.", e, stack: s, req: req);
+    _handleError("Failed to handle request.", e, stack: s, req: req.httpRequest);
+    completer.completeError(e, s);
   });
+    
+  return completer.future;
 }
 
-void _handleError(String message, Object error, {StackTrace stack, HttpRequestBody req}) {
-  _logger.severe(error, stack);
+void _handleError(String message, Object error, {StackTrace stack, HttpRequest req}) {
+  _logger.severe(message, error, stack);
 
   if (req != null) {
-    var resp = req.request.response;
+    var resp = req.response;
     try {
 
       if (error is RequestException) {
@@ -70,7 +81,7 @@ void _handleError(String message, Object error, {StackTrace stack, HttpRequestBo
         resp.statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
       }
 
-      _notifyError(req.request.response, req.request.uri.path, error, stack);
+      _notifyError(req.response, req.uri.path, error, stack);
     } catch(e) {
       _logger.severe(e);
       resp.close();
@@ -78,7 +89,7 @@ void _handleError(String message, Object error, {StackTrace stack, HttpRequestBo
   }
 }
 
-Future<bool> _runTarget(HttpRequestBody req) {
+Future<bool> _runTarget(Request req) {
 
   return new Future.sync(() {
 
@@ -94,10 +105,10 @@ Future<bool> _runTarget(HttpRequestBody req) {
       try {
         if (_virtualDirectory != null) {
           _logger.fine("Forwarding request to VirtualDirectory");
-          _virtualDirectory.serveRequest(req.request);
+          _virtualDirectory.serveRequest(req.httpRequest);
         } else {
-          _logger.fine("Resource not found: ${req.request.uri}");
-          _notifyError(req.request.response, req.request.uri.path);
+          _logger.fine("Resource not found: ${req.httpRequest.uri}");
+          _notifyError(req.response, req.httpRequest.uri.path);
         }
       } catch(e) {
         _handleError("Failed to send response to user.", e);
@@ -119,8 +130,8 @@ class _Target {
 
   _Target(this.urlTemplate, this.handler);
 
-  Future handleRequest(HttpRequestBody req) {
-    UrlMatch match = urlTemplate.match(req.request.uri.path);
+  Future handleRequest(Request req) {
+    UrlMatch match = urlTemplate.match(req.httpRequest.uri.path);
     if (match == null || !match.tail.isEmpty) {
       return null;
     }
@@ -196,7 +207,7 @@ class _ChainImpl implements Chain {
       } else {
         _targetInvoked = true;
         new Future(() {
-          _runTarget(request._reqBody).then((targetExecuted) {
+          _runTarget(request).then((targetExecuted) {
             _completers.reversed.forEach((c) => c.complete(targetExecuted));
           });
         });
@@ -225,8 +236,17 @@ class _ChainImpl implements Chain {
 
 }
 
-void _scanHandlers() {
-  currentMirrorSystem().libraries.values.forEach((LibraryMirror lib) {
+void _scanHandlers([List<Symbol> libraries]) {
+  
+  var mirrorSystem = currentMirrorSystem();
+  var libsToScan;
+  if (libraries != null) {
+    libsToScan = new List.from(libraries.map((l) => mirrorSystem.findLibrary(l)));
+  } else {
+    libsToScan = mirrorSystem.libraries.values;
+  }
+
+  libsToScan.forEach((LibraryMirror lib) {
 
     lib.topLevelMembers.values.forEach((MethodMirror method) {
       method.metadata.forEach((InstanceMirror metadata) {
@@ -254,6 +274,14 @@ void _scanHandlers() {
   });
 
   _interceptors.sort((i1, i2) => i1.chainIdx - i2.chainIdx);
+}
+
+void _clearHandlers() {
+
+  _targets.clear();
+  _interceptors.clear();
+  _errorHandlers.clear();
+
 }
 
 void _configureGroup(Group group, ClassMirror clazz) {
@@ -353,26 +381,26 @@ void _configureTarget(Route route, ObjectMirror owner, MethodMirror handler) {
   var paramProcessors = _buildParamProcesors(handler);
   var handlerName = MirrorSystem.getName(handler.qualifiedName);
 
-  var caller = (UrlMatch match, HttpRequestBody request) {
+  var caller = (UrlMatch match, Request request) {
     
     _logger.finer("Preparing to execute target: $handlerName");
 
     return new Future.sync(() {
 
-      var httpResp = request.request.response;
+      var httpResp = request.response;
       var pathParams = match.parameters;
-      var queryParams = request.request.uri.queryParameters;
+      var queryParams = request.queryParams;
 
-      if (!route.methods.contains(request.request.method)) {
+      if (!route.methods.contains(request.method)) {
         httpResp.statusCode = HttpStatus.METHOD_NOT_ALLOWED;
-        _notifyError(httpResp, request.request.uri.path);
+        _notifyError(httpResp, request.httpRequest.uri.path);
         return null;
       }
       
       var posParams = [];
       var namedParams = {};
       paramProcessors.map((f) => 
-          f(pathParams, queryParams, request.type, request.body))
+          f(pathParams, queryParams, request.bodyType, request.body))
             .forEach((_TargetParam targetParam) {
               if (targetParam.name == null) {
                 posParams.add(targetParam.value);
@@ -427,7 +455,7 @@ Future _writeResponse(respValue, HttpResponse httpResp, String responseType, {in
       respValue = conv.JSON.encode(respValue);
       try {
         if (responseType != null) {
-          httpResp.headers.add(HttpHeaders.CONTENT_TYPE, responseType);
+          httpResp.headers.set(HttpHeaders.CONTENT_TYPE, responseType);
         } else {
           httpResp.headers.contentType = new ContentType("application", "json", charset: "UTF-8");
         }
@@ -445,13 +473,13 @@ Future _writeResponse(respValue, HttpResponse httpResp, String responseType, {in
       File f = respValue as File;
       try {
         if (responseType != null) {
-          httpResp.headers.add(HttpHeaders.CONTENT_TYPE, responseType);
+          httpResp.headers.set(HttpHeaders.CONTENT_TYPE, responseType);
         } else {
           String contentType = lookupMimeType(f.path);
-          httpResp.headers.add(HttpHeaders.CONTENT_TYPE, contentType);
+          httpResp.headers.set(HttpHeaders.CONTENT_TYPE, contentType);
         }
       } catch (e) {
-        _logger.finer("Couldn't set the response's content type. Maybe it was already set?");
+        _logger.finer("Couldn't set the response's content type. Maybe it was already set?", e);
       }
       return httpResp.addStream(f.openRead());
 
@@ -462,7 +490,7 @@ Future _writeResponse(respValue, HttpResponse httpResp, String responseType, {in
       }
       try {
         if (responseType != null) {
-          httpResp.headers.add(HttpHeaders.CONTENT_TYPE, responseType);
+          httpResp.headers.set(HttpHeaders.CONTENT_TYPE, responseType);
         } else {
           httpResp.headers.contentType = new ContentType("text", "plain");
         }
