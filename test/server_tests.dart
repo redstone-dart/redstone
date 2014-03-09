@@ -9,12 +9,13 @@ import 'package:bloodless/mocks.dart';
 import 'package:logging/logging.dart';
 
 import 'services/type_serialization.dart';
+import 'services/arguments.dart';
 
 main() {
   
   //app.setupConsoleLog(Level.ALL);
   
-  group("When a route is executed, the returned value must be serialized according to its type:", () {
+  group("Response serialization:", () {
     
     setUp(() => app.setUp([#type_serialization]));
     
@@ -78,4 +79,105 @@ main() {
     
   });
   
+  group("Route arguments:", () {
+    
+    setUp(() => app.setUp([#arguments]));
+    
+    test("path parameters", () {
+      var req = new MockRequest("/args/arg/1/1.2");
+      return app.dispatch(req).then((resp) {
+        expect(JSON.decode(resp.mockContent), equals({
+          "arg1": "arg", 
+          "arg2": 1, 
+          "arg3": 1.2, 
+          "arg4": null, 
+          "arg5": "arg5"
+        }));
+      });
+    });
+    
+    test("path parameters with named arguments", () {
+      var req = new MockRequest("/named_args/arg1/arg2");
+      return app.dispatch(req).then((resp) {
+        expect(JSON.decode(resp.mockContent), equals({
+          "arg1": "arg1", 
+          "arg2": "arg2",  
+          "arg3": null, 
+          "arg4": "arg4"
+        }));
+      });
+    });
+    
+    test("query parameters", () {
+      var req = new MockRequest("/query_args", queryParams: {
+        "arg1": "arg1", "arg2": "1", "arg3": "1.2"
+      });
+      return app.dispatch(req).then((resp) {
+        expect(JSON.decode(resp.mockContent), equals({
+          "arg1": "arg1", 
+          "arg2": 1, 
+          "arg3": 1.2, 
+          "arg4": null, 
+          "arg5": "arg5",
+          "arg6": null,
+          "arg7": "arg7"
+        }));
+      });
+    });
+    
+    test("query parameters with named arguments", () {
+      var req = new MockRequest("/named_query_args", queryParams: {
+        "arg1": "arg1", "arg2": "arg2"
+      });
+      return app.dispatch(req).then((resp) {
+        expect(JSON.decode(resp.mockContent), equals({
+          "arg1": "arg1", 
+          "arg2": "arg2", 
+          "arg3": null, 
+          "arg4": "arg4",
+          "arg5": null,
+          "arg6": "arg6"
+        }));
+      });
+    });
+    
+    test("path and query parameters", () {
+      var req = new MockRequest("/path_query_args/arg1", queryParams: {
+        "arg": "arg2"
+      });
+      return app.dispatch(req).then((resp) {
+        expect(JSON.decode(resp.mockContent), equals({
+          "arg": "arg1", 
+          "qArg": "arg2"
+        }));
+      });
+    });
+    
+    test("request's content as JSON", () {
+      var req = new MockRequest("/json/arg1", method: app.POST, bodyType: app.JSON, body: {
+        "key": "value"
+      });
+      return app.dispatch(req).then((resp) {
+        expect(JSON.decode(resp.mockContent), equals({
+          "arg": "arg1",
+          "json": {"key": "value"}
+        }));
+      });
+    });
+    
+    test("request's content as FORM", () {
+      var req = new MockRequest("/form/arg1", method: app.POST, bodyType: app.FORM, body: {
+        "key": "value"
+      });
+      return app.dispatch(req).then((resp) {
+        expect(JSON.decode(resp.mockContent), equals({
+          "arg": "arg1",
+          "form": {"key": "value"}
+        }));
+      });
+    });
+    
+    tearDown(() => app.tearDown());
+    
+  });
 }

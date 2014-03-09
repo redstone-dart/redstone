@@ -262,7 +262,7 @@ void _scanHandlers([List<Symbol> libraries]) {
 
     lib.declarations.values.forEach((DeclarationMirror declaration) {
       if (declaration is ClassMirror) {
-        ClassMirror clazz = declaration as ClassMirror;
+        ClassMirror clazz = declaration;
 
         clazz.metadata.forEach((InstanceMirror metadata) {
           if (metadata.reflectee is Group) {
