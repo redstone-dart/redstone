@@ -1,5 +1,5 @@
 
-## v0.0.1
+## v0.1.0
 - Bug fixes
 - BREAKING CHANGE: `chain.next()` now receives a callback, instead of returning a `Future`
 - Added new API for unit tests
