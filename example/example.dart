@@ -11,7 +11,7 @@ getUsername(String username) => ">> $username";
 @app.Interceptor(r'/user/.+')
 doge() {
   app.request.response.write("wow! such user!\n\n");
-  app.chain.next().then((_) {
+  app.chain.next(() {
     app.request.response.write("\n\nso smart!");
   });
 }
