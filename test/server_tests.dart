@@ -11,6 +11,7 @@ import 'package:logging/logging.dart';
 import 'services/type_serialization.dart';
 import 'services/arguments.dart';
 import 'services/errors.dart';
+import 'services/interceptors.dart';
 
 main() {
   
@@ -245,6 +246,21 @@ main() {
       return app.dispatch(req).then((resp) {
         expect(resp.statusCode, equals(404));
         expect(resp.mockContent, equals("not_found"));
+      });
+    });
+    
+    tearDown(() => app.tearDown());
+    
+  });
+  
+  group("Chain:", () {
+    
+    setUp(() => app.setUp([#interceptors]));
+    
+    test("interceptors", () {
+      var req = new MockRequest("/target");
+      app.dispatch(req).then((resp) {
+        expect(resp.mockContent, equals("before_interceptor1|before_interceptor2|target_executed|after_interceptor1|after_interceptor2"));
       });
     });
     
