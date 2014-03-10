@@ -6,7 +6,7 @@ typedef void _HandleError();
 typedef _TargetParam _ParamProcessor(Map<String, String> urlParams,
                                      Map<String, String> queryParams, 
                                      String bodyType, dynamic reqBody);
-typedef dynamic _ConvertFunction(String value);
+typedef dynamic _ConvertFunction(String value, dynamic defaultValue);
 
 var _intType = reflectClass(int);
 var _doubleType = reflectClass(double);
@@ -48,21 +48,25 @@ Future<HttpResponse> _dispatchRequest(Request req) {
   }
 
   runZoned(() {
-
-    chain.next().then((targetExecuted) {
-      if (targetExecuted) {
-        request.response.close();
-      }
-      _logger.finer("Closed request for: ${request.httpRequest.uri}");
+    
+    runZoned(() {
+      chain.done.then((targetExecuted) {
+        if (targetExecuted) {
+          request.response.close();
+        }
+        _logger.finer("Closed request for: ${request.httpRequest.uri}");
+        completer.complete(req.response);
+      });
+      chain.next();
+    }, onError: (e, s) {
+      _handleError("Failed to handle request.", e, stack: s, req: req.httpRequest);
+      req.httpRequest.response.close();
       completer.complete(req.response);
     });
 
   }, zoneValues: {
     #request: req,
     #chain: chain
-  }, onError: (e, s) {
-    _handleError("Failed to handle request.", e, stack: s, req: req.httpRequest);
-    completer.completeError(e, s);
   });
     
   return completer.future;
@@ -82,9 +86,8 @@ void _handleError(String message, Object error, {StackTrace stack, HttpRequest r
       }
 
       _notifyError(req.response, req.uri.path, error, stack);
-    } catch(e) {
-      _logger.severe(e);
-      resp.close();
+    } catch(e, s) {
+      _logger.severe("Failed to handle error", e, s);
     }
   }
 }
@@ -108,6 +111,7 @@ Future<bool> _runTarget(Request req) {
           _virtualDirectory.serveRequest(req.httpRequest);
         } else {
           _logger.fine("Resource not found: ${req.httpRequest.uri}");
+          req.response.statusCode = HttpStatus.NOT_FOUND;
           _notifyError(req.response, req.httpRequest.uri.path);
         }
       } catch(e) {
@@ -180,12 +184,16 @@ class _ChainImpl implements Chain {
   bool _targetInvoked = false;
   bool _interrupted = false;
 
-  List _completers = [];
+  final Completer _completer = new Completer();
+  
+  List _callbacks = [];
 
   _ChainImpl(List<_Interceptor> this._interceptors);
+  
+  Future<bool> get done => _completer.future;
 
-  Future<bool> next() {
-    return new Future.sync(() {
+  void next([callback()]) {
+    new Future.sync(() {
       if (_interrupted) {
         var name = _currentInterceptor != null ? _currentInterceptor.interceptorName : null;
         throw new ChainException(request.httpRequest.uri.path, 
@@ -195,9 +203,10 @@ class _ChainImpl implements Chain {
       if (_interceptors.isEmpty && _targetInvoked) {
         throw new ChainException(request.httpRequest.uri.path, "chain.next() must be called from an interceptor.");
       }
-
-      Completer completer = new Completer();
-      _completers.add(completer);
+      
+      if (callback != null) {
+        _callbacks.add(callback);
+      }
 
       if (!_interceptors.isEmpty) {
         _currentInterceptor = _interceptors.removeAt(0);
@@ -208,12 +217,17 @@ class _ChainImpl implements Chain {
         _targetInvoked = true;
         new Future(() {
           _runTarget(request).then((targetExecuted) {
-            _completers.reversed.forEach((c) => c.complete(targetExecuted));
+            return Future.forEach(_callbacks.reversed, (c) {
+              var f = c();
+              if (f != null && f is Future) {
+                return f;
+              }
+              return new Future.value();
+            }).then((_) => _completer.complete(targetExecuted));
           });
         });
       }
-
-      return completer.future;
+      
     });
   }
 
@@ -231,7 +245,7 @@ class _ChainImpl implements Chain {
     _interrupted = true;
 
     _writeResponse(response, request.response, responseType, statusCode: statusCode);
-    _completers[0].complete(true);
+    _completer.complete(true);
   }
 
 }
@@ -399,15 +413,14 @@ void _configureTarget(Route route, ObjectMirror owner, MethodMirror handler) {
       
       var posParams = [];
       var namedParams = {};
-      paramProcessors.map((f) => 
-          f(pathParams, queryParams, request.bodyType, request.body))
-            .forEach((_TargetParam targetParam) {
-              if (targetParam.name == null) {
-                posParams.add(targetParam.value);
-              } else {
-                namedParams[targetParam.name] = targetParam.value;
-              }
-            });
+      paramProcessors.forEach((f) {
+        var targetParam = f(pathParams, queryParams, request.bodyType, request.body);
+        if (targetParam.name == null) {
+          posParams.add(targetParam.value);
+        } else {
+          namedParams[targetParam.name] = targetParam.value;
+        }
+      });
 
       _logger.finer("Invoking target $handlerName");
       InstanceMirror resp = owner.invoke(handler.simpleName, posParams, namedParams);
@@ -536,15 +549,14 @@ List<_ParamProcessor> _buildParamProcesors(MethodMirror handler) {
       } else if (metadata.reflectee is QueryParam) {
         var paramName = MirrorSystem.getName(paramSymbol);
         var convertFunc = _buildConvertFunction(param.type);
+        var defaultValue = param.hasDefaultValue ? param.defaultValue.reflectee : null;
 
         return (urlParams, queryParams, reqBodyType, reqBody) {
           var value = (queryParams as Map)[(metadata.reflectee as QueryParam).name];
-          if (value != null) {
-            try {
-              value = convertFunc(value);
-            } catch(e) {
-              throw new RequestException(handlerName, "Invalid value for $paramName: $value");
-            }
+          try {
+            value = convertFunc(value, defaultValue);
+          } catch(e) {
+            throw new RequestException(handlerName, "Invalid value for $paramName: $value");
           }
           return new _TargetParam(value, name);
         };
@@ -553,15 +565,14 @@ List<_ParamProcessor> _buildParamProcesors(MethodMirror handler) {
 
     var convertFunc = _buildConvertFunction(param.type);
     var paramName = MirrorSystem.getName(paramSymbol);
+    var defaultValue = param.hasDefaultValue ? param.defaultValue.reflectee : null;
 
     return (urlParams, queryParams, reqBodyType, reqBody) {
       var value = urlParams[paramName];
-      if (value != null) {
-        try {
-          value = convertFunc(value);
-        } catch(e) {
-          throw new RequestException(handlerName, "Invalid value for $paramName: $value");
-        }
+      try {
+        value = convertFunc(value, defaultValue);
+      } catch(e) {
+        throw new RequestException(handlerName, "Invalid value for $paramName: $value");
       }
       return new _TargetParam(value, name);
     };
@@ -570,19 +581,19 @@ List<_ParamProcessor> _buildParamProcesors(MethodMirror handler) {
 
 _ConvertFunction _buildConvertFunction(paramType) {
   if (paramType == _stringType || paramType == _dynamicType) {
-    return (String value) => value;
+    return (String value, defaultValue) => value != null ? value : defaultValue;
   }
   if (paramType == _intType) {
-    return (String value) => int.parse(value);
+    return (String value, defaultValue) => value != null ? int.parse(value) : defaultValue;
   }
   if (paramType == _doubleType) {
-    return (String value) => double.parse(value);
+    return (String value, defaultValue) => value != null ? double.parse(value) : defaultValue;
   }
   if (paramType == _boolType) {
-    return (String value) => value.toLowerCase() == "true";
+    return (String value, defaultValue) => value != null ? value.toLowerCase() == "true" : defaultValue;
   }
 
-  return (String value) => null;
+  return (String value, defaultValue) => null;
 }
 
 void _notifyError(HttpResponse resp, String resource, [Object error, StackTrace stack]) {
@@ -591,7 +602,6 @@ void _notifyError(HttpResponse resp, String resource, [Object error, StackTrace 
   _ErrorHandler handler = _errorHandlers[statusCode];
   if (handler != null) {
     handler.errorHandler();
-    resp.close();
   } else {
     _writeErrorPage(resp, resource, error, stack);
   }
@@ -664,8 +674,6 @@ void _writeErrorPage(HttpResponse resp, String resource, [Object error, StackTra
 
   resp.headers.contentType = new ContentType("text", "html");
   resp.write(errorTemplate);
-  resp.close();
-
 }
 
 String _getStatusDescription(int statusCode) {

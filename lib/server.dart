@@ -85,14 +85,20 @@ class Request {
 abstract class Chain {
 
   /**
-   * Call the next element of this chain (an interceptor or a target)
-   *
-   * The returned [Future] will be completed when all following elements
-   * in the chain are completed. It completes with [true] if the target
+   * Get a [Future] that will complete when this Chain
+   * has completed. It completes with [true] if the target
    * was found and executed, and with [false] if the request was fowarded
    * to the VirtualDirectory.
    */
-  Future<bool> next();
+  Future<bool> get done;
+  
+  /**
+   * Call the next element of this chain (an interceptor or a target)
+   *
+   * The given [callback] will be executed when all following elements
+   * in the chain are completed. The callback can return a [Future].
+   */
+  void next([callback()]);
 
   ///Interrupt this chain and close the current request.
   void interrupt(int statusCode, {Object response, String responseType});

@@ -10,6 +10,7 @@ import 'package:logging/logging.dart';
 
 import 'services/type_serialization.dart';
 import 'services/arguments.dart';
+import 'services/errors.dart';
 
 main() {
   
@@ -174,6 +175,76 @@ main() {
           "arg": "arg1",
           "form": {"key": "value"}
         }));
+      });
+    });
+    
+    tearDown(() => app.tearDown());
+    
+  });
+  
+  group("Error handling:", () {
+    
+    setUp(() => app.setUp([#errors]));
+    
+    test("wrong method", () {
+      var req = new MockRequest("/wrong_method");
+      return app.dispatch(req).then((resp) {
+        expect(resp.statusCode, equals(405));
+      });
+    });
+    
+    test("wrong type", () {
+      var req = new MockRequest("/wrong_type", method: app.POST, 
+          bodyType: app.FORM, body: {"key": "value"});
+      return app.dispatch(req).then((resp) {
+        expect(resp.statusCode, equals(400));
+      });
+    });
+    
+    test("wrong value", () {
+      var req = new MockRequest("/wrong_value/not_int");
+      return app.dispatch(req).then((resp) {
+        expect(resp.statusCode, equals(400));
+      });
+    });
+    
+    test("route error", () {
+      var req = new MockRequest("/route_error");
+      return app.dispatch(req).then((resp) {
+        expect(resp.statusCode, equals(500));
+        expect(resp.mockContent, equals("server_error"));
+      });
+    });
+ 
+    test("async route error", () {
+      var req = new MockRequest("/async_route_error");
+      return app.dispatch(req).then((resp) {
+        expect(resp.statusCode, equals(500));
+        expect(resp.mockContent, equals("server_error"));
+      });
+    });
+    
+    test("interceptor error", () {
+      var req = new MockRequest("/interceptor_error");
+      return app.dispatch(req).then((resp) {
+        expect(resp.statusCode, equals(500));
+        expect(resp.mockContent, equals("server_error"));
+      });
+    });
+    
+    test("async interceptor error", () {
+      var req = new MockRequest("/async_interceptor_error");
+      return app.dispatch(req).then((resp) {
+        expect(resp.statusCode, equals(500));
+        expect(resp.mockContent, equals("target_executed server_error"));
+      });
+    });
+    
+    test("resource not found", () {
+      var req = new MockRequest("/not_found");
+      return app.dispatch(req).then((resp) {
+        expect(resp.statusCode, equals(404));
+        expect(resp.mockContent, equals("not_found"));
       });
     });
     
