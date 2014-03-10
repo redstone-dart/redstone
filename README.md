@@ -375,7 +375,7 @@ main() {
 }
 ```
 
-**NOTE: To learn more abou unit tests in Dart, take a look at [this article](https://www.dartlang.org/articles/dart-unit-tests/).**
+**NOTE: To learn more about unit tests in Dart, take a look at [this article](https://www.dartlang.org/articles/dart-unit-tests/).**
 
 ## Deploying the app
 
