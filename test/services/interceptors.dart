@@ -24,3 +24,33 @@ interceptor2() {
     app.request.response.write("|after_interceptor2");
   });
 }
+
+@app.Route("/interrupt")
+target2() => "not_reached";
+
+@app.Interceptor("/interrupt")
+interceptor3() {
+  app.chain.interrupt(401, response: "chain_interrupted");
+}
+
+@app.Route("/redirect")
+target3() => "not_reached";
+
+@app.Interceptor("/redirect")
+interceptor4() {
+  new Future(() {
+    app.redirect("/new_path");
+  });
+}
+
+@app.Route("/abort")
+target4() => "not_reached";
+
+@app.Interceptor("/abort")
+interceptor5() {
+  new Future(() {
+    app.abort(401);
+  });
+}
+
+

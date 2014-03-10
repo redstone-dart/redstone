@@ -264,6 +264,28 @@ main() {
       });
     });
     
+    test("interrupt", () {
+      var req = new MockRequest("/interrupt");
+      app.dispatch(req).then((resp) {
+        expect(resp.statusCode, equals(401));
+        expect(resp.mockContent, equals("chain_interrupted"));      
+      });
+    });
+    
+    test("redirect", () {
+      var req = new MockRequest("/redirect");
+      app.dispatch(req).then((resp) {
+        expect(resp.statusCode, equals(302));   
+      });
+    });
+    
+    test("abort", () {
+      var req = new MockRequest("/abort");
+      app.dispatch(req).then((resp) {
+        expect(resp.statusCode, equals(401));   
+      });
+    });
+    
     tearDown(() => app.tearDown());
     
   });

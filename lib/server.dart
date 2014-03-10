@@ -100,7 +100,7 @@ abstract class Chain {
    */
   void next([callback()]);
 
-  ///Interrupt this chain and close the current request.
+  ///Interrupt this chain and closes the current request.
   void interrupt(int statusCode, {Object response, String responseType});
 
 }
@@ -199,7 +199,12 @@ Future<HttpServer> start({address: _DEFAULT_ADDRESS, int port: _DEFAULT_PORT,
   });
 }
 
-///API for tests. TODO: documentation for unit tests
+/**
+ * Scan and initialize routes, interceptors and error handlers
+ * 
+ * If [libraries] is provided, then the scan process will be limited
+ * to these libraries. This method is intended to be used in unit tests.
+ */
 void setUp([List<Symbol> libraries]) {
   try {
     _scanHandlers(libraries);
@@ -209,11 +214,20 @@ void setUp([List<Symbol> libraries]) {
   }
 }
 
-///API for tests. TODO: documentation for unit tests
+/**
+ * Remove all routes, interceptors and error handlers.
+ * 
+ * This method is intended to be used in unit tests.
+ */
 void tearDown() {
   _clearHandlers();
 }
 
-///API for tests. TODO: documentation for unit tests
+/**
+ * Dispatch a request.
+ * 
+ * This method is intended to be used in unit tests, where you
+ * can create new requests with [MockRequest]
+ */
 Future<HttpResponse> dispatch(Request request) => _dispatchRequest(request);
 

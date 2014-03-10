@@ -9,7 +9,16 @@ import 'package:bloodless/server.dart';
 
 part 'package:bloodless/src/http_mock.dart';
 
-///API for tests. TODO: documentation for unit tests
+/**
+ * A class to simulate requests in unit tests.
+ * 
+ * Usage:
+ * 
+ *     var req = new MockRequest("/service");
+ *     app.dispatch(req).then((resp) {
+ *       ...
+ *     });
+ */
 class MockRequest implements Request {
   
   final String method;
@@ -47,7 +56,19 @@ class MockRequest implements Request {
   
 }
 
-///API for tests. TODO: documentation for unit tests
+/**
+ * A mock session, intended to be used
+ * with [MockRequest].
+ * 
+ * Usage:
+ * 
+ *     var session = new MockHttpSession("session_1", {"username": "user"});
+ *     var req = new MockRequest("/service", session: session);
+ *     app.dispatch(req).then((resp) {
+ *       ...
+ *     });
+ *     
+ */
 class MockHttpSession implements HttpSession {
   
   final String id;

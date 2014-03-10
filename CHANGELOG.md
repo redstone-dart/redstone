@@ -1,4 +1,10 @@
 
+## v0.0.1
+- Bug fixes
+- BREAKING CHANGE: `chain.next()` now receives a callback, instead of returning a `Future`
+- Added new API for unit tests
+- Updated documentation
+
 ## v0.0.4
 - Fix: `chain.interrupt()` is not closing the `HttpResponse` stream
 

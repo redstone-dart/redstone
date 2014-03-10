@@ -207,7 +207,7 @@ adminFilter() {
 
 When a request is received, the framework will execute all interceptors that matchs the URL, and then will look for a valid route. If a route is found, it will be executed, otherwise the request will be fowarded to the VirtualDirectory, which will look for a static file.
 
-Each interceptor must execute the `chain.next()` or `chain.interrupt()` methods, otherwise, the request will be stucked. The `chain.next()` method returns a `Future`, that completes when the target completes. The interceptors are notified in the reverse order they are executed.
+Each interceptor must execute the `chain.next()` or `chain.interrupt()` methods, otherwise, the request will be stucked. The `chain.next()` method can receive a callback, that is executed when the target completes. All callbacks are executed in the reverse order they are created. If a callback returns a `Future`, then the next callback will execute only when the future completes.
 
 For example, consider this script:
 
@@ -218,7 +218,7 @@ helloWorld() => "target\n";
 @app.Interceptor(r'/.*', chainIdx: 0)
 interceptor1() {
   app.request.response.write("interceptor 1 - before target\n");
-  app.chain.next().then((_) {
+  app.chain.next(() {
     app.request.response.write("interceptor 1 - after target\n");
   });
 }
@@ -226,7 +226,7 @@ interceptor1() {
 @app.Interceptor(r'/.*', chainIdx: 1)
 interceptor2() {
   app.request.response.write("interceptor 2 - before target\n");
-  app.chain.next().then((_) {
+  app.chain.next(() {
     app.request.response.write("interceptor 2 - after target\n");
   });
 }
@@ -326,6 +326,54 @@ Logger.root.onRecord.listen((LogRecord rec) {
   ...
 });
 ```
+
+## Unit tests
+
+Bloodless provides a simple API that you can use to easily test your server. 
+
+For example, consider you have the following service at `/lib/services.dart`
+
+```
+library services;
+
+import 'package:bloodless/server.dart' as app;
+
+@app.Route("/user/:username")
+helloUser(String username) => "hello, $username";
+```
+
+A simple script to test this service would be:
+
+```
+import 'package:unittest/unittest.dart';
+
+import 'package:bloodless/server.dart' as app;
+import 'package:bloodless/mocks.dart';
+
+import 'package:your_package_name/services.dart'
+
+main() {
+
+  //load the services in 'services' library
+  setUp(() => app.setUp([#services]);
+  
+  test("hello service", () {
+    //create a mock request
+    var req = new MockRequest("/user/luiz");
+    //dispatch the request
+    return app.dispatch(req).then((resp) {
+      //verify the response
+      expect(resp.statusCode, equals(200));
+      expect(resp.mockContent, equals("hello, luiz"));
+    });
+  })
+  
+  //remove all loaded services
+  tearDown(() => app.tearDown());
+}
+```
+
+**NOTE: To learn more abou unit tests in Dart, take a look at [this article](https://www.dartlang.org/articles/dart-unit-tests/).**
 
 ## Deploying the app
 
