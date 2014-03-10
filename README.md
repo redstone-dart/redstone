@@ -1,6 +1,8 @@
 bloodless
 =========
 
+[![Build Status](https://drone.io/github.com/luizmineo/bloodless/status.png)](https://drone.io/github.com/luizmineo/bloodless/latest)
+
 A microframework for Dart, heavily inspired by [Flask](http://flask.pocoo.org/).
 
 ```dart
