@@ -352,7 +352,7 @@ import 'package:unittest/unittest.dart';
 import 'package:bloodless/server.dart' as app;
 import 'package:bloodless/mocks.dart';
 
-import 'package:your_package_name/services.dart'
+import 'package:your_package_name/services.dart';
 
 main() {
 
