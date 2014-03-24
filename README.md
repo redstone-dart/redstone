@@ -335,7 +335,7 @@ Bloodless provides a simple API that you can use to easily test your server.
 
 For example, consider you have the following service at `/lib/services.dart`
 
-```
+```Dart
 library services;
 
 import 'package:bloodless/server.dart' as app;
@@ -346,7 +346,7 @@ helloUser(String username) => "hello, $username";
 
 A simple script to test this service would be:
 
-```
+```Dart
 import 'package:unittest/unittest.dart';
 
 import 'package:bloodless/server.dart' as app;

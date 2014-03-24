@@ -1,4 +1,7 @@
 
+## v0.1.1
+- Fix: malformed requests can cause a crash
+
 ## v0.1.0
 - Bug fixes
 - BREAKING CHANGE: `chain.next()` now receives a callback, instead of returning a `Future`

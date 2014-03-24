@@ -184,17 +184,21 @@ Future<HttpServer> start({address: _DEFAULT_ADDRESS, int port: _DEFAULT_PORT,
 
     }
 
-    return HttpServer.bind(address, port).then((server) {
-      server.transform(new HttpBodyHandler())
+    return runZoned(() {
+      return HttpServer.bind(address, port).then((server) {
+        server.transform(new HttpBodyHandler())
           .listen((HttpRequestBody req) {
 
             _logger.fine("Received request for: ${req.request.uri}");
             _handleRequest(req);
 
           });
-
-      _logger.info("Running on $address:$port");
-      return server;
+  
+        _logger.info("Running on $address:$port");
+        return server;
+      });
+    }, onError: (e, s) {
+      _logger.severe("Failed to handle request", e, s);
     });
   });
 }
