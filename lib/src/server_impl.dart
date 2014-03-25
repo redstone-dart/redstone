@@ -261,21 +261,20 @@ void _scanHandlers([List<Symbol> libraries]) {
   }
 
   libsToScan.forEach((LibraryMirror lib) {
-
-    lib.topLevelMembers.values.forEach((MethodMirror method) {
-      method.metadata.forEach((InstanceMirror metadata) {
-        if (metadata.reflectee is Route) {
-          _configureTarget(metadata.reflectee as Route, lib, method);
-        } else if (metadata.reflectee is Interceptor) {
-          _configureInterceptor(metadata.reflectee as Interceptor, lib, method);
-        } else if (metadata.reflectee is ErrorHandler) {
-          _configureErrorHandler(metadata.reflectee as ErrorHandler, lib, method);
-        }
-      });
-    });
-
     lib.declarations.values.forEach((DeclarationMirror declaration) {
-      if (declaration is ClassMirror) {
+      if (declaration is MethodMirror) {
+        MethodMirror method = declaration;
+        
+        method.metadata.forEach((InstanceMirror metadata) {
+          if (metadata.reflectee is Route) {
+            _configureTarget(metadata.reflectee as Route, lib, method);
+          } else if (metadata.reflectee is Interceptor) {
+            _configureInterceptor(metadata.reflectee as Interceptor, lib, method);
+          } else if (metadata.reflectee is ErrorHandler) {
+            _configureErrorHandler(metadata.reflectee as ErrorHandler, lib, method);
+          }
+        });
+      } else if (declaration is ClassMirror) {
         ClassMirror clazz = declaration;
 
         clazz.metadata.forEach((InstanceMirror metadata) {

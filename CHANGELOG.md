@@ -1,3 +1,5 @@
+## v0.1.2
+- Fix: bloodless crashes on Dart 1.3.
 
 ## v0.1.1
 - Fix: malformed requests can cause a crash
