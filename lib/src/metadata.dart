@@ -7,6 +7,8 @@ part of bloodless_server;
  * [methods] are the HTTP methods accepted by this target, and defaults to GET.
  * The [responseType] is the content type of the response. If it's not provided,
  * the framework will generate it based on the value returned by the method;
+ * If [allowMultipartRequest] is true, then the Route is allowed to receive
+ * multipart requests (file upload);
  *
  * Example:
  *
@@ -21,13 +23,17 @@ class Route {
   final List<String> methods;
 
   final String responseType;
+  
+  final bool allowMultipartRequest;
 
   const Route(String this.urlTemplate, 
               {this.methods: const [GET],
-               this.responseType});
+               this.responseType,
+               this.allowMultipartRequest: false});
 
   Route._fromGroup(String this.urlTemplate, 
-              this.methods, this.responseType);
+              this.methods, this.responseType,
+              this.allowMultipartRequest);
 
 }
 
@@ -74,7 +80,9 @@ class QueryParam {
  * An annotation to define interceptors.
  *
  * The [urlPattern] is a regex that defines the requests that will be
- * intercepted. The [chainIdx] is the interceptor's position in the chain,
+ * intercepted. The [chainIdx] is the interceptor's position in the chain.
+ * If [parseRequestBody] is true, then the request's body will be parsed
+ * when the interceptor is invoked.
  *
  * Example:
  *
@@ -89,10 +97,11 @@ class Interceptor {
 
   final String urlPattern;
   final int chainIdx;
+  final bool parseRequestBody;
 
-  const Interceptor(String this.urlPattern, {int this.chainIdx: 0});
+  const Interceptor(String this.urlPattern, {int this.chainIdx: 0, bool this.parseRequestBody: false});
 
-  Interceptor._fromGroup(String this.urlPattern, int this.chainIdx);
+  Interceptor._fromGroup(String this.urlPattern, int this.chainIdx, bool this.parseRequestBody);
 
 }
 

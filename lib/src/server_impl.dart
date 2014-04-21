@@ -3,9 +3,6 @@ part of bloodless_server;
 typedef Future _RequestHandler(UrlMatch match, Request request);
 typedef void _RunInterceptor();
 typedef void _HandleError();
-typedef _TargetParam _ParamProcessor(Map<String, String> urlParams,
-                                     Map<String, String> queryParams, 
-                                     String bodyType, dynamic reqBody);
 typedef dynamic _ConvertFunction(String value, dynamic defaultValue);
 
 var _intType = reflectClass(int);
@@ -21,34 +18,125 @@ final Map<int, _ErrorHandler> _errorHandlers = {};
 
 VirtualDirectory _virtualDirectory;
 
-void _handleRequest(HttpRequestBody req) {
-  _dispatchRequest(new Request(req, req.request.uri.queryParameters));
+class _RequestImpl extends UnparsedRequest {
+
+  HttpRequest _httpRequest;
+  HttpRequestBody _requestBody;
+  String _bodyType;
+  bool _isMultipart = false;
+  
+  Future _bodyParsed = null;
+  
+  _RequestImpl(this._httpRequest) {
+    _parseBodyType();
+  }
+  
+  void _parseBodyType() {
+    ContentType contentType = _httpRequest.headers.contentType;
+    if (contentType == null) {
+      return;
+    }
+    switch (contentType.primaryType) {
+      case "text":
+        _bodyType = TEXT;
+        break;
+      case "application":
+        switch (contentType.subType) {
+          case "json":
+            _bodyType = JSON;
+            break;
+          case "x-www-form-urlencoded":
+            _bodyType = FORM;
+            break;
+        }
+        break;
+      case "multipart":
+        _isMultipart = true;
+        switch (contentType.subType) {
+          case "form-data":
+            _bodyType = FORM;
+            break;
+        }
+        break;
+    }
+  }
+  
+  get body => _requestBody != null ? _requestBody.body : null;
+
+  String get bodyType => _bodyType;
+  
+  bool get isMultipart => _isMultipart;
+
+  HttpHeaders get headers => _httpRequest.headers;
+
+  HttpRequest get httpRequest => _httpRequest;
+
+  String get method => _httpRequest.method;
+
+  Future parseBody() {
+    if (_bodyParsed != null) {
+      return _bodyParsed;
+    }
+    
+    _bodyParsed = HttpBodyHandler.processRequest(_httpRequest).then((HttpRequestBody reqBody) {
+      _requestBody = reqBody;
+      return reqBody.body;
+    });
+    return _bodyParsed;
+  }
+
+  Map<String, String> get queryParams => _httpRequest.uri.queryParameters;
+
+  HttpResponse get response => _httpRequest.response;
+
+  HttpSession get session => _httpRequest.session;
 }
 
-Future<HttpResponse> _dispatchRequest(Request req) {
+List<_Interceptor> _getInterceptors(Uri uri) {
+  String path = uri.path;
+  return new List.from(_interceptors.where((i) {
+    var match = i.urlPattern.firstMatch(path);
+    if (match != null) {
+      return match[0] == path;
+    }
+    return false;
+  }));
+}
+
+_Target _getTarget(Uri uri) {
+  for (var target in _targets) {
+    if (target.match(uri)) {
+      return target;
+    }
+  }
+  return null;
+}
+
+Future<HttpResponse> _dispatchRequest(UnparsedRequest req) {
   
   var completer = new Completer();
   
-  var queryParams, path, chain;
+  Chain chain;
   try {
-    queryParams = req.queryParams;
-    path = req.httpRequest.uri.path;
-    var handlers = _interceptors.where((i) {
-      var match = i.urlPattern.firstMatch(path);
-      if (match != null) {
-        return match[0] == path;
-      }
-      return false;
-    });
-    chain = new _ChainImpl(new List.from(handlers));
+    
+    List<_Interceptor> interceptors = _getInterceptors(req.httpRequest.uri);
+    _Target target = _getTarget(req.httpRequest.uri);
+
+    chain = new _ChainImpl(interceptors, target, req);
   } catch(e, s) {
     _handleError("Failed to handle request.", e, stack: s, req: req.httpRequest);
     completer.completeError(e, s);
     return completer.future;
   }
-
-  runZoned(() {
     
+  _process(req, chain, completer);
+    
+  return completer.future;
+}
+
+void _process(UnparsedRequest req, Chain chain, Completer completer) {
+  runZoned(() {
+        
     runZoned(() {
       chain.done.then((targetExecuted) {
         if (targetExecuted) {
@@ -60,7 +148,7 @@ Future<HttpResponse> _dispatchRequest(Request req) {
       chain.next();
     }, onError: (e, s) {
       _handleError("Failed to handle request.", e, stack: s, req: req.httpRequest);
-      req.httpRequest.response.close();
+      req.response.close();
       completer.complete(req.response);
     });
 
@@ -68,8 +156,6 @@ Future<HttpResponse> _dispatchRequest(Request req) {
     #request: req,
     #chain: chain
   });
-    
-  return completer.future;
 }
 
 void _handleError(String message, Object error, {StackTrace stack, HttpRequest req}) {
@@ -92,36 +178,75 @@ void _handleError(String message, Object error, {StackTrace stack, HttpRequest r
   }
 }
 
-Future<bool> _runTarget(Request req) {
+bool _verifyRequest(_Target target, UnparsedRequest req) {
+  var resp = req.response;
+  
+  if (target == null) {
+    return true;
+  }
+  
+  //verify method
+  if (!target.route.methods.contains(req.method)) {
+    resp.statusCode = HttpStatus.METHOD_NOT_ALLOWED;
+    _notifyError(resp, req.httpRequest.uri.path);
+    return false;
+  }
+  //verify multipart
+  if (req.isMultipart && !target.route.allowMultipartRequest) {
+    resp.statusCode = HttpStatus.BAD_REQUEST;
+    _notifyError(resp, req.httpRequest.uri.path, 
+        new RequestException(target.handlerName, 
+            "multipart requests are not allowed for this target"));
+    return false;
+  }
+  //verify body type
+  if (target.bodyType != null && target.bodyType != req.bodyType) {
+    resp.statusCode = HttpStatus.BAD_REQUEST;
+    _notifyError(resp, req.httpRequest.uri.path, 
+        new RequestException(target.handlerName, 
+            "${req.bodyType} data not supported for this target"));
+    return false;
+  }
+  
+  return true;
+}
 
-  return new Future.sync(() {
+Future<bool> _runTarget(_Target target, UnparsedRequest req) {
 
-    Future f = null;
-    for (var target in _targets) {
-      f = target.handleRequest(req);
-      if (f != null) {
-        break;
-      }
+  return new Future(() {
+
+    if (!_verifyRequest(target, req)) {
+      return true;
     }
 
+    bool routeExecuted = false;
+    Future f = null;
+    if (target != null) {
+      f = req.parseBody().then((_) => target.handleRequest(req));
+    }
+    
     if (f == null) {
       try {
         if (_virtualDirectory != null) {
           _logger.fine("Forwarding request to VirtualDirectory");
-          _virtualDirectory.serveRequest(req.httpRequest);
+          f = _virtualDirectory.serveRequest(req.httpRequest);
         } else {
           _logger.fine("Resource not found: ${req.httpRequest.uri}");
           req.response.statusCode = HttpStatus.NOT_FOUND;
           _notifyError(req.response, req.httpRequest.uri.path);
+          f = new Future.value();
         }
       } catch(e) {
         _handleError("Failed to send response to user.", e);
+        f = new Future.value();
       }
 
       return false;
+    } else {
+      routeExecuted = true;
     }
 
-    return f.then((_) => true);
+    return f.then((_) => routeExecuted);
 
   });
 
@@ -131,13 +256,34 @@ class _Target {
   
   final UrlTemplate urlTemplate;
   final _RequestHandler handler;
+  
+  final String handlerName;
+  final Route route;
+  final String bodyType;
+  
+  UrlMatch _match;
 
-  _Target(this.urlTemplate, this.handler);
+  _Target(this.urlTemplate, this.handlerName, 
+          this.handler, this.route, this.bodyType);
+  
+  bool match(Uri uri) {
+    UrlMatch match = urlTemplate.match(uri.path);
+    if (match != null && match.tail.isEmpty) {
+      _match = match;
+      return true;
+    }
+    return false;
+  }
 
   Future handleRequest(Request req) {
-    UrlMatch match = urlTemplate.match(req.httpRequest.uri.path);
-    if (match == null || !match.tail.isEmpty) {
-      return null;
+    UrlMatch match;
+    if (_match == null) {
+      match = urlTemplate.match(req.httpRequest.uri.path);
+      if (match == null || !match.tail.isEmpty) {
+        return null;
+      }
+    } else {
+      match = _match;
     }
 
     return handler(match, req);
@@ -158,10 +304,12 @@ class _Interceptor {
   final RegExp urlPattern;
   final String interceptorName;
   final int chainIdx;
+  final bool parseRequestBody;
   final _RunInterceptor runInterceptor;
 
   _Interceptor(this.urlPattern, this.interceptorName, 
-               this.chainIdx, this.runInterceptor);
+               this.chainIdx, this.parseRequestBody, 
+               this.runInterceptor);
 
 }
 
@@ -179,7 +327,9 @@ class _ErrorHandler {
 class _ChainImpl implements Chain {
 
   List<_Interceptor> _interceptors;
+  _Target _target;
   _Interceptor _currentInterceptor;
+  UnparsedRequest _request;
   
   bool _targetInvoked = false;
   bool _interrupted = false;
@@ -188,7 +338,7 @@ class _ChainImpl implements Chain {
   
   List _callbacks = [];
 
-  _ChainImpl(List<_Interceptor> this._interceptors);
+  _ChainImpl(this._interceptors, this._target, this._request);
   
   Future<bool> get done => _completer.future;
 
@@ -211,12 +361,17 @@ class _ChainImpl implements Chain {
       if (!_interceptors.isEmpty) {
         _currentInterceptor = _interceptors.removeAt(0);
         new Future(() {
-          _currentInterceptor.runInterceptor();
+          if (_currentInterceptor.parseRequestBody) {
+            return _request.parseBody().then((_) =>
+                _currentInterceptor.runInterceptor());
+          } else {
+            _currentInterceptor.runInterceptor();
+          }
         });
       } else {
         _targetInvoked = true;
         new Future(() {
-          _runTarget(request).then((targetExecuted) {
+          _runTarget(_target, request).then((targetExecuted) {
             return Future.forEach(_callbacks.reversed, (c) {
               var f = c();
               if (f != null && f is Future) {
@@ -244,10 +399,19 @@ class _ChainImpl implements Chain {
 
     _interrupted = true;
 
-    _writeResponse(response, request.response, responseType, statusCode: statusCode);
-    _completer.complete(true);
+    _writeResponse(response, request.response, responseType, statusCode: statusCode).
+        then((_) => _completer.complete(true));
   }
 
+}
+
+class _ParamProcessors {
+  
+  final List<Function> processors;
+  final String bodyType;
+  
+  _ParamProcessors(this.bodyType, this.processors);
+  
 }
 
 void _scanHandlers([List<Symbol> libraries]) {
@@ -326,7 +490,7 @@ void _configureGroup(Group group, ClassMirror clazz) {
         } else {
           urlTemplate = "$prefix$urlTemplate";
         }
-        var newRoute = new Route._fromGroup(urlTemplate, route.methods, route.responseType);
+        var newRoute = new Route._fromGroup(urlTemplate, route.methods, route.responseType, route.allowMultipartRequest);
 
         _configureTarget(newRoute, instance, method);
       } else if (metadata.reflectee is Interceptor) {
@@ -338,7 +502,7 @@ void _configureGroup(Group group, ClassMirror clazz) {
         } else {
           urlPattern = "$prefix$urlPattern";
         }
-        var newInterceptor = new Interceptor._fromGroup(urlPattern, interceptor.chainIdx);
+        var newInterceptor = new Interceptor._fromGroup(urlPattern, interceptor.chainIdx, interceptor.parseRequestBody);
 
         _configureInterceptor(newInterceptor, instance, method);
       }
@@ -363,7 +527,8 @@ void _configureInterceptor(Interceptor interceptor, ObjectMirror owner, MethodMi
 
   var name = MirrorSystem.getName(handler.qualifiedName);
   _interceptors.add(new _Interceptor(new RegExp(interceptor.urlPattern), name,
-                                     interceptor.chainIdx, caller));
+                                     interceptor.chainIdx, interceptor.parseRequestBody, 
+                                     caller));
 
   _logger.info("Configured interceptor for ${interceptor.urlPattern} : $handlerName");
 }
@@ -398,21 +563,15 @@ void _configureTarget(Route route, ObjectMirror owner, MethodMirror handler) {
     
     _logger.finer("Preparing to execute target: $handlerName");
 
-    return new Future.sync(() {
+    return new Future(() {
 
       var httpResp = request.response;
       var pathParams = match.parameters;
       var queryParams = request.queryParams;
-
-      if (!route.methods.contains(request.method)) {
-        httpResp.statusCode = HttpStatus.METHOD_NOT_ALLOWED;
-        _notifyError(httpResp, request.httpRequest.uri.path);
-        return null;
-      }
       
       var posParams = [];
       var namedParams = {};
-      paramProcessors.forEach((f) {
+      paramProcessors.processors.forEach((f) {
         var targetParam = f(pathParams, queryParams, request.bodyType, request.body);
         if (targetParam.name == null) {
           posParams.add(targetParam.value);
@@ -437,92 +596,92 @@ void _configureTarget(Route route, ObjectMirror owner, MethodMirror handler) {
 
   };
 
-  _targets.add(new _Target(new UrlTemplate(route.urlTemplate), caller));
+  _targets.add(new _Target(new UrlTemplate(route.urlTemplate), handlerName, caller, route, paramProcessors.bodyType));
 
   _logger.info("Configured target for ${route.urlTemplate} : $handlerName");
 }
 
 Future _writeResponse(respValue, HttpResponse httpResp, String responseType, {int statusCode}) {
 
-  return new Future.sync(() {
+  Completer completer = new Completer();
+  
+  if (respValue == null) {
 
-    if (respValue == null) {
-
-      if (statusCode != null) {
-        httpResp.statusCode = statusCode;
-      }
-      return null;
-
-    } else if (respValue is Future) {
-
-      return (respValue as Future).then((fValue) {
-        _writeResponse(fValue, httpResp, responseType);
-      });
-
-    } else if (respValue is Map || respValue is List) {
-
-      if (statusCode != null) {
-        httpResp.statusCode = statusCode;
-      }
-      respValue = conv.JSON.encode(respValue);
-      try {
-        if (responseType != null) {
-          httpResp.headers.set(HttpHeaders.CONTENT_TYPE, responseType);
-        } else {
-          httpResp.headers.contentType = new ContentType("application", "json", charset: "UTF-8");
-        }
-      } catch (e) {
-        _logger.finer("Couldn't set the response's content type. Maybe it was already set?");
-      }
-      httpResp.write(respValue);
-      return null;
-
-    } else if (respValue is File) { 
-      
-      if (statusCode != null) {
-        httpResp.statusCode = statusCode;
-      }
-      File f = respValue as File;
-      try {
-        if (responseType != null) {
-          httpResp.headers.set(HttpHeaders.CONTENT_TYPE, responseType);
-        } else {
-          String contentType = lookupMimeType(f.path);
-          httpResp.headers.set(HttpHeaders.CONTENT_TYPE, contentType);
-        }
-      } catch (e) {
-        _logger.finer("Couldn't set the response's content type. Maybe it was already set?", e);
-      }
-      return httpResp.addStream(f.openRead());
-
-    } else {
-
-      if (statusCode != null) {
-        httpResp.statusCode = statusCode;
-      }
-      try {
-        if (responseType != null) {
-          httpResp.headers.set(HttpHeaders.CONTENT_TYPE, responseType);
-        } else {
-          httpResp.headers.contentType = new ContentType("text", "plain");
-        }
-      } catch (e) {
-        _logger.finer("Couldn't set the response's content type. Maybe it was already set?");
-      }
-      httpResp.write(respValue);
-      return null;
-
+    if (statusCode != null) {
+      httpResp.statusCode = statusCode;
     }
+    completer.complete();
 
-  });
+  } else if (respValue is Future) {
+
+    (respValue as Future).then((fValue) =>
+      _writeResponse(fValue, httpResp, responseType).then((v) =>
+          completer.complete(v)));
+
+  } else if (respValue is Map || respValue is List) {
+
+    if (statusCode != null) {
+      httpResp.statusCode = statusCode;
+    }
+    respValue = conv.JSON.encode(respValue);
+    try {
+      if (responseType != null) {
+        httpResp.headers.set(HttpHeaders.CONTENT_TYPE, responseType);
+      } else {
+        httpResp.headers.contentType = new ContentType("application", "json", charset: "UTF-8");
+      }
+    } catch (e) {
+      _logger.finer("Couldn't set the response's content type. Maybe it was already set?");
+    }
+    httpResp.write(respValue);
+    completer.complete();
+
+  } else if (respValue is File) { 
+    
+    if (statusCode != null) {
+      httpResp.statusCode = statusCode;
+    }
+    File f = respValue as File;
+    try {
+      if (responseType != null) {
+        httpResp.headers.set(HttpHeaders.CONTENT_TYPE, responseType);
+      } else {
+        String contentType = lookupMimeType(f.path);
+        httpResp.headers.set(HttpHeaders.CONTENT_TYPE, contentType);
+      }
+    } catch (e) {
+      _logger.finer("Couldn't set the response's content type. Maybe it was already set?", e);
+    }
+    httpResp.addStream(f.openRead()).then((_) => completer.complete());
+
+  } else {
+
+    if (statusCode != null) {
+      httpResp.statusCode = statusCode;
+    }
+    try {
+      if (responseType != null) {
+        httpResp.headers.set(HttpHeaders.CONTENT_TYPE, responseType);
+      } else {
+        httpResp.headers.contentType = new ContentType("text", "plain");
+      }
+    } catch (e) {
+      _logger.finer("Couldn't set the response's content type. Maybe it was already set?");
+    }
+    httpResp.write(respValue);
+    completer.complete();
+
+  }
+  
+  return completer.future;
 
 }
 
-List<_ParamProcessor> _buildParamProcesors(MethodMirror handler) {
+_ParamProcessors _buildParamProcesors(MethodMirror handler) {
 
-  var bodyType = null;
+  String bodyType = null;
 
-  return new List.from(handler.parameters.map((ParameterMirror param) {
+  List processors = new List.from(handler.parameters.map((ParameterMirror param) {
     var handlerName = MirrorSystem.getName(handler.qualifiedName);
     var paramSymbol = param.simpleName;
     var name = param.isNamed ? paramSymbol : null;
@@ -539,9 +698,6 @@ List<_ParamProcessor> _buildParamProcesors(MethodMirror handler) {
         bodyType = body.type;
 
         return (urlParams, queryParams, reqBodyType, reqBody) {
-          if (bodyType != reqBodyType) {
-            throw new RequestException(handlerName, "$reqBodyType data not supported for this target");
-          } 
           return new _TargetParam(reqBody, name);
         };
 
@@ -576,6 +732,8 @@ List<_ParamProcessor> _buildParamProcesors(MethodMirror handler) {
       return new _TargetParam(value, name);
     };
   }));
+  
+  return new _ParamProcessors(bodyType, processors);
 }
 
 _ConvertFunction _buildConvertFunction(paramType) {

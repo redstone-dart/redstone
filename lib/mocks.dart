@@ -19,12 +19,16 @@ part 'package:bloodless/src/http_mock.dart';
  *       ...
  *     });
  */
-class MockRequest implements Request {
+class MockRequest extends UnparsedRequest {
   
   final String method;
   final Map<String, String> queryParams;
   final String bodyType;
-  final dynamic body;
+  dynamic _mockBody;
+  final bool isMultipart;
+  
+  dynamic body;
+  Future _parsedBody;
   
   HttpHeaders _headers;
   HttpResponse _response;
@@ -34,9 +38,12 @@ class MockRequest implements Request {
   
   MockRequest(String uri, {String this.method: GET, 
               Map<String, String> this.queryParams: const {},
-              String this.bodyType, dynamic this.body,
+              String this.bodyType, dynamic body,
+              bool this.isMultipart: false,
               Map<String, String> headers: const {},
               HttpSession this.session}) {
+    
+    this._mockBody = body;
     
     var hValues = {};
     headers.forEach((k, v) => hValues[k] = [v]);
@@ -53,7 +60,18 @@ class MockRequest implements Request {
   HttpResponse get response => _response;
   
   HttpRequest get httpRequest => _httpRequest;
-  
+
+  Future parseBody() {
+    if (_parsedBody != null) {
+      return _parsedBody;
+    }
+    
+    _parsedBody = new Future(() {
+      body = _mockBody;
+      return _mockBody;
+    });
+    return _parsedBody;
+  }
 }
 
 /**

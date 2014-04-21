@@ -33,26 +33,20 @@ const List<String> _DEFAULT_INDEX_FILES = const ["index.html"];
 
 /**
  * The request's information and content.
- *
- * This class is just a wrapper to the [HttpRequestBody]
- * and [HttpRequest] objects.
  */
-class Request {
-
-  HttpRequestBody _reqBody;
-  Map<String, String> _queryParams;
-
-  Request(HttpRequestBody this._reqBody,
-          Map<String, String> this._queryParams);
+abstract class Request {
 
   ///The method, such as 'GET' or 'POST', for the request (read-only).
-  String get method => _reqBody.request.method;
+  String get method;
 
   ///The query parameters associated with the request
-  Map<String, String> get queryParams => _queryParams;
+  Map<String, String> get queryParams;
 
-  ///The body type, such as 'application/json' or 'text/plain'
-  String get bodyType => _reqBody.type;
+  ///The body type, such as 'JSON', 'TEXT' or 'FORM'
+  String get bodyType;
+  
+  ///Indicate if this request is multipart
+  bool get isMultipart;
 
   /**
    * The request's body.
@@ -60,20 +54,29 @@ class Request {
    * [body] can be a [Map], [List] or [String]. See [HttpRequestBody]
    * for more information.
    */ 
-  dynamic get body => _reqBody.body;
+  dynamic get body;
 
   ///The headers of the request
-  HttpHeaders get headers => _reqBody.request.headers;
+  HttpHeaders get headers;
 
   ///The session for the given request (read-only).
-  HttpSession get session => _reqBody.request.session;
+  HttpSession get session;
 
   ///The [HttpResponse] object, used for sending back the response to the client (read-only).
-  HttpResponse get response => _reqBody.request.response;
+  HttpResponse get response;
 
   ///The [HttpRequest] object of the given request (read-only).
-  HttpRequest get httpRequest => _reqBody.request;
+  HttpRequest get httpRequest;
 
+}
+
+/**
+ * A request whose body was not fully read yet
+ */
+abstract class UnparsedRequest extends Request {
+  
+  Future parseBody();
+  
 }
 
 /**
@@ -152,7 +155,8 @@ void redirect(String url) {
  */
 Future<HttpServer> start({address: _DEFAULT_ADDRESS, int port: _DEFAULT_PORT, 
                           String staticDir: _DEFAULT_STATIC_DIR,
-                          List<String> indexFiles: _DEFAULT_INDEX_FILES}) {
+                          List<String> indexFiles: _DEFAULT_INDEX_FILES,
+                          bool followLinks: false, bool jailRoot: true}) {
   return new Future(() {
     
     setUp();
@@ -161,8 +165,8 @@ Future<HttpServer> start({address: _DEFAULT_ADDRESS, int port: _DEFAULT_PORT,
       String dir = Platform.script.resolve(staticDir).toFilePath();
       _logger.info("Setting up VirtualDirectory for ${dir} - index files: $indexFiles");
       _virtualDirectory = new VirtualDirectory(dir);
-      _virtualDirectory..followLinks = true
-                       ..jailRoot = false
+      _virtualDirectory..followLinks = followLinks
+                       ..jailRoot = jailRoot
                        ..allowDirectoryListing = true;
       if (indexFiles != null && !indexFiles.isEmpty) {
         _virtualDirectory.directoryHandler = (dir, req) {
@@ -180,17 +184,17 @@ Future<HttpServer> start({address: _DEFAULT_ADDRESS, int port: _DEFAULT_PORT,
       _virtualDirectory.errorPageHandler = (req) {
         _logger.fine("Resource not found: ${req.uri}");
         _notifyError(req.response, req.uri.path);
+        req.response.close();
       };
 
     }
 
     return runZoned(() {
       return HttpServer.bind(address, port).then((server) {
-        server.transform(new HttpBodyHandler())
-          .listen((HttpRequestBody req) {
+        server.listen((HttpRequest req) {
 
-            _logger.fine("Received request for: ${req.request.uri}");
-            _handleRequest(req);
+            _logger.fine("Received request for: ${req.uri}");
+            _dispatchRequest(new _RequestImpl(req));
 
           });
   
@@ -233,5 +237,5 @@ void tearDown() {
  * This method is intended to be used in unit tests, where you
  * can create new requests with [MockRequest]
  */
-Future<HttpResponse> dispatch(Request request) => _dispatchRequest(request);
+Future<HttpResponse> dispatch(UnparsedRequest request) => _dispatchRequest(request);
 
