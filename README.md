@@ -3,7 +3,7 @@ bloodless
 
 [![Build Status](https://drone.io/github.com/luizmineo/bloodless/status.png)](https://drone.io/github.com/luizmineo/bloodless/latest)
 
-A microframework for Dart, heavily inspired by [Flask](http://flask.pocoo.org/).
+A metadata driven microframework for Dart.
 
 ```dart
 
@@ -22,13 +22,13 @@ main() {
 ```
 $ dart hello.dart 
 INFO: 2014-02-24 13:16:19.086: Configured target for / : .helloWorld
-INFO: 2014-02-24 13:16:19.102: Setting up VirtualDirectory for /home/user/project/web - index files: [index.html]
+INFO: 2014-02-24 13:16:19.102: Setting up VirtualDirectory for /home/user/project/web - followLinks: false - jailRoot: true - index files: [index.html]
 INFO: 2014-02-24 13:16:19.121: Running on 0.0.0.0:8080
 ```
 
-## Installation
+**NOTE: Bloodless took a lot of ideas and concepts from the Python's [Flask](http://flask.pocoo.org/) microframework **
 
-**NOTE: It's recommended to use Dart 1.2 or above, ~~which is currently available only at the [dev channel](http://gsdview.appspot.com/dart-archive/channels/dev/release/latest/)~~ (Dart 1.2 is stable now).**
+## Installation
 
 * Create a new Dart package ([manually](http://pub.dartlang.org/doc/) or through Dart Editor)
 * Add bloodless as a dependency in `pubspec.yaml` file
@@ -61,7 +61,7 @@ main() {
 ```
 $ dart bin/server.dart
 INFO: 2014-02-24 13:16:19.086: Configured target for / : .helloWorld
-INFO: 2014-02-24 13:16:19.102: Setting up VirtualDirectory for /home/user/project/web - index files: [index.html]
+INFO: 2014-02-24 13:16:19.102: Setting up VirtualDirectory for /home/user/project/web - followLinks: false - jailRoot: true - index files: [index.html]
 INFO: 2014-02-24 13:16:19.121: Running on 0.0.0.0:8080
 ```
 
@@ -142,9 +142,9 @@ By default, a route only respond to GET requests. You can change that with the `
 helloUser(String username) => "hello $username";
 ```
 
-### Retrieving request's body
+### Retrieving the request body
 
-You can retrieve the requests's body as a form, json or text
+You can retrieve the request body as a form, json or text
 
 ```Dart
 @app.Route("/adduser", methods: const [app.POST])
@@ -155,6 +155,17 @@ addUser(@app.Body(app.JSON) Map json) {
 
 ```Dart
 @app.Route("/adduser", methods: const [app.POST])
+addUser(@app.Body(app.FORM) Map form) {
+  ...
+};
+```
+
+#### Multipart requests (file uploads)
+
+By default, Bloodless will refuse any multipart request. If your method need to receive a multipart request, you can set `Route.allowMultipartRequest = true`. Example:
+
+```Dart
+@app.Route("/adduser", methods: const [app.POST], allowMultipartRequest: true)
 addUser(@app.Body(app.FORM) Map form) {
   ...
 };
@@ -201,7 +212,7 @@ adminFilter() {
   if (app.request.session["username"] != null) {
     app.chain.next();
   } else {
-    app.chain.interrupt(HttpStatus.UNAUTHORIZED);
+    app.chain.interrupt(statusCode: HttpStatus.UNAUTHORIZED);
     //or app.redirect("/login.html");
   }
 }
@@ -209,7 +220,7 @@ adminFilter() {
 
 When a request is received, the framework will execute all interceptors that matchs the URL, and then will look for a valid route. If a route is found, it will be executed, otherwise the request will be fowarded to the VirtualDirectory, which will look for a static file.
 
-Each interceptor must execute the `chain.next()` or `chain.interrupt()` methods, otherwise, the request will be stucked. The `chain.next()` method can receive a callback, that is executed when the target completes. All callbacks are executed in the reverse order they are created. If a callback returns a `Future`, then the next callback will execute only when the future completes.
+Each interceptor must call the `chain.next()` or `chain.interrupt()` methods, otherwise, the request will be stucked. The `chain.next()` method can receive a callback, that is executed when the target completes. All callbacks are executed in the reverse order they are created. If a callback returns a `Future`, then the next callback will execute only when the future completes.
 
 For example, consider this script:
 
@@ -252,6 +263,19 @@ interceptor 1 - after target
 ```
 
 Like the `request` object, the `chain` object is also a get method, that returns the chain of the current zone.
+
+**NOTE: By default, Bloodless won't parse the request body until all interceptors are called. If your interceptor need to inspect the request body, you must set `parseRequestBody = true`. Example:**
+
+```Dart
+@app.Interceptor(r'/service/.+', parseRequestBody: true)
+verifyRequest() {
+  //if parseRequestBody is not setted, request.body is null
+  print(app.request.body);
+  app.chain.next();
+}
+
+```
+
 
 **NOTE: You can also call `redirect()` or `abort()` instead of `chain.interrupt()`. The `abort()` call will invoke the corresponding error handler.**
 
@@ -299,6 +323,10 @@ host           | "0.0.0.0"
 port           | 8080
 staticDir      | "../web"
 indexFiles     | ["index.html"]
+followLinks    | false
+jailRoot       | true
+
+**NOTE: During development, you will probably need to set `followLinks = true` and `jailRoot = false`, since Dartium will request for .dart files that are not in web folder. Although, doing so in production environment can lead to security issues.**
 
 ## Logging
 
@@ -414,3 +442,4 @@ $ dart bin/build.dart all
 ```
 
 **NOTE: You can improve your build script according to your needs.**
+

@@ -166,7 +166,7 @@ Future<HttpServer> start({address: _DEFAULT_ADDRESS, int port: _DEFAULT_PORT,
 
     if (staticDir != null) {
       String dir = Platform.script.resolve(staticDir).toFilePath();
-      _logger.info("Setting up VirtualDirectory for ${dir} - index files: $indexFiles");
+      _logger.info("Setting up VirtualDirectory for ${dir} - followLinks: $followLinks - jailRoot: $jailRoot - index files: $indexFiles");
       _virtualDirectory = new VirtualDirectory(dir);
       _virtualDirectory..followLinks = followLinks
                        ..jailRoot = jailRoot

@@ -1,3 +1,11 @@
+## v0.2.0
+- BREAKING CHANGES (check documentation for more details):
+  - [VirtualDirectory](https://api.dartlang.org/apidocs/channels/stable/dartdoc-viewer/http_server/http_server.VirtualDirectory) is now configured with `jailRoot = true` and `followLinks = false`. You can change these flags through `start()` method.
+  - For security and perfomance reasons, the parse of request body is now delayed as much as possible, so interceptors will receive `null` if they call `request.body` (although request.bodyType is still filled). If your interceptor need to inspect the request body, you can set `Interceptor.parseRequestBody = true`.
+  - Multipart requests (file uploads) are now refused by default. If your method need to receive multipart requests, you can set `Route.allowMultipartRequest = true`.
+  - All arguments of `chain.interrupt()` method are now optional.
+- Bug fixes in `abort()`, `redirect()` and `chain.interrupt()` methods. (see issue #3).
+
 ## v0.1.2
 - Fix: bloodless crashes on Dart 1.3.
 
