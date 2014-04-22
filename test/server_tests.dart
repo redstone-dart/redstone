@@ -249,6 +249,22 @@ main() {
       });
     });
     
+    test("Ignore route response if abort() is called", () {
+      var req = new MockRequest("/abort");
+      return app.dispatch(req).then((resp) {
+        expect(resp.statusCode, equals(500));
+        expect(resp.mockContent, equals("server_error"));
+      });
+    });
+    
+    test("Ignore route response if redirect() is called", () {
+      var req = new MockRequest("/redirect");
+      return app.dispatch(req).then((resp) {
+        expect(resp.statusCode, equals(302));
+        print(resp.mockContent);
+      });
+    });
+    
     tearDown(() => app.tearDown());
     
   });
@@ -259,14 +275,14 @@ main() {
     
     test("interceptors", () {
       var req = new MockRequest("/target");
-      app.dispatch(req).then((resp) {
-        expect(resp.mockContent, equals("before_interceptor1|before_interceptor2|target_executed|after_interceptor1|after_interceptor2"));
+      return app.dispatch(req).then((resp) {
+        expect(resp.mockContent, equals("before_interceptor1|before_interceptor2|target_executed|after_interceptor2|after_interceptor1"));
       });
     });
     
     test("interrupt", () {
       var req = new MockRequest("/interrupt");
-      app.dispatch(req).then((resp) {
+      return app.dispatch(req).then((resp) {
         expect(resp.statusCode, equals(401));
         expect(resp.mockContent, equals("chain_interrupted"));      
       });
@@ -274,14 +290,14 @@ main() {
     
     test("redirect", () {
       var req = new MockRequest("/redirect");
-      app.dispatch(req).then((resp) {
+      return app.dispatch(req).then((resp) {
         expect(resp.statusCode, equals(302));   
       });
     });
     
     test("abort", () {
       var req = new MockRequest("/abort");
-      app.dispatch(req).then((resp) {
+      return app.dispatch(req).then((resp) {
         expect(resp.statusCode, equals(401));   
       });
     });

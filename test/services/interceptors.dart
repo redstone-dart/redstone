@@ -30,7 +30,7 @@ target2() => "not_reached";
 
 @app.Interceptor("/interrupt")
 interceptor3() {
-  app.chain.interrupt(401, response: "chain_interrupted");
+  app.chain.interrupt(statusCode: 401, response: "chain_interrupted");
 }
 
 @app.Route("/redirect")

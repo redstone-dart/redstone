@@ -104,7 +104,10 @@ abstract class Chain {
   void next([callback()]);
 
   ///Interrupt this chain and closes the current request.
-  void interrupt(int statusCode, {Object response, String responseType});
+  void interrupt({int statusCode: HttpStatus.OK, Object response, String responseType});
+  
+  ///Returns true if this chain was interrupted
+  bool get interrupted;
 
 }
 
@@ -131,7 +134,7 @@ Chain get chain => Zone.current[#chain];
  * will be invked. Otherwise, the default ErrorHandler will be invoked.
  */
 void abort(int statusCode) {
-  (chain as _ChainImpl)._interrupted = true;
+  chain.interrupt(statusCode: statusCode);
   _notifyError(request.response, request.httpRequest.uri.path);
 }
 
@@ -141,7 +144,7 @@ void abort(int statusCode) {
  * [url] can be absolute, or relative to the url of the current request.
  */
 void redirect(String url) {
-  (chain as _ChainImpl)._interrupted = true;
+  chain.interrupt(statusCode: null);
   request.response.redirect(request.httpRequest.uri.resolve(url));
 }
 
@@ -151,7 +154,7 @@ void redirect(String url) {
  * The [address] can be a [String] or an [InternetAddress]. The [staticDir] is an
  * absolute or relative path to static files, which defaults to the 'web' directory
  * of the project or build. If no static files will be handled by this server, the [staticDir]
- * can be setted to null. 
+ * can be setted to null.
  */
 Future<HttpServer> start({address: _DEFAULT_ADDRESS, int port: _DEFAULT_PORT, 
                           String staticDir: _DEFAULT_STATIC_DIR,

@@ -34,6 +34,18 @@ asyncInterceptorError() {
   app.chain.next(() => new Future(() => throw "The client must receive a 500 status code"));
 }
 
+@app.Route("/abort")
+abort() {
+  app.abort(500);
+  return "response";
+}
+
+@app.Route("/redirect")
+redirect() {
+  app.redirect("/other_resource");
+  return "response";
+}
+
 @app.ErrorHandler(404)
 notFoundHandler() => app.request.response.write("not_found");
 

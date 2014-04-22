@@ -138,17 +138,15 @@ void _process(UnparsedRequest req, Chain chain, Completer completer) {
   runZoned(() {
         
     runZoned(() {
-      chain.done.then((targetExecuted) {
-        if (targetExecuted) {
-          request.response.close();
-        }
+      chain.done.then((_) {
+        _closeResponse();
         _logger.finer("Closed request for: ${request.httpRequest.uri}");
         completer.complete(req.response);
       });
       chain.next();
     }, onError: (e, s) {
       _handleError("Failed to handle request.", e, stack: s, req: req.httpRequest);
-      req.response.close();
+      _closeResponse();
       completer.complete(req.response);
     });
 
@@ -156,6 +154,14 @@ void _process(UnparsedRequest req, Chain chain, Completer completer) {
     #request: req,
     #chain: chain
   });
+}
+
+void _closeResponse() {
+  try {
+    request.response.close();
+  } catch (_) {
+    //response already closed
+  }
 }
 
 void _handleError(String message, Object error, {StackTrace stack, HttpRequest req}) {
@@ -216,10 +222,8 @@ Future<bool> _runTarget(_Target target, UnparsedRequest req) {
   return new Future(() {
 
     if (!_verifyRequest(target, req)) {
-      return true;
+      return null;
     }
-
-    bool routeExecuted = false;
     Future f = null;
     if (target != null) {
       f = req.parseBody().then((_) => target.handleRequest(req));
@@ -240,13 +244,9 @@ Future<bool> _runTarget(_Target target, UnparsedRequest req) {
         _handleError("Failed to send response to user.", e);
         f = new Future.value();
       }
-
-      return false;
-    } else {
-      routeExecuted = true;
     }
 
-    return f.then((_) => routeExecuted);
+    return f;
 
   });
 
@@ -369,16 +369,21 @@ class _ChainImpl implements Chain {
           }
         });
       } else {
+        _currentInterceptor = null;
         _targetInvoked = true;
         new Future(() {
-          _runTarget(_target, request).then((targetExecuted) {
+          _runTarget(_target, request).then((_) {
             return Future.forEach(_callbacks.reversed, (c) {
               var f = c();
               if (f != null && f is Future) {
                 return f;
               }
               return new Future.value();
-            }).then((_) => _completer.complete(targetExecuted));
+            }).then((_) {
+              if (!interrupted) {
+                _completer.complete();
+              }
+            });
           });
         });
       }
@@ -386,15 +391,12 @@ class _ChainImpl implements Chain {
     });
   }
 
-  void interrupt(int statusCode, {Object response, String responseType}) {
+  void interrupt({int statusCode: HttpStatus.OK, Object response, String responseType}) {
     if (_interrupted) {
       var name = _currentInterceptor != null ? _currentInterceptor.interceptorName : null;
       throw new ChainException(request.httpRequest.uri.path, 
                                "invalid state: chain already interrupted",
                                interceptorName: name);
-    }
-    if (_targetInvoked) {
-      throw new ChainException(request.httpRequest.uri.path, "Invalid state: target already invoked.");
     }
 
     _interrupted = true;
@@ -402,6 +404,8 @@ class _ChainImpl implements Chain {
     _writeResponse(response, request.response, responseType, statusCode: statusCode).
         then((_) => _completer.complete(true));
   }
+  
+  bool get interrupted => _interrupted;
 
 }
 
@@ -583,7 +587,7 @@ void _configureTarget(Route route, ObjectMirror owner, MethodMirror handler) {
       _logger.finer("Invoking target $handlerName");
       InstanceMirror resp = owner.invoke(handler.simpleName, posParams, namedParams);
 
-      if (resp.type == _voidType) {
+      if (resp.type == _voidType || chain.interrupted) {
         return null;
       }
 
