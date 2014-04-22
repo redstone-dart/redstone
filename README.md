@@ -26,7 +26,7 @@ INFO: 2014-02-24 13:16:19.102: Setting up VirtualDirectory for /home/user/projec
 INFO: 2014-02-24 13:16:19.121: Running on 0.0.0.0:8080
 ```
 
-**NOTE: Bloodless took a lot of ideas and concepts from the Python's [Flask](http://flask.pocoo.org/) microframework **
+**NOTE: Bloodless took a lot of ideas and concepts from the Python's [Flask](http://flask.pocoo.org/) microframework**
 
 ## Installation
 
