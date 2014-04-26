@@ -1,13 +1,15 @@
 name: bloodless
-author: Luiz Mineo <luiz.mineo@gmail.com>
 version: 0.2.0
-description: "A metadata driven microframework for Dart"
+author: Luiz Mineo <luiz.mineo@gmail.com>
+description: A metadata driven microframework for Dart
 homepage: https://github.com/luizmineo/bloodless
-dependencies:
-  route_hierarchical: ">=0.4.14 <0.5.0"
-  http_server: ">=0.9.2 <0.10.0"
-  grinder: ">=0.5.2 <0.6.0"
-dev_dependencies:
-  unittest: ">=0.10.0 <0.11.0"
 environment:
   sdk: '>=1.2.0 <2.0.0'
+dependencies:
+  crypto: any
+  grinder: '>=0.5.2 <0.6.0'
+  http_server: '>=0.9.2 <0.10.0'
+  route_hierarchical: '>=0.4.14 <0.5.0'
+  utf: any
+dev_dependencies:
+  unittest: '>=0.10.0 <0.11.0'

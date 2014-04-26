@@ -53,4 +53,12 @@ interceptor5() {
   });
 }
 
+@app.Route("/basicauth")
+target5() => "basic_auth";
+
+@app.Interceptor("/basicauth")
+interceptor6() { 
+   app.authenticateBasic('Bloodless', 'Aladdin', 'open sesame');
+}
+
 
