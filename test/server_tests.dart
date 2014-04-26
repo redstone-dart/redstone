@@ -12,6 +12,8 @@ import 'services/type_serialization.dart';
 import 'services/arguments.dart';
 import 'services/errors.dart';
 import 'services/interceptors.dart';
+import 'dart:io';
+import 'package:crypto/crypto.dart';
 
 main() {
   
@@ -301,6 +303,33 @@ main() {
         expect(resp.statusCode, equals(401));   
       });
     });
+    
+    test("without basic auth", () {
+       var req = new MockRequest("/basicauth");
+       return app.dispatch(req).then((resp) {
+         expect(resp.statusCode, equals(401));   
+       });
+     });
+    
+    test("wrong basic auth", () {
+       var req = new MockRequest("/basicauth");
+       req.headers.set(HttpHeaders.AUTHORIZATION, "Basic xxx");
+       return app.dispatch(req).then((resp) {
+         expect(resp.headers[HttpHeaders.WWW_AUTHENTICATE][0], equals('Basic realm="Bloodless"'));   
+         expect(resp.statusCode, equals(401));   
+       });
+     });
+    
+    test("basic auth", () {
+       var req = new MockRequest("/basicauth");
+       // username: 'Aladdin' password: 'open sesame'
+       // Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==
+       req.headers.set(HttpHeaders.AUTHORIZATION, 'Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==');
+       return app.dispatch(req).then((resp) {
+         expect(resp.statusCode, equals(200));
+         expect(resp.mockContent, equals("basic_auth"));
+       });
+     });
     
     tearDown(() => app.tearDown());
     

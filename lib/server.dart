@@ -11,6 +11,8 @@ import 'package:route_hierarchical/url_matcher.dart';
 import 'package:route_hierarchical/url_template.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as path;
+import 'package:crypto/crypto.dart';
+import 'package:utf/utf.dart';
 
 part 'package:bloodless/src/metadata.dart';
 part 'package:bloodless/src/logger.dart';
@@ -146,6 +148,29 @@ void abort(int statusCode) {
 void redirect(String url) {
   chain.interrupt(statusCode: null);
   request.response.redirect(request.httpRequest.uri.resolve(url));
+}
+
+/**
+ * Http Basic access authentication
+ *
+ */
+void authenticateBasic(String realm, String username, String password){
+  bool r = false;
+  var headers = request.headers;
+  if (request.headers[HttpHeaders.AUTHORIZATION] != null) {
+    String authorization = request.headers[HttpHeaders.AUTHORIZATION][0];
+    List<String> tokens = authorization.split(" ");
+    String auth = CryptoUtils.bytesToBase64(encodeUtf8("$username:$password"));
+    if ("Basic" == tokens[0] && auth == tokens[1]) {
+      r = true;
+    }
+  }
+  if (r) {
+    chain.next();
+  } else {
+    request.response.headers.add(HttpHeaders.WWW_AUTHENTICATE, 'Basic realm="$realm"');
+    chain.interrupt(statusCode: HttpStatus.UNAUTHORIZED);
+  }  
 }
 
 /**
