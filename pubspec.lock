@@ -61,7 +61,3 @@ packages:
     description: unittest
     source: hosted
     version: "0.10.1+2"
-  utf:
-    description: utf
-    source: hosted
-    version: "0.9.0"
