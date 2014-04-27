@@ -331,6 +331,15 @@ main() {
        });
      });
     
+    test("basic auth parse", () {
+       var req = new MockRequest("/basicauth_data", 
+             basicAuth: new app.Credentials("Aladdin", "open sesame"));
+       return app.dispatch(req).then((resp) {
+         expect(resp.statusCode, equals(200));
+         expect(resp.mockContent, equals("basic_auth"));
+       });
+     });
+    
     tearDown(() => app.tearDown());
     
   });

@@ -1,3 +1,8 @@
+## v0.2.1
+- Added support for basic authentication (thanks **Y12STUDIO** for the contribution)
+  - Added `parseAuthorizationHeader()` method.
+  - Added `authenticateBasic()` method.
+
 ## v0.2.0
 - BREAKING CHANGES (check documentation for more details):
   - [VirtualDirectory](https://api.dartlang.org/apidocs/channels/stable/dartdoc-viewer/http_server/http_server.VirtualDirectory) is now configured with `jailRoot = true` and `followLinks = false`. You can change these flags through `start()` method.
