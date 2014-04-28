@@ -13,6 +13,10 @@ packages:
     description: collection
     source: hosted
     version: "0.9.1"
+  crypto:
+    description: crypto
+    source: hosted
+    version: "0.9.0"
   grinder:
     description: grinder
     source: hosted

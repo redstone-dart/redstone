@@ -5,6 +5,8 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:async';
 
+import 'package:crypto/crypto.dart';
+
 import 'package:bloodless/server.dart';
 
 part 'package:bloodless/src/http_mock.dart';
@@ -41,12 +43,20 @@ class MockRequest extends UnparsedRequest {
               String this.bodyType, dynamic body,
               bool this.isMultipart: false,
               Map<String, String> headers: const {},
+              Credentials basicAuth, 
               HttpSession this.session}) {
     
     this._mockBody = body;
     
     var hValues = {};
     headers.forEach((k, v) => hValues[k] = [v]);
+    
+    if (basicAuth != null) {
+      String auth = CryptoUtils.bytesToBase64(
+          UTF8.encode("${basicAuth.username}:${basicAuth.password}"));
+      hValues[HttpHeaders.AUTHORIZATION] = ["Basic $auth"];
+    }
+    
     _headers = new MockHttpHeaders(hValues);
 
     Uri uriObj = Uri.parse(uri);

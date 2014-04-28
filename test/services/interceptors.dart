@@ -53,4 +53,27 @@ interceptor5() {
   });
 }
 
+@app.Route("/basicauth")
+target5() => "basic_auth";
+
+@app.Interceptor("/basicauth")
+interceptor6() { 
+   if (app.authenticateBasic('Aladdin', 'open sesame', realm: 'Bloodless', abortOnFail: true)) {
+     app.chain.next();
+   }
+}
+
+@app.Route("/basicauth_data")
+target6() => "basic_auth";
+
+@app.Interceptor("/basicauth_data")
+interceptor7() { 
+   var authInfo = app.parseAuthorizationHeader();
+   if (authInfo.username == "Aladdin" && authInfo.password == "open sesame") {
+     app.chain.next();
+   } else {
+     app.abort(403);
+   }
+}
+
 

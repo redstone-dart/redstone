@@ -11,6 +11,7 @@ import 'package:route_hierarchical/url_matcher.dart';
 import 'package:route_hierarchical/url_template.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as path;
+import 'package:crypto/crypto.dart';
 
 part 'package:bloodless/src/metadata.dart';
 part 'package:bloodless/src/logger.dart';
@@ -112,6 +113,19 @@ abstract class Chain {
 }
 
 /**
+ * User credentials from request
+ * 
+ */
+class Credentials {
+  
+  String username;
+  String password;
+  
+  Credentials(this.username, this.password);
+
+}
+
+/**
  * The request's information and content.
  *
  * Since each request run in it's own [Zone], it's completely safe
@@ -146,6 +160,58 @@ void abort(int statusCode) {
 void redirect(String url) {
   chain.interrupt(statusCode: null);
   request.response.redirect(request.httpRequest.uri.resolve(url));
+}
+
+/**
+ * Parse authorization header from request.
+ * 
+ */
+Credentials parseAuthorizationHeader() {
+  if (request.headers[HttpHeaders.AUTHORIZATION] != null) {
+    String authorization = request.headers[HttpHeaders.AUTHORIZATION][0];
+    List<String> tokens = authorization.split(" ");
+    if ("Basic" == tokens[0]) {
+      String auth = conv.UTF8.decode(CryptoUtils.base64StringToBytes(tokens[1]));
+      int idx = auth.indexOf(":");
+      if (idx > 0) {
+        String username = auth.substring(0, idx);
+        String password = auth.substring(idx + 1);
+        return new Credentials(username, password);
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Http Basic access authentication
+ *
+ * Returns true if the current request contains the authorization header for [username] and [password]. 
+ * If authentication fails and [abortOnFail] is true, then [abort] will be 
+ * called with the 401 status code. If authentication fails and [realm] is provided, 
+ * a 'www-authenticate' header will be added to response.
+ */
+bool authenticateBasic(String username, String password, {String realm, bool abortOnFail: false}){
+  bool r = false;
+  var headers = request.headers;
+  if (request.headers[HttpHeaders.AUTHORIZATION] != null) {
+    String authorization = request.headers[HttpHeaders.AUTHORIZATION][0];
+    List<String> tokens = authorization.split(" ");
+    String auth = CryptoUtils.bytesToBase64(conv.UTF8.encode("$username:$password"));
+    if ("Basic" == tokens[0] && auth == tokens[1]) {
+      r = true;
+    }
+  }
+  if (!r) {
+    if (realm != null) {
+      request.response.headers.add(HttpHeaders.WWW_AUTHENTICATE, 'Basic realm="$realm"');
+    }
+    if (abortOnFail) {
+      abort(HttpStatus.UNAUTHORIZED);
+    }
+  }
+  
+  return r;
 }
 
 /**

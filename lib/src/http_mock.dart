@@ -13,6 +13,8 @@ class MockHttpHeaders implements HttpHeaders {
       _headers.addAll(values);
     }
   }
+  
+  List<String> operator[](String name) => _headers[name.toLowerCase()];
 
   DateTime get ifModifiedSince {
     List<String> values = _headers[HttpHeaders.IF_MODIFIED_SINCE];
