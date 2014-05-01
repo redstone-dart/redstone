@@ -76,4 +76,6 @@ interceptor7() {
    }
 }
 
+@app.Route(r'/match/.*')
+target8() => "match/foo";
 

@@ -267,12 +267,8 @@ class _Target {
           this.handler, this.route, this.bodyType);
   
   bool match(Uri uri) {
-    UrlMatch match = urlTemplate.match(uri.path);
-    if (match != null && match.tail.isEmpty) {
-      _match = match;
-      return true;
-    }
-    return false;
+    _match = urlTemplate.match(uri.path);
+    return _match !=null;
   }
 
   Future handleRequest(Request req) {

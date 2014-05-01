@@ -340,6 +340,22 @@ main() {
        });
      });
     
+    test("url match", () {
+        var req = new MockRequest(r"/match/foo");
+        return app.dispatch(req).then((resp) {
+          expect(resp.statusCode, equals(200));
+          expect(resp.mockContent, equals("match/foo"));
+        });
+      });
+    
+    test("another url match", () {
+         var req = new MockRequest(r"/match/anyfoo");
+         return app.dispatch(req).then((resp) {
+           expect(resp.statusCode, equals(200));
+           expect(resp.mockContent, equals("match/foo"));
+         });
+       });
+    
     tearDown(() => app.tearDown());
     
   });
