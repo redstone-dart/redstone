@@ -341,7 +341,7 @@ main() {
      });
     
     test("url match", () {
-        var req = new MockRequest(r"/match/foo");
+        var req = new MockRequest("/match/foo");
         return app.dispatch(req).then((resp) {
           expect(resp.statusCode, equals(200));
           expect(resp.mockContent, equals("match/foo"));
@@ -349,12 +349,26 @@ main() {
       });
     
     test("another url match", () {
-         var req = new MockRequest(r"/match/anyfoo");
+         var req = new MockRequest("/match/anyfoo");
          return app.dispatch(req).then((resp) {
            expect(resp.statusCode, equals(200));
            expect(resp.mockContent, equals("match/foo"));
          });
        });
+    
+    test("url match for tail.isNotEmpty", () {
+          var req = new MockRequest("/foo");
+          return app.dispatch(req).then((resp) {
+            expect(resp.mockContent, equals("serverA"));
+          });
+        });
+    
+    test("url match for tail.isNotEmpty", () {
+            var req = new MockRequest("/foo/bar/haha");
+            return app.dispatch(req).then((resp) {
+              expect(resp.mockContent, equals("serverB/haha"));
+            });
+          });
     
     tearDown(() => app.tearDown());
     
