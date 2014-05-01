@@ -76,4 +76,11 @@ interceptor7() {
    }
 }
 
+@app.Route(r'/match/.*')
+target8() => "match/foo";
 
+@app.Route('/foo')
+serviceA()=>"serverA";
+
+@app.Route('/foo/bar/:param')
+serviceB(String param) =>'serverB/$param';
