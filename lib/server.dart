@@ -16,6 +16,7 @@ import 'package:crypto/crypto.dart';
 part 'package:bloodless/src/metadata.dart';
 part 'package:bloodless/src/logger.dart';
 part 'package:bloodless/src/exception.dart';
+part 'package:bloodless/src/setup_impl.dart';
 part 'package:bloodless/src/server_impl.dart';
 
 const String GET = "GET";

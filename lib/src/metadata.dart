@@ -25,15 +25,19 @@ class Route {
   final String responseType;
   
   final bool allowMultipartRequest;
+  
+  final bool matchSubPaths;
 
   const Route(String this.urlTemplate, 
               {this.methods: const [GET],
                this.responseType,
-               this.allowMultipartRequest: false});
+               this.allowMultipartRequest: false,
+               this.matchSubPaths: false});
 
   Route._fromGroup(String this.urlTemplate, 
               this.methods, this.responseType,
-              this.allowMultipartRequest);
+              this.allowMultipartRequest,
+              this.matchSubPaths);
 
 }
 
