@@ -156,7 +156,7 @@ void _closeResponse() {
 void _handleError(String message, Object error, {StackTrace stack, HttpRequest req}) {
   _logger.severe(message, error, stack);
 
-  if (req != null) {
+  if (req != null && chain.error == null) {
     var resp = req.response;
     try {
 
@@ -206,7 +206,7 @@ bool _verifyRequest(_Target target, UnparsedRequest req) {
   return true;
 }
 
-Future<bool> _runTarget(_Target target, UnparsedRequest req) {
+Future _runTarget(_Target target, UnparsedRequest req) {
 
   return new Future(() {
 
@@ -254,10 +254,24 @@ class _ChainImpl implements Chain {
   final Completer _completer = new Completer();
   
   List _callbacks = [];
+  
+  dynamic _error;
 
   _ChainImpl(this._interceptors, this._target, this._request);
   
   Future<bool> get done => _completer.future;
+  
+  dynamic get error => _error;
+  
+  Future _invokeCallbacks() {
+    return Future.forEach(_callbacks.reversed, (c) {
+      var f = c();
+      if (f != null && f is Future) {
+        return f;
+      }
+      return new Future.value();
+    });
+  }
 
   void next([callback()]) {
     new Future.sync(() {
@@ -290,13 +304,16 @@ class _ChainImpl implements Chain {
         _targetInvoked = true;
         new Future(() {
           _runTarget(_target, request).then((_) {
-            return Future.forEach(_callbacks.reversed, (c) {
-              var f = c();
-              if (f != null && f is Future) {
-                return f;
+            return _invokeCallbacks().then((_) {
+              if (!interrupted) {
+                _completer.complete();
               }
-              return new Future.value();
-            }).then((_) {
+            });
+          }).catchError((e, s) {
+            _handleError("Failed to execute ${_target.handlerName}", e, 
+                stack: s, req: request.httpRequest);
+            _error = e;
+            return _invokeCallbacks().then((_) {
               if (!interrupted) {
                 _completer.complete();
               }
@@ -319,18 +336,23 @@ class _ChainImpl implements Chain {
     _interrupted = true;
 
     _writeResponse(response, request.response, responseType, statusCode: statusCode).
-        then((_) => _completer.complete(true));
+        then((_) => _completer.complete());
   }
   
   bool get interrupted => _interrupted;
 
 }
 
-Future _writeResponse(respValue, HttpResponse httpResp, String responseType, {int statusCode}) {
+Future _writeResponse(respValue, HttpResponse httpResp, String responseType, {int statusCode, 
+  bool abortIfChainInterrupted: false}) {
 
   Completer completer = new Completer();
   
-  if (respValue == null) {
+  if (abortIfChainInterrupted && chain.interrupted) {
+    
+    completer.complete();
+    
+  } else if (respValue == null) {
 
     if (statusCode != null) {
       httpResp.statusCode = statusCode;

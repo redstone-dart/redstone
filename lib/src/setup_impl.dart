@@ -273,14 +273,14 @@ void _configureTarget(Route route, ObjectMirror owner, MethodMirror handler) {
       _logger.finer("Invoking target $handlerName");
       InstanceMirror resp = owner.invoke(handler.simpleName, posParams, namedParams);
 
-      if (resp.type == _voidType || chain.interrupted) {
+      if (resp.type == _voidType) {
         return null;
       }
 
       var respValue = resp.reflectee;
 
       _logger.finer("Writing response for target $handlerName");
-      return _writeResponse(respValue, httpResp, route.responseType);
+      return _writeResponse(respValue, httpResp, route.responseType, abortIfChainInterrupted: true);
 
     });    
 

@@ -91,11 +91,12 @@ abstract class Chain {
 
   /**
    * Get a [Future] that will complete when this Chain
-   * has completed. It completes with [true] if the target
-   * was found and executed, and with [false] if the request was fowarded
-   * to the VirtualDirectory.
+   * has completed.
    */
-  Future<bool> get done;
+  Future get done;
+  
+  ///The error object thrown by the target
+  dynamic get error;
   
   /**
    * Call the next element of this chain (an interceptor or a target)
@@ -137,7 +138,7 @@ Request get request => Zone.current[#request];
 /**
  * The request's chain.
  *
- * Since each request run in it's own [Zone], it's completely safe
+ * Since each request run in its own [Zone], it's completely safe
  * to access this object at any time, even in async callbacks.
  */
 Chain get chain => Zone.current[#chain];
@@ -146,11 +147,12 @@ Chain get chain => Zone.current[#chain];
  * Abort the current request.
  *
  * If there is a ErrorHandler registered to [statusCode], it
- * will be invked. Otherwise, the default ErrorHandler will be invoked.
+ * will be invoked. Otherwise, the default ErrorHandler will be invoked.
  */
 void abort(int statusCode) {
-  chain.interrupt(statusCode: statusCode);
+  request.response.statusCode = statusCode;
   _notifyError(request.response, request.httpRequest.uri.path);
+  chain.interrupt(statusCode: statusCode);
 }
 
 /**
@@ -159,7 +161,7 @@ void abort(int statusCode) {
  * [url] can be absolute, or relative to the url of the current request.
  */
 void redirect(String url) {
-  chain.interrupt(statusCode: null);
+  chain.interrupt(statusCode: HttpStatus.MOVED_TEMPORARILY);
   request.response.redirect(request.httpRequest.uri.resolve(url));
 }
 
