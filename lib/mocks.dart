@@ -28,6 +28,7 @@ class MockRequest extends UnparsedRequest {
   final String bodyType;
   dynamic _mockBody;
   final bool isMultipart;
+  final Map _attributes = {};
   
   dynamic body;
   Future _parsedBody;
@@ -70,6 +71,8 @@ class MockRequest extends UnparsedRequest {
   HttpResponse get response => _response;
   
   HttpRequest get httpRequest => _httpRequest;
+  
+  Map get attributes => _attributes;
 
   Future parseBody() {
     if (_parsedBody != null) {

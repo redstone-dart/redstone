@@ -13,6 +13,7 @@ class _RequestImpl extends UnparsedRequest {
   HttpRequestBody _requestBody;
   String _bodyType;
   bool _isMultipart = false;
+  final Map _attributes = {};
   
   Future _bodyParsed = null;
   
@@ -60,6 +61,8 @@ class _RequestImpl extends UnparsedRequest {
 
   HttpRequest get httpRequest => _httpRequest;
 
+  Map get attributes => _attributes;
+  
   String get method => _httpRequest.method;
 
   Future parseBody() {

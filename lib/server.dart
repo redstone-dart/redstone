@@ -51,7 +51,7 @@ abstract class Request {
   bool get isMultipart;
 
   /**
-   * The request's body.
+   * The request body.
    *
    * [body] can be a [Map], [List] or [String]. See [HttpRequestBody]
    * for more information.
@@ -63,6 +63,14 @@ abstract class Request {
 
   ///The session for the given request (read-only).
   HttpSession get session;
+  
+  /**
+   * Map of request attributes.
+   * 
+   * Attributes are objects that can be shared between
+   * interceptors and routes
+   */
+  Map get attributes;
 
   ///The [HttpResponse] object, used for sending back the response to the client (read-only).
   HttpResponse get response;

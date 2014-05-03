@@ -44,7 +44,7 @@ class Route {
 /**
  * An annotation to define a target parameter.
  *
- * The [type] is the request body's type
+ * The [type] is the type of the request body
  *
  * Example:
  *
@@ -77,7 +77,27 @@ class QueryParam {
   
   final String name;
 
-  const QueryParam(String this.name);
+  const QueryParam([String this.name]);
+}
+
+/**
+ * An annotation to define a target parameter.
+ * 
+ * [name] is the name of the request attribute
+ * 
+ * Example:
+ * 
+ *     @app.Route('/service')
+ *     service(@app.Attr("conn") DbConn conn) {
+ *      ...
+ *     }
+ * 
+ */
+class Attr {
+  
+  final String name;
+  
+  const Attr([String this.name]);
 }
 
 /**

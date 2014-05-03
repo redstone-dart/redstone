@@ -262,7 +262,7 @@ void _configureTarget(Route route, ObjectMirror owner, MethodMirror handler) {
       var posParams = [];
       var namedParams = {};
       paramProcessors.processors.forEach((f) {
-        var targetParam = f(pathParams, queryParams, request.bodyType, request.body);
+        var targetParam = f(pathParams, queryParams, request.bodyType, request.body, request.attributes);
         if (targetParam.name == null) {
           posParams.add(targetParam.value);
         } else {
@@ -311,7 +311,7 @@ _ParamProcessors _buildParamProcesors(MethodMirror handler) {
         }
         bodyType = body.type;
 
-        return (urlParams, queryParams, reqBodyType, reqBody) {
+        return (urlParams, queryParams, reqBodyType, reqBody, reqAttrs) {
           return new _TargetParam(reqBody, name);
         };
 
@@ -319,13 +319,32 @@ _ParamProcessors _buildParamProcesors(MethodMirror handler) {
         var paramName = MirrorSystem.getName(paramSymbol);
         var convertFunc = _buildConvertFunction(param.type);
         var defaultValue = param.hasDefaultValue ? param.defaultValue.reflectee : null;
+        var queryParamName = (metadata.reflectee as QueryParam).name;
+        if (queryParamName == null) {
+          queryParamName = paramName;
+        }
 
-        return (urlParams, queryParams, reqBodyType, reqBody) {
-          var value = (queryParams as Map)[(metadata.reflectee as QueryParam).name];
+        return (urlParams, queryParams, reqBodyType, reqBody, reqAttrs) {
+          var value = queryParams[queryParamName];
           try {
             value = convertFunc(value, defaultValue);
           } catch(e) {
             throw new RequestException(handlerName, "Invalid value for $paramName: $value");
+          }
+          return new _TargetParam(value, name);
+        };
+      } else if (metadata.reflectee is Attr) {
+        var paramName = MirrorSystem.getName(paramSymbol);
+        var defaultValue = param.hasDefaultValue ? param.defaultValue.reflectee : null;
+        var attrName = (metadata.reflectee as Attr).name;
+        if (attrName == null) {
+          attrName = paramName;
+        }
+        
+        return (urlParams, queryParams, reqBodyType, reqBody, reqAttrs) {
+          var value = reqAttrs[name];
+          if (value == null) {
+            value = defaultValue;
           }
           return new _TargetParam(value, name);
         };
@@ -336,7 +355,7 @@ _ParamProcessors _buildParamProcesors(MethodMirror handler) {
     var paramName = MirrorSystem.getName(paramSymbol);
     var defaultValue = param.hasDefaultValue ? param.defaultValue.reflectee : null;
 
-    return (urlParams, queryParams, reqBodyType, reqBody) {
+    return (urlParams, queryParams, reqBodyType, reqBody, reqAttrs) {
       var value = urlParams[paramName];
       try {
         value = convertFunc(value, defaultValue);
