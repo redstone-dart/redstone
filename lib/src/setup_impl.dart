@@ -11,6 +11,9 @@ final List<_Target> _targets = [];
 final List<_Interceptor> _interceptors = [];
 final Map<int, List<_ErrorHandler>> _errorHandlers = {};
 
+final List<Module> _modules = [];
+Injector _injector;
+
 class _Target {
   
   final UrlTemplate urlTemplate;
@@ -103,6 +106,15 @@ class _ParamProcessors {
   
 }
 
+class _Group {
+  
+  final Group metadata;
+  final ClassMirror clazz;
+  
+  _Group(this.metadata, this.clazz);
+  
+}
+
 void _scanHandlers([List<Symbol> libraries]) {
   
   var mirrorSystem = currentMirrorSystem();
@@ -112,6 +124,9 @@ void _scanHandlers([List<Symbol> libraries]) {
   } else {
     libsToScan = mirrorSystem.libraries.values;
   }
+  
+  Module baseModule = new Module();
+  List<_Group> groups = [];
 
   libsToScan.forEach((LibraryMirror lib) {
     lib.declarations.values.forEach((DeclarationMirror declaration) {
@@ -132,13 +147,18 @@ void _scanHandlers([List<Symbol> libraries]) {
 
         clazz.metadata.forEach((InstanceMirror metadata) {
           if (metadata.reflectee is Group) {
-            _configureGroup(metadata.reflectee as Group, clazz);
+            baseModule.bind(clazz.reflectedType);
+            groups.add(new _Group(metadata.reflectee, clazz));
           }
         });
       }
     });
   });
-
+  
+  _modules.add(baseModule);
+  _injector = defaultInjector(modules: _modules);
+  groups.forEach((g) => _configureGroup(g.metadata, g.clazz, _injector));
+  
   _targets.sort((t1, t2) => t1.urlTemplate.compareTo(t2.urlTemplate));
   _interceptors.sort((i1, i2) => i1.chainIdx - i2.chainIdx);
   _errorHandlers.forEach((status, handlers) {
@@ -158,16 +178,17 @@ void _clearHandlers() {
 
 }
 
-void _configureGroup(Group group, ClassMirror clazz) {
+void _configureGroup(Group group, ClassMirror clazz, Injector injector) {
 
   var className = MirrorSystem.getName(clazz.qualifiedName);
   _logger.info("Found group: $className");
 
   InstanceMirror instance = null;
   try {
-    instance = clazz.newInstance(new Symbol(""), []);
+    instance = reflect(injector.get(clazz.reflectedType));
   } catch(e) {
-    throw new SetupException(className, "Failed to create a instance of the group. Does $className have a default constructor with no arguments?");
+    _logger.severe("Failed to get $className", e);
+    throw new SetupException(className, "Failed to create a instance of the group $className");
   }
 
   String prefix = group.urlPrefix;
@@ -287,7 +308,8 @@ void _configureTarget(Route route, ObjectMirror owner, MethodMirror handler) {
       var posParams = [];
       var namedParams = {};
       paramProcessors.processors.forEach((f) {
-        var targetParam = f(pathParams, queryParams, request.bodyType, request.body, request.attributes);
+        var targetParam = f(pathParams, queryParams, request.bodyType, 
+            request.body, request.attributes);
         if (targetParam.name == null) {
           posParams.add(targetParam.value);
         } else {
@@ -373,6 +395,13 @@ _ParamProcessors _buildParamProcesors(MethodMirror handler) {
           }
           return new _TargetParam(value, name);
         };
+      } else if (metadata.reflectee is Inject) {
+        var paramName = MirrorSystem.getName(paramSymbol);
+        var value = _injector.get(param.runtimeType);
+        var targetParam = new _TargetParam(value, name);
+        return (urlParams, queryParams, reqBodyType, reqBody, reqAttrs) =>
+            targetParam;
+        
       }
     }
 

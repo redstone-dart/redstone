@@ -101,6 +101,23 @@ class Attr {
 }
 
 /**
+ * An annotation to define a target parameter.
+ * 
+ * Example:
+ * 
+ *     @app.Route('/service')
+ *     service(@app.Inject() DbConn conn) {
+ *      ...
+ *     }
+ * 
+ */
+class Inject {
+  
+  const Inject();
+  
+}
+
+/**
  * An annotation to define interceptors.
  *
  * The [urlPattern] is a regex that defines the requests that will be

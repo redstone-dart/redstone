@@ -13,6 +13,9 @@ import 'package:logging/logging.dart';
 import 'package:path/path.dart' as path;
 import 'package:crypto/crypto.dart';
 
+import 'package:di/di.dart';
+import 'package:di/auto_injector.dart';
+
 part 'package:bloodless/src/metadata.dart';
 part 'package:bloodless/src/logger.dart';
 part 'package:bloodless/src/exception.dart';
@@ -226,6 +229,16 @@ bool authenticateBasic(String username, String password, {String realm, bool abo
 }
 
 /**
+ * Register a module for dependency injection.
+ * 
+ * All modules must be registered before invoking the [start] or
+ * [setUp] methods.
+ */
+void addModule(Module module) {
+  _modules.add(module);
+}
+
+/**
  * Start the server.
  *
  * The [address] can be a [String] or an [InternetAddress]. The [staticDir] is an
@@ -303,11 +316,12 @@ void setUp([List<Symbol> libraries]) {
 }
 
 /**
- * Remove all routes, interceptors and error handlers.
+ * Remove all modules, routes, interceptors and error handlers.
  * 
  * This method is intended to be used in unit tests.
  */
 void tearDown() {
+  _modules.clear();
   _clearHandlers();
 }
 
