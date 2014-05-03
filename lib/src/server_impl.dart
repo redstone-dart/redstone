@@ -427,10 +427,25 @@ Future _writeResponse(respValue, HttpResponse httpResp, String responseType, {in
 
 }
 
+_ErrorHandler _findErrorHandler(int statusCode, String path) {
+  List<_ErrorHandler> handlers = _errorHandlers[statusCode];
+  if (handlers == null) {
+    return null;
+  }
+  
+  return handlers.firstWhere((e) {
+    var match = e.urlPattern.firstMatch(path);
+    if (match != null) {
+      return match[0] == path;
+    }
+    return false;
+  }, orElse: () => null);
+}
+
 void _notifyError(HttpResponse resp, String resource, [Object error, StackTrace stack]) {
   int statusCode = resp.statusCode;
 
-  _ErrorHandler handler = _errorHandlers[statusCode];
+  _ErrorHandler handler = _findErrorHandler(statusCode, request.httpRequest.uri.path);
   if (handler != null) {
     handler.errorHandler();
   } else {

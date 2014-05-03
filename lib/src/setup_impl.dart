@@ -9,7 +9,7 @@ var _voidType = currentMirrorSystem().voidType;
 
 final List<_Target> _targets = [];
 final List<_Interceptor> _interceptors = [];
-final Map<int, _ErrorHandler> _errorHandlers = {};
+final Map<int, List<_ErrorHandler>> _errorHandlers = {};
 
 class _Target {
   
@@ -85,11 +85,12 @@ class _Interceptor {
 class _ErrorHandler {
   
   final int statusCode;
+  final RegExp urlPattern;
   final String handlerName;
   final _HandleError errorHandler;
 
-  _ErrorHandler(this.statusCode, this.handlerName, 
-                this.errorHandler);
+  _ErrorHandler(this.statusCode, this.urlPattern, 
+                this.handlerName, this.errorHandler);
 
 }
 
@@ -138,8 +139,15 @@ void _scanHandlers([List<Symbol> libraries]) {
     });
   });
 
-  _targets.sort((i1, i2) => i1.urlTemplate.compareTo(i2.urlTemplate));
+  _targets.sort((t1, t2) => t1.urlTemplate.compareTo(t2.urlTemplate));
   _interceptors.sort((i1, i2) => i1.chainIdx - i2.chainIdx);
+  _errorHandlers.forEach((status, handlers) {
+    handlers.sort((e1, e2) {
+      var length1 = e1.urlPattern.pattern.split(r'/').length;
+      var length2 = e2.urlPattern.pattern.split(r'/').length;
+      return length2 - length1;
+    });
+  });
 }
 
 void _clearHandlers() {
@@ -195,6 +203,18 @@ void _configureGroup(Group group, ClassMirror clazz) {
         var newInterceptor = new Interceptor._fromGroup(urlPattern, interceptor.chainIdx, interceptor.parseRequestBody);
 
         _configureInterceptor(newInterceptor, instance, method);
+      } else if (metadata.reflectee is ErrorHandler) {
+        
+        ErrorHandler errorHandler = metadata.reflectee as ErrorHandler;
+        String urlPattern = errorHandler.urlPattern;
+        if (!urlPattern.startsWith("/")) {
+          urlPattern = "$prefix/$urlPattern";
+        } else {
+          urlPattern = "$prefix$urlPattern";
+        }
+        var newErrorHandler = new ErrorHandler._fromGroup(errorHandler.statusCode, urlPattern);
+        
+        _configureErrorHandler(newErrorHandler, instance, method);
       }
     });
 
@@ -238,8 +258,13 @@ void _configureErrorHandler(ErrorHandler errorHandler, ObjectMirror owner, Metho
   };
 
   var name = MirrorSystem.getName(handler.qualifiedName);
-  _errorHandlers[errorHandler.statusCode] = new _ErrorHandler(errorHandler.statusCode, name,
-                                                              caller);
+  List<_ErrorHandler> handlers = _errorHandlers[errorHandler.statusCode];
+  if (handlers == null) {
+    handlers = [];
+    _errorHandlers[errorHandler.statusCode] = handlers;
+  }
+  handlers.add(new _ErrorHandler(errorHandler.statusCode, 
+      new RegExp(errorHandler.urlPattern), name, caller));
 
   _logger.info("Configured error handler for status ${errorHandler.statusCode} : $handlerName");
 }

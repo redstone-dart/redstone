@@ -104,8 +104,8 @@ class Attr {
  * An annotation to define interceptors.
  *
  * The [urlPattern] is a regex that defines the requests that will be
- * intercepted. The [chainIdx] is the interceptor's position in the chain.
- * If [parseRequestBody] is true, then the request's body will be parsed
+ * intercepted. The [chainIdx] is the interceptor position in the chain.
+ * If [parseRequestBody] is true, then the request body will be parsed
  * when the interceptor is invoked.
  *
  * Example:
@@ -132,7 +132,9 @@ class Interceptor {
 /**
  * An annotation to define error handlers.
  *
- * [statusCode] is the HTTP status to be handled.
+ * [statusCode] is the HTTP status to be handled. 
+ * [urlPattern] is a regex that defines the requests 
+ * that will be handled.
  *
  * Example:
  *
@@ -143,8 +145,11 @@ class Interceptor {
 class ErrorHandler {
 
   final int statusCode;
+  final String urlPattern;
 
-  const ErrorHandler(int this.statusCode);
+  const ErrorHandler(int this.statusCode, {String this.urlPattern: r'/.*'});
+  
+  ErrorHandler._fromGroup(int this.statusCode, String this.urlPattern);
 
 }
 
