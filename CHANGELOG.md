@@ -1,5 +1,5 @@
 ## v0.3.0
-- Added `Route.matchSubPaths` property (see issue $5)
+- Added `Route.matchSubPaths` property (see issue #5)
 - Added `ErrorHandler.urlPattern` property (check documentation for details)
 - Added request attributes (check documentation for details)
 - Added support for dependency injection (check documentation for details)
