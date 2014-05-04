@@ -51,3 +51,9 @@ notFoundHandler() => app.request.response.write("not_found");
 
 @app.ErrorHandler(500)
 serverErrorHandler() => app.request.response.write("server_error");
+
+@app.Route("/sub_handler")
+subHandler() => throw "server_error";
+
+@app.ErrorHandler(500, urlPattern: "/sub_handler?")
+subErrorHandler() => app.request.response.write("${app.chain.error} sub_error_handler");

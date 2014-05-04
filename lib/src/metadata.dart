@@ -164,7 +164,7 @@ class ErrorHandler {
   final int statusCode;
   final String urlPattern;
 
-  const ErrorHandler(int this.statusCode, {String this.urlPattern: r'/.*'});
+  const ErrorHandler(int this.statusCode, {String this.urlPattern});
   
   ErrorHandler._fromGroup(int this.statusCode, String this.urlPattern);
 

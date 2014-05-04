@@ -13,15 +13,15 @@ namedPathArgs(String arg1, {String arg2, String arg3, String arg4: "arg4"}) =>
 @app.Route("/query_args")
 queryArgs(@app.QueryParam("arg1") String arg1, 
           @app.QueryParam("arg2") int arg2, 
-          [@app.QueryParam("arg3") double arg3, 
+          [@app.QueryParam() double arg3, 
            @app.QueryParam("arg4") String arg4, 
            @app.QueryParam("arg5") String arg5 = "arg5",
            String arg6, String arg7 = "arg7"]) =>
     {"arg1": arg1, "arg2": arg2, "arg3": arg3, "arg4": arg4, "arg5": arg5, "arg6": arg6, "arg7": arg7};
 
 @app.Route("/named_query_args")
-namedQueryArgs(@app.QueryParam("arg1") String arg1,
-               {@app.QueryParam("arg2") String arg2,
+namedQueryArgs(@app.QueryParam() String arg1,
+               {@app.QueryParam() String arg2,
                 @app.QueryParam("arg3") String arg3,
                 @app.QueryParam("arg4") String arg4: "arg4",
                 String arg5, String arg6: "arg6"}) =>
@@ -37,6 +37,14 @@ jsonBody(String arg, @app.Body(app.JSON) Map json) => {"arg": arg, "json": json}
 @app.Route("/form/:arg", methods: const [app.POST])
 formBody(String arg, @app.Body(app.FORM) Map form) => {"arg": arg, "form": form};    
     
-    
+@app.Route("/attr/:arg")
+attr(@app.Attr() String name, String arg, {@app.Attr() int value: 0}) => "$name $arg $value";
+
+@app.Interceptor("/attr/.+")
+interceptorAttr() {
+  app.request.attributes["name"] = "name_attr";
+  app.request.attributes["value"] = 1;
+  app.chain.next();
+}
     
     

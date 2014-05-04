@@ -7,6 +7,12 @@ typedef dynamic _ConvertFunction(String value, dynamic defaultValue);
 
 VirtualDirectory _virtualDirectory;
 
+class _RequestState {
+  
+  bool errorHandlerInvoked = false;
+  
+}
+
 class _RequestImpl extends UnparsedRequest {
 
   HttpRequest _httpRequest;
@@ -144,7 +150,8 @@ void _process(UnparsedRequest req, Chain chain, Completer completer) {
 
   }, zoneValues: {
     #request: req,
-    #chain: chain
+    #chain: chain,
+    #state: new _RequestState()
   });
 }
 
@@ -159,7 +166,7 @@ void _closeResponse() {
 void _handleError(String message, Object error, {StackTrace stack, HttpRequest req}) {
   _logger.severe(message, error, stack);
 
-  if (req != null && chain.error == null) {
+  if (req != null) {
     var resp = req.response;
     try {
 
@@ -169,7 +176,11 @@ void _handleError(String message, Object error, {StackTrace stack, HttpRequest r
         resp.statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
       }
 
-      _notifyError(req.response, req.uri.path, error, stack);
+      _RequestState state = Zone.current[#state];
+      if (!state.errorHandlerInvoked) {
+        state.errorHandlerInvoked = true;
+        _notifyError(req.response, req.uri.path, error, stack);
+      }
     } catch(e, s) {
       _logger.severe("Failed to handle error", e, s);
     }
@@ -313,9 +324,9 @@ class _ChainImpl implements Chain {
               }
             });
           }).catchError((e, s) {
+            _error = e;
             _handleError("Failed to execute ${_target.handlerName}", e, 
                 stack: s, req: request.httpRequest);
-            _error = e;
             return _invokeCallbacks().then((_) {
               if (!interrupted) {
                 _completer.complete();
@@ -434,6 +445,9 @@ _ErrorHandler _findErrorHandler(int statusCode, String path) {
   }
   
   return handlers.firstWhere((e) {
+    if (e.urlPattern == null) {
+      return true;
+    }
     var match = e.urlPattern.firstMatch(path);
     if (match != null) {
       return match[0] == path;

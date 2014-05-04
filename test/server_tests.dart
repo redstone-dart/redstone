@@ -1,27 +1,68 @@
 library server_tests;
 
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:unittest/unittest.dart';
 
+import 'package:di/di.dart';
 import 'package:bloodless/server.dart' as app;
 import 'package:bloodless/mocks.dart';
 import 'package:logging/logging.dart';
 
+import 'services/routes.dart';
 import 'services/type_serialization.dart';
 import 'services/arguments.dart';
 import 'services/errors.dart';
 import 'services/interceptors.dart';
-import 'dart:io';
-import 'package:crypto/crypto.dart';
+import 'services/dependency_injection.dart';
 
 main() {
   
-  //app.setupConsoleLog(Level.ALL);
+  //app.setupConsoleLog(Level.All);
+  
+  group("Routes:", () {
+    
+    setUp(() => app.setUp([#routes]));
+    tearDown(() => app.tearDown());
+    
+    test("path matching", () {
+      var req = new MockRequest("/path/subpath");
+      var req2 = new MockRequest("/path/anotherpath");
+      var req3 = new MockRequest("/paths");
+      
+      return app.dispatch(req).then((resp) {
+        expect(resp.mockContent, equals("sub_route"));
+      }).then((_) => app.dispatch(req2)).then((resp) {
+        expect(resp.mockContent, equals("main_route"));
+      }).then((_) => app.dispatch(req3)).then((resp) {
+        expect(resp.statusCode, equals(404));
+      });
+    });
+    
+    test("group path matching", () {
+      var req = new MockRequest("/group/path/subpath");
+      var req2 = new MockRequest("/group/path/anotherpath");
+      var req3 = new MockRequest("/group/path");
+      var req4 = new MockRequest("/group/paths");
+      
+      return app.dispatch(req).then((resp) {
+        expect(resp.mockContent, equals("interceptor sub_route"));
+      }).then((_) => app.dispatch(req2)).then((resp) {
+        expect(resp.mockContent, equals("interceptor main_route"));
+      }).then((_) => app.dispatch(req3)).then((resp) {
+        expect(resp.mockContent, equals("interceptor main_route"));
+      }).then((_) => app.dispatch(req4)).then((resp) {
+        expect(resp.statusCode, equals(404));
+      });
+    });
+    
+  });
   
   group("Response serialization:", () {
     
     setUp(() => app.setUp([#type_serialization]));
+    tearDown(() => app.tearDown());
     
     test("String -> text/plain", () {
       var req = new MockRequest("/types/string");
@@ -79,13 +120,12 @@ main() {
       });
     });
     
-    tearDown(() => app.tearDown());
-    
   });
   
   group("Route arguments:", () {
     
     setUp(() => app.setUp([#arguments]));
+    tearDown(() => app.tearDown());
     
     test("path parameters", () {
       var req = new MockRequest("/args/arg/1/1.2");
@@ -157,7 +197,7 @@ main() {
       });
     });
     
-    test("request's content as JSON", () {
+    test("request content as JSON", () {
       var req = new MockRequest("/json/arg1", method: app.POST, bodyType: app.JSON, body: {
         "key": "value"
       });
@@ -169,7 +209,7 @@ main() {
       });
     });
     
-    test("request's content as FORM", () {
+    test("request content as FORM", () {
       var req = new MockRequest("/form/arg1", method: app.POST, bodyType: app.FORM, body: {
         "key": "value"
       });
@@ -181,13 +221,19 @@ main() {
       });
     });
     
-    tearDown(() => app.tearDown());
+    test("request attributes", () {
+      var req = new MockRequest("/attr/arg1");
+      return app.dispatch(req).then((resp) {
+        expect(resp.mockContent, equals("name_attr arg1 1"));
+      });
+    });
     
   });
   
   group("Error handling:", () {
     
     setUp(() => app.setUp([#errors]));
+    tearDown(() => app.tearDown());
     
     test("wrong method", () {
       var req = new MockRequest("/wrong_method");
@@ -263,17 +309,22 @@ main() {
       var req = new MockRequest("/redirect");
       return app.dispatch(req).then((resp) {
         expect(resp.statusCode, equals(302));
-        print(resp.mockContent);
       });
     });
     
-    tearDown(() => app.tearDown());
-    
+    test("Find error handler by path", () {
+      var req = new MockRequest("/sub_handler");
+      return app.dispatch(req).then((resp) {
+        expect(resp.statusCode, equals(500));
+        expect(resp.mockContent, equals("server_error sub_error_handler"));
+      });
+    });
   });
   
   group("Chain:", () {
     
     setUp(() => app.setUp([#interceptors]));
+    tearDown(() => app.tearDown());
     
     test("interceptors", () {
       var req = new MockRequest("/target");
@@ -340,7 +391,39 @@ main() {
        });
      });
     
+  });
+  
+  group("dependency injection:", () {
+    
+    setUp(() { 
+      app.addModule(new Module()
+         ..bind(A)
+         ..bind(B)
+         ..bind(C));
+      app.setUp([#dependency_injection]);
+    });
     tearDown(() => app.tearDown());
     
+    test("Routes and interceptors", () {
+      var req = new MockRequest("/di");
+      return app.dispatch(req).then((resp) {
+        expect(resp.mockContent, equals("value_a value_b value_a value_b"));
+      });
+    });
+    
+    test("Groups", () {
+      var req = new MockRequest("/group/di");
+      return app.dispatch(req).then((resp) {
+        expect(resp.mockContent, equals("value_a value_b"));
+      });
+    });
+    
+    test("Error handlers", () {
+      var req = new MockRequest("/invalid_path");
+      return app.dispatch(req).then((resp) {
+        expect(resp.statusCode, equals(404));
+        expect(resp.mockContent, equals("value_a value_b"));
+      });
+    });
   });
 }

@@ -14,6 +14,16 @@ final Map<int, List<_ErrorHandler>> _errorHandlers = {};
 final List<Module> _modules = [];
 Injector _injector;
 
+class _HandlerCfg<T> {
+  
+  T metadata;
+  LibraryMirror lib;
+  MethodMirror method;
+  
+  _HandlerCfg(this.metadata, this.lib, this.method);
+  
+}
+
 class _Target {
   
   final UrlTemplate urlTemplate;
@@ -120,12 +130,15 @@ void _scanHandlers([List<Symbol> libraries]) {
   var mirrorSystem = currentMirrorSystem();
   var libsToScan;
   if (libraries != null) {
-    libsToScan = new List.from(libraries.map((l) => mirrorSystem.findLibrary(l)));
+    libsToScan = libraries.map((l) => mirrorSystem.findLibrary(l));
   } else {
     libsToScan = mirrorSystem.libraries.values;
   }
   
   Module baseModule = new Module();
+  List<_HandlerCfg<Route>> routes = [];
+  List<_HandlerCfg<Interceptor>> interceptors = [];
+  List<_HandlerCfg<ErrorHandler>> errors = [];
   List<_Group> groups = [];
 
   libsToScan.forEach((LibraryMirror lib) {
@@ -135,11 +148,11 @@ void _scanHandlers([List<Symbol> libraries]) {
         
         method.metadata.forEach((InstanceMirror metadata) {
           if (metadata.reflectee is Route) {
-            _configureTarget(metadata.reflectee as Route, lib, method);
+            routes.add(new _HandlerCfg(metadata.reflectee, lib, method));
           } else if (metadata.reflectee is Interceptor) {
-            _configureInterceptor(metadata.reflectee as Interceptor, lib, method);
+            interceptors.add(new _HandlerCfg(metadata.reflectee, lib, method));
           } else if (metadata.reflectee is ErrorHandler) {
-            _configureErrorHandler(metadata.reflectee as ErrorHandler, lib, method);
+            errors.add(new _HandlerCfg(metadata.reflectee, lib, method));
           }
         });
       } else if (declaration is ClassMirror) {
@@ -157,15 +170,27 @@ void _scanHandlers([List<Symbol> libraries]) {
   
   _modules.add(baseModule);
   _injector = defaultInjector(modules: _modules);
+  
+  routes.forEach((r) => _configureTarget(r.metadata, r.lib, r.method));
+  interceptors.forEach((i) => _configureInterceptor(i.metadata, i.lib, i.method));
+  errors.forEach((e) => _configureErrorHandler(e.metadata, e.lib, e.method));
   groups.forEach((g) => _configureGroup(g.metadata, g.clazz, _injector));
   
   _targets.sort((t1, t2) => t1.urlTemplate.compareTo(t2.urlTemplate));
   _interceptors.sort((i1, i2) => i1.chainIdx - i2.chainIdx);
   _errorHandlers.forEach((status, handlers) {
     handlers.sort((e1, e2) {
-      var length1 = e1.urlPattern.pattern.split(r'/').length;
-      var length2 = e2.urlPattern.pattern.split(r'/').length;
-      return length2 - length1;
+      if (e1.urlPattern == null && e2.urlPattern == null) {
+        return 0;
+      } else if (e1.urlPattern == null && e2.urlPattern != null) {
+        return 1;
+      } else if (e1.urlPattern != null && e2.urlPattern == null) {
+        return -1;
+      } else {
+        var length1 = e1.urlPattern.pattern.split(r'/').length;
+        var length2 = e2.urlPattern.pattern.split(r'/').length;
+        return length2 - length1;
+      }
     });
   });
 }
@@ -245,14 +270,26 @@ void _configureGroup(Group group, ClassMirror clazz, Injector injector) {
 void _configureInterceptor(Interceptor interceptor, ObjectMirror owner, MethodMirror handler) {
 
   var handlerName = MirrorSystem.getName(handler.qualifiedName);
-  if (!handler.parameters.where((p) => !p.isOptional).isEmpty) {
-    throw new SetupException(handlerName, "Interceptors must have no required arguments.");
-  }
+  
+  var posParams = [];
+  var namedParams = {};
+  handler.parameters.forEach((ParameterMirror param) {
+    try {
+      if (param.isNamed) {
+        namedParams[param.simpleName] = _injector.get(param.type.reflectedType);
+      } else {
+        posParams.add(_injector.get(param.type.reflectedType));
+      }
+    } catch (_) {
+      var paramName = MirrorSystem.getName(param.simpleName);
+      throw new SetupException(handlerName, "Invalid parameter: Can't inject $paramName");
+    }
+  });
 
   var caller = () {
 
     _logger.finer("Invoking interceptor: $handlerName");
-    owner.invoke(handler.simpleName, []);
+    owner.invoke(handler.simpleName, posParams, namedParams);
 
   };
 
@@ -267,14 +304,26 @@ void _configureInterceptor(Interceptor interceptor, ObjectMirror owner, MethodMi
 void _configureErrorHandler(ErrorHandler errorHandler, ObjectMirror owner, MethodMirror handler) {
 
   var handlerName = MirrorSystem.getName(handler.qualifiedName);
-  if (!handler.parameters.where((p) => !p.isOptional).isEmpty) {
-    throw new SetupException(handlerName, "error handlers must have no required arguments.");
-  }
+  
+  var posParams = [];
+  var namedParams = {};
+  handler.parameters.forEach((ParameterMirror param) {
+    try {
+      if (param.isNamed) {
+        namedParams[param.simpleName] = _injector.get(param.type.reflectedType);
+      } else {
+        posParams.add(_injector.get(param.type.reflectedType));
+      }
+    } catch (_) {
+      var paramName = MirrorSystem.getName(param.simpleName);
+      throw new SetupException(handlerName, "Invalid parameter: Can't inject $paramName");
+    }
+  });
 
   var caller = () {
 
     _logger.finer("Invoking error handler: $handlerName");
-    owner.invoke(handler.simpleName, []);
+    owner.invoke(handler.simpleName, posParams, namedParams);
 
   };
 
@@ -284,8 +333,10 @@ void _configureErrorHandler(ErrorHandler errorHandler, ObjectMirror owner, Metho
     handlers = [];
     _errorHandlers[errorHandler.statusCode] = handlers;
   }
+  RegExp pattern = errorHandler.urlPattern != null ? 
+      new RegExp(errorHandler.urlPattern) : null;
   handlers.add(new _ErrorHandler(errorHandler.statusCode, 
-      new RegExp(errorHandler.urlPattern), name, caller));
+      pattern, name, caller));
 
   _logger.info("Configured error handler for status ${errorHandler.statusCode} : $handlerName");
 }
@@ -389,7 +440,7 @@ _ParamProcessors _buildParamProcesors(MethodMirror handler) {
         }
         
         return (urlParams, queryParams, reqBodyType, reqBody, reqAttrs) {
-          var value = reqAttrs[name];
+          var value = reqAttrs[attrName];
           if (value == null) {
             value = defaultValue;
           }
@@ -397,7 +448,12 @@ _ParamProcessors _buildParamProcesors(MethodMirror handler) {
         };
       } else if (metadata.reflectee is Inject) {
         var paramName = MirrorSystem.getName(paramSymbol);
-        var value = _injector.get(param.runtimeType);
+        var value;
+        try {
+          value = _injector.get(param.type.reflectedType);
+        } catch (e) {
+          throw new SetupException(handlerName, "Invalid parameter: Can't inject $paramName");
+        }
         var targetParam = new _TargetParam(value, name);
         return (urlParams, queryParams, reqBodyType, reqBody, reqAttrs) =>
             targetParam;
