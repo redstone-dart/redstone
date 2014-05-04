@@ -279,6 +279,26 @@ verifyRequest() {
 
 **NOTE: You can also call `redirect()` or `abort()` instead of `chain.interrupt()`. The `abort()` call will invoke the corresponding error handler.**
 
+## Request attributes
+
+Request attributes are objects that can be shared between interceptors and targets. They can be accessed through the `request.attributes` map. Also, if your method is annotated with `@Route`, they can be injected using the `Attr` annotation. Example:
+
+```Dart
+
+@app.Interceptor(r'/services/.+')
+dbConnInterceptor() {
+  var conn = new DbConn();
+  app.request.attributes["dbConn"] = conn;
+  app.chain.next(() => conn.close());
+}
+
+@app.Route('/services/find')
+find(@app.Attr() dbConn) {
+  ...
+}
+
+```
+
 ## Groups
 
 You can use classes to group routes and interceptors:
@@ -302,8 +322,6 @@ class UserService {
 
 The prefix defined with the `Group` annotation, will be prepended in every route and interceptor inside the group.
 
-**NOTE: The class must provide a default constructor, with no required arguments.**
-
 ## Error handlers
 
 You can define error handlers with the `ErrorHandler` annotation:
@@ -311,6 +329,82 @@ You can define error handlers with the `ErrorHandler` annotation:
 ```Dart
 @app.ErrorHandler(HttpStatus.NOT_FOUND)
 handleNotFoundError() => app.redirect("/error/not_found.html");
+```
+
+Also, you can define a error handler for a specific urlPattern
+
+```Dart
+@app.ErrorHandler(HttpStatus.NOT_FOUND, urlPattern: r'/public/.+')
+handleNotFoundError() => app.redirect("/error/not_found.html");
+```
+
+If you define a error handler inside a group, then the handler will be restricted to the group path.
+
+**NOTE: If a target throws a error, it can be accessed through the `chain.error` getter.**
+
+## Dependency injection
+
+Bloodless uses the [di package](http://pub.dartlang.org/packages/di) to provide dependency injection.
+
+To register a module, use the `addModule()` method:
+
+```Dart
+import 'package:bloodless/server.dart' as app;
+import 'package:di/di.dart';
+
+main() {
+
+  app.addModule(new Module()
+       ..bind(ClassA)
+       ..bind(ClassB));
+  
+  app.setupConsoleLog();
+  app.start();
+
+}
+
+```
+
+For methods annotated with `@Route`, you can inject objects using the `@Inject` annotation:
+
+```Dart
+@app.Route('/service')
+service(@app.Inject() ClassA objA) {
+ ...
+}
+```
+
+Groups can require objects using a constructor:
+
+```Dart
+@app.Group('/group')
+class Group {
+
+  ClassA objA;
+  
+  Group(ClassA this.objA);
+  
+  @app.Route('/service')
+  service() {
+    ...
+  }
+
+}
+```
+
+Interceptors and error handlers can also require dependencies:
+
+```
+@app.Interceptor(r'/services/.+')
+interceptor(ClassA objA, ClassB objB) {
+  ...
+}
+
+
+@app.ErrorHandler(404)
+notFound(ClassB objB) {
+  ...
+}
 ```
 
 ## Server configuration
@@ -387,6 +481,9 @@ main() {
   //load the services in 'services' library
   setUp(() => app.setUp([#services]);
   
+  //remove all loaded services
+  tearDown(() => app.tearDown());
+  
   test("hello service", () {
     //create a mock request
     var req = new MockRequest("/user/luiz");
@@ -398,8 +495,6 @@ main() {
     });
   })
   
-  //remove all loaded services
-  tearDown(() => app.tearDown());
 }
 ```
 
