@@ -1,0 +1,32 @@
+.panel-default>.panel-heading {
+  color: white;
+  background-color: rgba(204, 49, 0, 0.94);
+  border-color: #ddd;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.header {
+  background-image: url(shattered.png);
+  color: white;
+}
+
+.feature-panel {
+  height: 405px;
+}
+
+.code {
+  border:1px solid #ccc !important;
+  margin: 10px 0px 10px 0px;
+  padding: 10px !important;
+}
+
+.code a {
+  text-decoration: none;
+  background: rgba(204, 49, 0, 0.65);
+  padding: 2px 3px;
+}
+
+.code a span {
+  color: white !important;
+}

@@ -1,0 +1,417 @@
+/* ***** Fonts ***** */
+@import url(https://fonts.googleapis.com/css?family=Montserrat:400,700);
+@import url(https://fonts.googleapis.com/css?family=Roboto:300,400);
+
+
+body {
+    font-family: 'Roboto', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    font-size:15px;
+}
+
+/* ***** General ***** */
+p {
+    font-weight: 400;
+    font-size: 15px;
+    line-height: 25px;
+    color: #484848;
+}
+
+a {
+    text-decoration: none;
+}
+
+h1 {
+    font: 400 46px/52px 'Montserrat', sans-serif;
+    color: #484848;
+}
+
+@media (max-width: 768px) {
+    h1 {
+        font: 400 35px/42px 'Montserrat', sans-serif;
+    }
+}
+
+h2 {
+    font: 400 32px/40px 'Montserrat', sans-serif;
+    color: #484848;
+}
+
+h3 {
+    font: 400 17px/24px 'Montserrat', sans-serif;
+    text-transform: uppercase;
+    margin-top: 10px;
+    color: #484848;
+}
+
+h4 {
+    font: 400 12px/17px 'Montserrat', sans-serif;
+    text-transform: uppercase;
+}
+
+h5 {
+    font: 400 12px/17px 'Montserrat', sans-serif;
+    margin-top: 90px;
+    font-weight: 400;
+    font-size: 15px;
+    color: #484848;
+}
+
+h6 {
+    font: 400 12px/17px 'Montserrat', sans-serif;
+    font-size: 15px;
+    color: #0084c5;
+    margin-bottom: 35px;
+}
+
+/* ***** Icons ***** */
+i[class*="icon-"] {
+    background-image: url(../img/dart-sprite.png);
+    display: block;
+}
+
+i.icon-dart-logo {
+    width: 117px;
+    height: 33px;
+    background-position: 0 0;
+}
+
+i.icon-timer {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background-position: 0 -200px;
+    margin-right: 7px;
+    position: relative;
+    top: 4px;
+}
+
+i[class*="icon-app-"] {
+    width: 35px;
+    height: 35px;
+}
+
+i.icon-triangle {
+    display: inline-block;
+    width: 9px;
+    height: 10px;
+    margin-right: 7px;
+    background-position: -50px -200px;
+}
+
+i.icon-dd-tip {
+    width: 17px;
+    height: 8px;
+    background-position: -100px -200px;
+    position: absolute;
+    top: -8px;
+    left: 10px;
+}
+
+i.icon-close-x {
+    width: 8px;
+    height: 8px;
+    background-position: -150px -200px;
+}
+
+
+
+
+/* ***** Nav bar ***** */
+.navbar {
+    min-height: 65px;
+    background: #fff;
+    -webkit-box-shadow: 0px 2px 2px rgba(50, 50, 50, 0.15);
+       -moz-box-shadow: 0px 2px 2px rgba(50, 50, 50, 0.15);
+            box-shadow: 0px 2px 2px rgba(50, 50, 50, 0.15);
+    -webkit-transform: translateZ(0);
+}
+
+@media screen and (min-width: 768px) {
+    .navbar-nav {
+        margin-left: 25px;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .navbar-fixed-top {
+        position: inherit;
+    }
+}
+
+.navbar-nav > li > a {
+    font-family: 'Montserrat', sans-serif;
+    text-decoration: none;
+    color: #464646;
+    font-size: 12px;
+    line-height: 18px;
+    padding-top: 30px;
+}
+
+@media (min-width: 768px) {
+    .navbar-nav > li > a {
+        padding-top: 30px;
+    }
+}
+
+.navbar-header {
+    min-height: 65px;
+}
+
+.navbar .navbar-brand {
+    display: block;
+    width: 117px;
+    height: 33px;
+    margin-right: 50px;
+}
+
+@media (max-width: 768px) {
+    .navbar-brand.btn-link {
+        width: auto;
+        max-width: none;
+        margin-top: 0px !important;
+        padding-top: 22px !important;
+        text-align: left;
+    }
+}
+
+.nav.navbar-right > li > a {
+    padding-left: 2px;
+    padding-right: 2px;
+}
+
+@media (max-width: 768px) {
+    .nav.navbar-right > li > a {
+        padding: 10px 15px;
+    }
+}
+
+.navbar-toggle {
+    margin-top: 16px;
+}
+
+@media (max-width: 767px) {
+    .collapse.in {
+        width: 100%;
+        top: 66px;
+        left: 5px;
+        background-color: #fff;
+    }
+}
+
+.navbar-nav > li > .dropdown-menu {
+    text-align: left;
+}
+
+.navbar-nav > li > .dropdown-menu > li > a {
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.navbar-nav > li > .dropdown-toggle {
+    text-align: right;
+    cursor: pointer;
+}
+
+.navbar-search .search-query {
+  margin-bottom: 0;
+  padding: 4px 6px;
+  font-size: 13px;
+  font-weight: normal;
+  line-height: 1;
+  margin-top: 20px;
+  margin-right:10px;
+  height:30px;
+}
+
+.navbar-nav > .active > a,
+.navbar-nav > .active > a:hover,
+.navbar-nav > .active > a:focus {
+  color: #555555;
+  background-color: #d5d5d5;
+  height: 65px;
+}
+
+/* ***** Code ***** */
+b {
+    font-weight:400;
+    font-weight:bold;
+}
+
+#itemList .panel p {
+    font-size:15px !important;
+    max-width: 650px;
+    padding-left: 30px;
+    margin-bottom: 15px !important;
+}
+
+.firstParagraph {
+    color: #000;
+}
+
+#itemList .description.panel p {
+    padding-left:0px !important;
+}
+
+/* A lot of the HTML comments have <h2>Other Resources</h2> which
+   is ridiculously large. */
+.description h2 {
+    font-size:15px;
+    margin-bottom:0px;
+    margin-top:0px;
+}
+
+/* A lot of the HTML comments also have <h1> comments which are
+   is ridiculously large. */
+.description h1 {
+    font-size:17px;
+    margin-bottom:0px;
+    margin-top:0px;
+}
+
+#itemList .panel li {
+    font-size:15px !important;
+}
+
+@media (max-width: 768px) {
+    #itemList .panel li {
+        margin-left:0px;
+    }
+}
+
+@media (min-width: 768px) {
+    #itemList .panel li {
+        margin-left:30px;
+    }
+}
+
+#itemList .panel li > p {
+    padding-left: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+#itemList .panel pre {
+    margin-left:30px;
+    max-width: 590px;
+}
+
+.panel-heading {
+    padding: 0px 10px;
+    margin: -15px -8px 15px !important;
+}
+
+
+.panel-heading p {
+    font-size:15px !important;
+    padding-left:0px !important;
+}
+
+#nameGoesHere a {
+    font-size:15px !important;
+}
+
+
+/* ***** Buttons ***** */
+
+.btn-lg {
+    padding: 10px 46px;
+    font-size: 15px;
+    line-height: 1.33;
+    text-transform:uppercase;
+    border:0;
+    -webkit-transition: background ease-out 500ms;
+    -moz-transition: background ease-out 500ms;
+    -o-transition: background ease-out 500ms;
+    transition: background ease-out 500ms;
+    -moz-box-shadow:    0 1px 0px 1px #d9d9d9;
+    -webkit-box-shadow: 0 1px 0px 1px #d9d9d9;
+    box-shadow:         0 1px 0px 1px #d9d9d9;
+    font-weight:300;
+}
+
+.btn-primary {
+    color: #fff;
+    background-color: #1485c3;
+    border:0;
+}
+
+.btn-primary:hover {
+    color: #fff;
+    background-color: #1290d5;
+}
+
+.btn-default {
+    color: #797979;
+    background-color: #e5e5e5;
+    border:0;
+}
+
+.btn-default:hover {
+    color: #7a7a7a;
+    background-color: #f6f6f6;
+}
+
+.sub-page {
+    margin-top:80px;
+}
+
+.bs-sidenav {
+    margin-top: 30px;
+    margin-bottom: 30px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    background-color: #f6f6f6;
+    border-radius: 5px;
+}
+
+.affix {
+    position: fixed;
+}
+
+#search {
+    width: 300px !important;
+    margin-top: 17px;
+}
+
+#minimap {
+    font-size:14px;
+    -webkit-transform: translateZ(0);
+}
+
+#minimap .nav .caret {
+    border-top-color: #fff;
+    border-bottom-color: #fff;
+}
+
+#library-panel {
+    -webkit-transform: translateZ(0);
+}
+
+.accordion-heading a:hover {
+  color: #0083c5;
+}
+
+dartdoc-category,
+dartdoc-item,
+dartdoc-method,
+method-panel,
+dartdoc-page,
+dartdoc-variable {
+  display: block;
+}
+
+dartdoc-annotation {
+  font-style: italic;
+}
+
+#nav-collapse-button.visible {
+    display: block;
+}
+
+/* Override the normal bootstrap which forces this to be
+   invisible at this resolution */
+@media screen and (min-width: 768 px) {
+    .navbar-toggle {
+        display: block;
+    }
+}

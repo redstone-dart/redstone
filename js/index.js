@@ -1,0 +1,1 @@
+$('.dart-popover').popover();

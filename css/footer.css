@@ -1,0 +1,41 @@
+.footer {
+  border-top: 1px solid #ccc;
+  margin-top: 100px;
+  padding-top: 40px;
+  padding-bottom: 40px;
+}
+
+.footer-panel {
+  text-align: center;
+  color: #777;
+}
+
+.gh-links {
+  display: inline-block;
+  margin-bottom: 10;
+  padding-left: 0;
+  list-style: none;
+}
+
+.gh-links li {
+  display: inline-block;
+  line-height: 1;
+  padding: 5px 8px;
+}
+
+.footer-links {
+  display: inline-block;
+  list-style: none;
+  margin-top: 10px;
+  padding-left: 0;
+  color: #999;
+}
+
+.footer-links li:first-child {
+  padding-left: 0;
+}
+
+.footer-links li {
+  display: inline;
+  padding: 0 2px;
+}
