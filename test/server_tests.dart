@@ -6,8 +6,8 @@ import 'dart:io';
 import 'package:unittest/unittest.dart';
 
 import 'package:di/di.dart';
-import 'package:bloodless/server.dart' as app;
-import 'package:bloodless/mocks.dart';
+import 'package:redstone/server.dart' as app;
+import 'package:redstone/mocks.dart';
 import 'package:logging/logging.dart';
 
 import 'services/routes.dart';

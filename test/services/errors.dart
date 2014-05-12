@@ -2,7 +2,7 @@ library errors;
 
 import "dart:async";
 
-import 'package:bloodless/server.dart' as app;
+import 'package:redstone/server.dart' as app;
 
 @app.Route("/wrong_method", methods: const [app.POST])
 wrongMethod() => "this route accepts only POST requests";

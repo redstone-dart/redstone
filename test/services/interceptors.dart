@@ -2,7 +2,7 @@ library interceptors;
 
 import "dart:async";
 
-import 'package:bloodless/server.dart' as app;
+import 'package:redstone/server.dart' as app;
 
 @app.Route("/target")
 target() => "target_executed";
@@ -58,7 +58,7 @@ target5() => "basic_auth";
 
 @app.Interceptor("/basicauth")
 interceptor6() { 
-   if (app.authenticateBasic('Aladdin', 'open sesame', realm: 'Bloodless', abortOnFail: true)) {
+   if (app.authenticateBasic('Aladdin', 'open sesame', realm: 'Redstone', abortOnFail: true)) {
      app.chain.next();
    }
 }

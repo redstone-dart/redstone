@@ -1,4 +1,4 @@
-library bloodless_server;
+library redstone_server;
 
 import 'dart:async';
 import 'dart:io';
@@ -16,11 +16,11 @@ import 'package:crypto/crypto.dart';
 import 'package:di/di.dart';
 import 'package:di/auto_injector.dart';
 
-part 'package:bloodless/src/metadata.dart';
-part 'package:bloodless/src/logger.dart';
-part 'package:bloodless/src/exception.dart';
-part 'package:bloodless/src/setup_impl.dart';
-part 'package:bloodless/src/server_impl.dart';
+part 'package:redstone/src/metadata.dart';
+part 'package:redstone/src/logger.dart';
+part 'package:redstone/src/exception.dart';
+part 'package:redstone/src/setup_impl.dart';
+part 'package:redstone/src/server_impl.dart';
 
 const String GET = "GET";
 const String POST = "POST";

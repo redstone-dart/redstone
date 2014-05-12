@@ -1,4 +1,4 @@
-library bloodless_tasks;
+library redstone_tasks;
 
 import 'dart:io';
 import 'package:grinder/grinder.dart';

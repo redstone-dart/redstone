@@ -4,7 +4,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:convert';
 
-import 'package:bloodless/server.dart' as app;
+import 'package:redstone/server.dart' as app;
 
 @app.Route("/types/string")
 stringType() => "string";

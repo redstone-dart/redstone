@@ -1,6 +1,6 @@
 library dependency_injection;
 
-import 'package:bloodless/server.dart' as app;
+import 'package:redstone/server.dart' as app;
 
 class A {
   

@@ -1,6 +1,6 @@
 library routes;
 
-import 'package:bloodless/server.dart' as app;
+import 'package:redstone/server.dart' as app;
 
 @app.Route("/path", matchSubPaths: true)
 mainRoute() => "main_route";

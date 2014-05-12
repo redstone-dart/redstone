@@ -1,4 +1,4 @@
-part of bloodless_server;
+part of redstone_server;
 
 /**
  * An annotation to define targets.

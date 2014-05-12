@@ -1,4 +1,4 @@
-part of bloodless_server;
+part of redstone_server;
 
 typedef Future _RequestHandler(UrlMatch match, Request request);
 typedef void _RunInterceptor();
@@ -476,7 +476,7 @@ void _writeErrorPage(HttpResponse resp, String resource, [Object error, StackTra
 '''<!DOCTYPE>
 <html>
 <head>
-  <title>Bloodless Server - ${description != null ? description : statusCode}</title>
+  <title>Redstone Server - ${description != null ? description : statusCode}</title>
   <style>
     body, html {
       margin: 0px;
@@ -485,7 +485,7 @@ void _writeErrorPage(HttpResponse resp, String resource, [Object error, StackTra
     }
     .header {
       height:100px;
-      background-color:steelblue;
+      background-color: rgba(204, 49, 0, 0.94);
       color:#F8F8F8;
       overflow: hidden;
     }
@@ -528,7 +528,7 @@ void _writeErrorPage(HttpResponse resp, String resource, [Object error, StackTra
       <pre>${error}${stack != null ? "\n\n" + stack.toString() : ""}</pre>
     </div>
   </div>
-  <div class="footer">Bloodless Server - 2014 - Luiz Mineo</div>
+  <div class="footer">Redstone Server - 2014 - Luiz Mineo</div>
 </body>
 </html>''';
 

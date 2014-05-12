@@ -1,3 +1,7 @@
+## v0.3.1
+- Renamed project to **Redstone.dart**
+- New and improved documentation
+
 ## v0.3.0
 - Added `Route.matchSubPaths` property (see issue #5)
 - Added `ErrorHandler.urlPattern` property (check documentation for details)

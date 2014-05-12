@@ -1,6 +1,6 @@
 library test_lib;
 
-import 'package:bloodless/server.dart' as app;
+import 'package:redstone/server.dart' as app;
 
 @app.Route("/")
 helloWorld() => "Hello, World!";

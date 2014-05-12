@@ -1,4 +1,4 @@
-library bloodless_mocks;
+library redstone_mocks;
 
 import 'dart:io';
 import 'dart:collection';
@@ -7,9 +7,9 @@ import 'dart:async';
 
 import 'package:crypto/crypto.dart';
 
-import 'package:bloodless/server.dart';
+import 'package:redstone/server.dart';
 
-part 'package:bloodless/src/http_mock.dart';
+part 'package:redstone/src/http_mock.dart';
 
 /**
  * A class to simulate requests in unit tests.

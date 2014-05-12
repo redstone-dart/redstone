@@ -1,6 +1,6 @@
-part of bloodless_server;
+part of redstone_server;
 
-final Logger _logger = new Logger("bloodless_server");
+final Logger _logger = new Logger("redstone_server");
 
 /// Setup a simple log handler, that output messages to console.
 void setupConsoleLog([Level level = Level.INFO]) {

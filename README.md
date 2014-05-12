@@ -1,16 +1,16 @@
 bloodless
 =========
 
-[![Build Status](https://drone.io/github.com/luizmineo/bloodless/status.png)](https://drone.io/github.com/luizmineo/bloodless/latest)
+[![Build Status](https://drone.io/github.com/luizmineo/redstone.dart/status.png)](https://drone.io/github.com/luizmineo/redstone.dart/latest)
 
-Bloodless is a server-side, metadata driven microframework for [Dart](https://www.dartlang.org/). 
+Redstone.dart is a server-side, metadata driven microframework for [Dart](https://www.dartlang.org/). 
 
 ####How does it work?
-Bloodless allows you to easily publish your functions and classes through a web interface, by just adding some annotations to them. 
+Redstone.dart allows you to easily publish your functions and classes through a web interface, by just adding some annotations to them. 
 
 ```dart
 
-import 'package:bloodless/server.dart' as app;
+import 'package:redstone/server.dart' as app;
 
 @app.Route("/")
 helloWorld() => "Hello, World!";
@@ -22,4 +22,4 @@ main() {
 ``` 
 
 ####Want to know more?
-Check out our [wiki](https://github.com/luizmineo/bloodless/wiki)! :)
+Check out our [wiki](https://github.com/luizmineo/redstone.dart/wiki)! :)
