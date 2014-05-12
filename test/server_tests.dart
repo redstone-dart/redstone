@@ -366,7 +366,7 @@ main() {
        var req = new MockRequest("/basicauth");
        req.headers.set(HttpHeaders.AUTHORIZATION, "Basic xxx");
        return app.dispatch(req).then((resp) {
-         expect(resp.headers[HttpHeaders.WWW_AUTHENTICATE][0], equals('Basic realm="Bloodless"'));   
+         expect(resp.headers[HttpHeaders.WWW_AUTHENTICATE][0], equals('Basic realm="Redstone"'));   
          expect(resp.statusCode, equals(401));   
        });
      });
