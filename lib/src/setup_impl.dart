@@ -11,7 +11,11 @@ final List<_Target> _targets = [];
 final List<_Interceptor> _interceptors = [];
 final Map<int, List<_ErrorHandler>> _errorHandlers = {};
 
+final List<RedstonePlugin> _plugins = [];
 final List<Module> _modules = [];
+
+final Map<String, List<_ParamHandler>> _customParams = {};
+
 Injector _injector;
 
 class _HandlerCfg<T> {
@@ -81,6 +85,15 @@ class _TargetParam {
 
 }
 
+class _ParamHandler {
+  
+  final Type metadataType;
+  final ParamProvider parameterProvider;
+  
+  _ParamHandler(this.metadataType, this.parameterProvider);
+  
+}
+
 class _Interceptor {
   
   final RegExp urlPattern;
@@ -127,6 +140,11 @@ class _Group {
 
 void _scanHandlers([List<Symbol> libraries]) {
   
+  //install plugins
+  _ManagerImpl manager = new _ManagerImpl();
+  manager.installPlugins();
+  
+  //scan libraries
   var mirrorSystem = currentMirrorSystem();
   var libsToScan;
   if (libraries != null) {
@@ -142,6 +160,12 @@ void _scanHandlers([List<Symbol> libraries]) {
   List<_Group> groups = [];
 
   libsToScan.forEach((LibraryMirror lib) {
+    
+    Install installConf = lib.metadata.
+        firstWhere((m) => m.reflectee is Install, orElse: () => null) as Install;
+    
+    
+    
     lib.declarations.values.forEach((DeclarationMirror declaration) {
       if (declaration is MethodMirror) {
         MethodMirror method = declaration;
@@ -200,6 +224,10 @@ void _clearHandlers() {
   _targets.clear();
   _interceptors.clear();
   _errorHandlers.clear();
+  
+  _modules.clear();
+  _plugins.clear();
+  _customParams.clear();
 
 }
 
@@ -274,15 +302,41 @@ void _configureInterceptor(Interceptor interceptor, ObjectMirror owner, MethodMi
   var posParams = [];
   var namedParams = {};
   handler.parameters.forEach((ParameterMirror param) {
-    try {
-      if (param.isNamed) {
-        namedParams[param.simpleName] = _injector.get(param.type.reflectedType);
-      } else {
-        posParams.add(_injector.get(param.type.reflectedType));
+    bool hasProvider = false;
+    if (!param.metadata.isEmpty) {
+      var metadata = param.metadata[0];
+      List<_ParamHandler> params = _customParams[ERROR_HANDLER];
+      if (params != null) {
+        _ParamHandler customParam = params.firstWhere((_ParamHandler p) => 
+            metadata.reflectee.runtimeType == p.metadataType, orElse: () => null);
+        if (customParam != null) {
+          var paramName = MirrorSystem.getName(param.simpleName);
+          var defaultValue = param.hasDefaultValue ? param.defaultValue : null;
+          var value = customParam.parameterProvider(metadata.reflectee, paramName, request, _injector);
+          if (value == null) {
+            value = defaultValue;
+          }
+          if (param.isNamed) {
+            namedParams[param.simpleName] = value;
+          } else {
+            posParams.add(value);
+          }
+          
+          hasProvider = true;
+        }
       }
-    } catch (_) {
-      var paramName = MirrorSystem.getName(param.simpleName);
-      throw new SetupException(handlerName, "Invalid parameter: Can't inject $paramName");
+    }
+    if (!hasProvider) {
+      try {
+        if (param.isNamed) {
+          namedParams[param.simpleName] = _injector.get(param.type.reflectedType);
+        } else {
+          posParams.add(_injector.get(param.type.reflectedType));
+        }
+      } catch (_) {
+        var paramName = MirrorSystem.getName(param.simpleName);
+        throw new SetupException(handlerName, "Invalid parameter: Can't inject $paramName");
+      }
     }
   });
 
@@ -308,15 +362,42 @@ void _configureErrorHandler(ErrorHandler errorHandler, ObjectMirror owner, Metho
   var posParams = [];
   var namedParams = {};
   handler.parameters.forEach((ParameterMirror param) {
-    try {
-      if (param.isNamed) {
-        namedParams[param.simpleName] = _injector.get(param.type.reflectedType);
-      } else {
-        posParams.add(_injector.get(param.type.reflectedType));
+    bool hasProvider = false;
+    if (!param.metadata.isEmpty) {
+      var metadata = param.metadata[0];
+      List<_ParamHandler> params = _customParams[ERROR_HANDLER];
+      if (params != null) {
+        _ParamHandler customParam = params.firstWhere((_ParamHandler p) => 
+            metadata.reflectee.runtimeType == p.metadataType, orElse: () => null);
+        if (customParam != null) {
+          var paramName = MirrorSystem.getName(param.simpleName);
+          var defaultValue = param.hasDefaultValue ? param.defaultValue : null;
+          var value = customParam.parameterProvider(metadata.reflectee, paramName, request, _injector);
+          if (value == null) {
+            value = defaultValue;
+          }
+          if (param.isNamed) {
+            namedParams[param.simpleName] = value;
+          } else {
+            posParams.add(value);
+          }
+          
+          hasProvider = true;
+        }
       }
-    } catch (_) {
-      var paramName = MirrorSystem.getName(param.simpleName);
-      throw new SetupException(handlerName, "Invalid parameter: Can't inject $paramName");
+    }
+    
+    if (!hasProvider) {
+      try {
+        if (param.isNamed) {
+          namedParams[param.simpleName] = _injector.get(param.type.reflectedType);
+        } else {
+          posParams.add(_injector.get(param.type.reflectedType));
+        }
+      } catch (_) {
+        var paramName = MirrorSystem.getName(param.simpleName);
+        throw new SetupException(handlerName, "Invalid parameter: Can't inject $paramName");
+      }
     }
   });
 
@@ -338,7 +419,8 @@ void _configureErrorHandler(ErrorHandler errorHandler, ObjectMirror owner, Metho
   handlers.add(new _ErrorHandler(errorHandler.statusCode, 
       pattern, name, caller));
 
-  _logger.info("Configured error handler for status ${errorHandler.statusCode} : $handlerName");
+  var url = errorHandler.urlPattern != null ? " - " + errorHandler.urlPattern : "";
+  _logger.info("Configured error handler for status ${errorHandler.statusCode} $url : $handlerName");
 }
 
 void _configureTarget(Route route, ObjectMirror owner, MethodMirror handler) {
@@ -354,13 +436,11 @@ void _configureTarget(Route route, ObjectMirror owner, MethodMirror handler) {
 
       var httpResp = request.response;
       var pathParams = match.parameters;
-      var queryParams = request.queryParams;
       
       var posParams = [];
       var namedParams = {};
       paramProcessors.processors.forEach((f) {
-        var targetParam = f(pathParams, queryParams, request.bodyType, 
-            request.body, request.attributes);
+        var targetParam = f(pathParams, request);
         if (targetParam.name == null) {
           posParams.add(targetParam.value);
         } else {
@@ -409,8 +489,8 @@ _ParamProcessors _buildParamProcesors(MethodMirror handler) {
         }
         bodyType = body.type;
 
-        return (urlParams, queryParams, reqBodyType, reqBody, reqAttrs) {
-          return new _TargetParam(reqBody, name);
+        return (Map urlParams, Request request) {
+          return new _TargetParam(request.body, name);
         };
 
       } else if (metadata.reflectee is QueryParam) {
@@ -422,8 +502,8 @@ _ParamProcessors _buildParamProcesors(MethodMirror handler) {
           queryParamName = paramName;
         }
 
-        return (urlParams, queryParams, reqBodyType, reqBody, reqAttrs) {
-          var value = queryParams[queryParamName];
+        return (Map urlParams, Request request) {
+          var value = request.queryParams[queryParamName];
           try {
             value = convertFunc(value, defaultValue);
           } catch(e) {
@@ -439,8 +519,8 @@ _ParamProcessors _buildParamProcesors(MethodMirror handler) {
           attrName = paramName;
         }
         
-        return (urlParams, queryParams, reqBodyType, reqBody, reqAttrs) {
-          var value = reqAttrs[attrName];
+        return (Map urlParams, Request request) {
+          var value = request.attributes[attrName];
           if (value == null) {
             value = defaultValue;
           }
@@ -455,9 +535,28 @@ _ParamProcessors _buildParamProcesors(MethodMirror handler) {
           throw new SetupException(handlerName, "Invalid parameter: Can't inject $paramName");
         }
         var targetParam = new _TargetParam(value, name);
-        return (urlParams, queryParams, reqBodyType, reqBody, reqAttrs) =>
+        return (Map urlParams, Request request) =>
             targetParam;
         
+      } else {
+        List<_ParamHandler> params = _customParams[ROUTE];
+        if (params != null) {
+          _ParamHandler customParam = params.firstWhere((_ParamHandler p) => 
+              metadata.reflectee.runtimeType == p.metadataType, orElse: () => null);
+          if (customParam != null) {
+            var paramName = MirrorSystem.getName(paramSymbol);
+            var defaultValue = param.hasDefaultValue ? 
+                param.defaultValue.reflectee : null;
+            return (Map urlParams, Request request) {
+              var value = customParam.parameterProvider(metadata.reflectee, 
+                  paramName, request, _injector);
+              if (value == null) {
+                value = defaultValue;
+              }
+              return new _TargetParam(value, name);
+            };
+          }
+        }
       }
     }
 
@@ -465,7 +564,7 @@ _ParamProcessors _buildParamProcesors(MethodMirror handler) {
     var paramName = MirrorSystem.getName(paramSymbol);
     var defaultValue = param.hasDefaultValue ? param.defaultValue.reflectee : null;
 
-    return (urlParams, queryParams, reqBodyType, reqBody, reqAttrs) {
+    return (Map urlParams, Request request) {
       var value = urlParams[paramName];
       try {
         value = convertFunc(value, defaultValue);

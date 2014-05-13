@@ -20,6 +20,7 @@ part 'package:redstone/src/metadata.dart';
 part 'package:redstone/src/logger.dart';
 part 'package:redstone/src/exception.dart';
 part 'package:redstone/src/setup_impl.dart';
+part 'package:redstone/src/plugin_impl.dart';
 part 'package:redstone/src/server_impl.dart';
 
 const String GET = "GET";
@@ -30,6 +31,10 @@ const String DELETE = "DELETE";
 const String JSON = "json";
 const String FORM = "form";
 const String TEXT = "text";
+
+const String ROUTE = "ROUTE";
+const String INTERCEPTOR = "INTERCEPTOR";
+const String ERROR_HANDLER = "ERROR_HANDLER";
 
 const String _DEFAULT_ADDRESS = "0.0.0.0";
 const int _DEFAULT_PORT = 8080;
@@ -321,7 +326,6 @@ void setUp([List<Symbol> libraries]) {
  * This method is intended to be used in unit tests.
  */
 void tearDown() {
-  _modules.clear();
   _clearHandlers();
 }
 
@@ -333,3 +337,32 @@ void tearDown() {
  */
 Future<HttpResponse> dispatch(UnparsedRequest request) => _dispatchRequest(request);
 
+/**
+ * 
+ */
+void addPlugin(RedstonePlugin plugin) {
+  _plugins.add(plugin);
+}
+
+typedef dynamic RouteHandler(Map<String, String> pathSegments, 
+                             Injector injector, Request request);
+
+typedef dynamic Handler(Injector injector);
+
+typedef Object ParamProvider(dynamic metadata, Type paramType, 
+                             String paramName, Request request, Injector injector);
+
+abstract class Manager {
+  
+  void addRoute(Route conf, String name, RouteHandler route, {String bodyType});
+  
+  void addInterceptor(Interceptor conf, String name, Handler interceptor);
+  
+  void addErrorHandler(ErrorHandler conf, String name, Handler errorHandler);
+  
+  void addParameterProvider(Type metadataType, ParamProvider parameterProvider, 
+                            {List<String> handlerTypes: const [ROUTE]});
+  
+}
+
+typedef void RedstonePlugin(Manager manager);

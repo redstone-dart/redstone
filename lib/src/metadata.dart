@@ -33,6 +33,12 @@ class Route {
                this.responseType,
                this.allowMultipartRequest: false,
                this.matchSubPaths: false});
+  
+  Route.conf(String this.urlTemplate, 
+                {this.methods: const [GET],
+                 this.responseType,
+                 this.allowMultipartRequest: false,
+                 this.matchSubPaths: false});
 
   Route._fromGroup(String this.urlTemplate, 
               this.methods, this.responseType,
@@ -142,6 +148,8 @@ class Interceptor {
 
   const Interceptor(String this.urlPattern, {int this.chainIdx: 0, bool this.parseRequestBody: false});
 
+  Interceptor.conf(String this.urlPattern, {int this.chainIdx: 0, bool this.parseRequestBody: false});
+  
   Interceptor._fromGroup(String this.urlPattern, int this.chainIdx, bool this.parseRequestBody);
 
 }
@@ -165,6 +173,8 @@ class ErrorHandler {
   final String urlPattern;
 
   const ErrorHandler(int this.statusCode, {String this.urlPattern});
+  
+  ErrorHandler.conf(int this.statusCode, {String this.urlPattern});
   
   ErrorHandler._fromGroup(int this.statusCode, String this.urlPattern);
 
@@ -201,4 +211,17 @@ class Group {
 
   const Group(String this.urlPrefix);
 
+}
+
+/**
+ * An annotation to include handlers from other libraries
+ * 
+ */
+class Install {
+  
+  final String urlPrefix;
+  final int chainIdx;
+  
+  const Install({String this.urlPrefix, int this.chainIdx});
+  
 }
