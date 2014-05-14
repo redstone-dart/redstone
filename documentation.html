@@ -294,7 +294,7 @@ import 'package:your_package_name/services.dart';
 main() {
 
   //load handlers in 'services' library
-  setUp(() => app.setUp([#services]);
+  setUp(() => app.setUp([#services]));
 
   //remove all loaded handlers
   tearDown(() => app.tearDown());
@@ -317,7 +317,7 @@ main() {
             <h1 class="page-header">Reference</h1>
             <div id="routes" class="subsection">
               <h2>Routes</h2>
-              <p>The <code>@Route</code> annotation is used to bind a function or method to a URL:</p>
+              <p>The <code>@Route</code> annotation is used to bind a function or method to an URL:</p>
               <pre class="prettyprint code">
 @app.Route("/")
 helloWorld() => "Hello, World!";</pre>
@@ -444,7 +444,7 @@ handleResponseHeader() {
   app.chain.next();
 }</pre>
               <h3>The chain object</h3>
-              <p>Each request is actually a chain, composed by 0 or more interceptors, and a target. A target is a function annotated with <code>@Route</code>, or a static file. An interceptor is a structure that allows you to apply a common behavior to a group of targets. For example, you can use a interceptor to apply a security constraint, or to manage a resource:</p>
+              <p>Each request is actually a chain, composed by 0 or more interceptors, and a target. A target is a function annotated with <code>@Route</code>, or a static file. An interceptor is a structure that allows you to apply a common behavior to a group of targets. For example, you can use an interceptor to apply a security constraint, or to manage a resource:</p>
               <pre class="prettyprint code">
 @app.Interceptor(r'/admin/.*')
 adminFilter() {
@@ -653,7 +653,7 @@ import 'package:your_package_name/services.dart';
 main() {
 
   //load handlers in 'services' library
-  setUp(() => app.setUp([#services]);
+  setUp(() => app.setUp([#services]));
 
   //remove all loaded handlers
   tearDown(() => app.tearDown());

@@ -103,9 +103,9 @@ handleNotFoundError() => app.redirect("/error/not_found.html");</pre>
               <pre class="prettyprint code">
 main() {
 
-  setUp(() => app.setUp());
+  setUp(app.setUp);
 
-  tearDown(() => app.tearDown());
+  tearDown(app.tearDown);
 
   test("service", () {
     var req = new <a href="#" class="dart-popover" data-toggle="popover" title="MockRequest" data-html="true" data-trigger="hover focus" data-content="To test your code, just create and dispatch a MockRequest.">MockRequest</a>("/service");
