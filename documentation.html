@@ -61,6 +61,8 @@
                 <li><a href="#error_handlers">Error handlers</a></li>
                 <li><a href="#groups">Groups</a></li>
                 <li><a href="#dependency_injection">Dependency injection</a></li>
+                <li><a href="#importing_libraries">Importing libraries</a></li>
+                <li><a href="#plugins">Plugins</a></li>
                 <li><a href="#unit_test">Unit test</a></li>
                 <li><a href="#server_configuration">Server Configuration</a></li>
                 <li><a href="#deploy">Deploy</a></li>
@@ -441,7 +443,11 @@ user() {
 @app.Interceptor(r'/.*')
 handleResponseHeader() {
   app.request.response.headers.add("Access-Control-Allow-Origin", "*");
-  app.chain.next();
+  if (app.request.method == "OPTIONS") {
+    app.chain.interrupt();
+  } else {
+    app.chain.next();
+  }
 }</pre>
               <h3>The chain object</h3>
               <p>Each request is actually a chain, composed by 0 or more interceptors, and a target. A target is a function annotated with <code>@Route</code>, or a static file. An interceptor is a structure that allows you to apply a common behavior to a group of targets. For example, you can use an interceptor to apply a security constraint, or to manage a resource:</p>
@@ -622,6 +628,213 @@ interceptor(ClassA objA, ClassB objB) {
 @app.ErrorHandler(404)
 notFound(ClassB objB) {
   ...
+}</pre>
+            </div>
+            <div id="importing_libraries" class="subsection">
+              <h2>Importing Libraries</h2>
+              <p>Redstone.dart recursively scans all libraries imported by your main script. Example:</p>
+              <ul>
+                <li>server.dart</li>
+              </ul>
+              <pre class="prettyprint code">
+import 'package:redstone/server.dart' as app;
+//all handlers in services.dart will be installed
+import 'package:myapp/services.dart';
+
+main() {
+  app.setupConsoleLog();
+  app.start();
+}</pre>
+              <ul>
+                <li>services.dart</li>
+              </ul>
+              <pre class="prettyprint code">
+import 'package:redstone/server.dart' as app;
+
+@app.Route("/user/find")
+findUser() {
+  ...
+}</pre>
+              <p>However, sometimes you need more control on how handlers from other libraries are installed. In these cases, you can use the <code>@Install</code> annotation:</p>
+              <pre class="prettyprint code">
+import 'package:redstone/server.dart' as app;
+//all handlers in services.dart will be installed under the '/services' path
+@app.Install(urlPrefix: '/services')
+import 'package:myapp/services.dart';
+
+main() {
+  app.setupConsoleLog();
+  app.start();
+}</pre>
+              <p>If the library defines interceptors, you can control the execution order:</p>
+              <pre class="prettyprint code">
+import 'package:redstone/server.dart' as app;
+
+@app.Install(chainIdx: 1)
+import 'package:myapp/services.dart';
+
+//this interceptor will be invoked first
+@app.Interceptor("/.+", chainIdx: 0)
+interceptor() {
+  app.request.response.write("interceptor 1");
+  app.chain.next();
+}
+
+main() {
+  app.setupConsoleLog();
+  app.start();
+}</pre>
+              <ul>
+                <li>services.dart</li>
+              </ul>
+              <pre class="prettyprint code">
+import 'package:redstone/server.dart' as app;
+
+@app.Interceptor("/.+", chainIdx: 0)
+interceptor() {
+  app.request.response.write("interceptor 2");
+  app.chain.next();
+}
+
+@app.Interceptor("/.+", chainIdx: 1)
+interceptor2() {
+  app.request.response.write("interceptor 3");
+  app.chain.next();
+}</pre>
+              <p>If you want to import a library, but don't need its handlers, you can use the <code>@Ignore</code> annotation:</p>
+              <pre class="prettyprint code">
+import 'package:redstone/server.dart' as app;
+//handlers defined in services.dart won't be installed
+@app.Ignore()
+import 'package:myapp/services.dart';
+
+main() {
+  app.setupConsoleLog();
+  app.start();
+}</pre>
+              <p>A library is installed only once. So, if you import the same library in different files, its handlers won't be installed twice:</p>
+              <pre class="prettyprint code">
+import 'package:redstone/server.dart' as app;
+import 'package:myapp/lib_a.dart';
+import 'package:myapp/lib_b.dart';
+
+main() {
+  app.setupConsoleLog();
+  app.start();
+}</pre>
+              <ul>
+                <li>lib_a.dart</li>
+              </ul>
+              <pre class="prettyprint code">
+library lib_a;
+import 'package:redstone/server.dart' as app;
+import 'package:myapp/lib_c.dart';
+
+@app.Route(...)
+serviceA() {
+  ...
+}</pre>
+              <ul>
+                <li>lib_b.dart</li>
+              </ul>
+              <pre class="prettyprint code">
+library lib_b;
+import 'package:redstone/server.dart' as app;
+import 'package:myapp/lib_c.dart';
+
+@app.Route(...)
+serviceB() {
+  ...
+}</pre>
+              <ul>
+                <li>lib_c.dart</li>
+              </ul>
+              <pre class="prettyprint code">
+//lib_c is imported by lib_a and lib_b, but its handlers are installed only once.
+library lib_c;
+import 'package:redstone/server.dart' as app;
+
+@app.Interceptor(...)
+interceptor() {
+  ...
+}</pre>
+            </div>
+            <div id="plugins" class="subsection">
+              <h2>Plugins</h2>
+              <p>Redstone plugins can dynamically create new routes, interceptors, error handlers, parameter providers and response processors.</p>
+              <p>For example, if your app often needs to convert from json data to Dart objects, like this:</p>
+              <pre class="prettyprint code">
+@app.Route("/user", methods: const[app.POST])
+printUser(@app.Body() Map json) {
+  User user = new User();
+  user.fromJson(json);
+  ...
+}</pre>
+              <p>You can build a plugin to do this job for you. Example:</p>
+              <pre class="prettyprint code">
+class FromJson {
+  
+  const FromJson();
+  
+}
+
+FromJsonPlugin(app.Manager manager) {
+  
+  manager.addParameterProvider(FromJson, (metadata, type, handlerName, paramName, req, injector) {
+    if (req.bodyType != app.JSON) {
+      throw new app.RequestException(
+          "FromJson plugin - $handlerName", "content-type must be 'application/json'");
+    }
+    
+    ClassMirror clazz = reflectClass(type);
+    InstanceMirror obj = clazz.newInstance(const Symbol(""), const []);
+    obj.invoke(#fromJson, [req.body]);
+    return obj.reflectee;
+  });
+  
+}</pre>
+              <p>Now, if you install <code>FromJsonPlugin</code>, you can use the <code>@FromJson</code> annotation:</p>
+              <pre class="prettyprint code">
+@app.Route("/user", methods: const[app.POST])
+printUser(@FromJson() User user) {
+  ...
+}
+
+main() {
+  app.addPlugin(FromJsonPlugin);
+  app.setupConsoleLog();
+  app.start();
+}</pre>
+              <p>Besides, you can also build a plugin to convert from dart objects to json data:</p>
+              <pre class="prettyprint code">
+class ToJson {
+  
+  const ToJson();
+  
+}
+
+ToJsonPlugin(app.Manager manager) {
+  manager.addResponseProcessor(ToJson, (metadata, handlerName, value, injector) {
+    if (value == null) {
+      return value;
+    }
+    return value.toJson();
+  });
+}</pre>
+              <pre class="prettyprint code">
+@app.Route("/user/find")
+@ToJson()
+findUser() {
+  return new Future(() {
+    ...
+    return user;
+  });
+}
+
+main() {
+  app.addPlugin(ToJsonPlugin);
+  app.setupConsoleLog();
+  app.start();
 }</pre>
             </div>
             <div id="unit_test" class="subsection">
@@ -810,7 +1023,7 @@ $ dart bin/build.dart all</pre>
             </ul>
             <p>Built and mantained by <a href="https://github.com/luizmineo" target="_blank">Luiz Mineo</a>. Code licensed under <a href="https://github.com/luizmineo/redstone.dart/blob/master/LICENSE" target="_blank">MIT</a>.</p>
             <ul class="footer-links">
-              <li>Currently v0.3.1</li>
+              <li>Currently v0.4.0</li>
               <li>-</li>
               <li><a href="https://github.com/luizmineo/redstone.dart">Github</a></li>
               <li>-</li>

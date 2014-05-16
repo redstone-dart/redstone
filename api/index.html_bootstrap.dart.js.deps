@@ -185,6 +185,14 @@ file:///home/luiz/dev/git/redstone/redstone.dart/dartdoc-viewer/client/out/web/p
 file:///home/luiz/dev/git/redstone/redstone.dart/dartdoc-viewer/client/out/web/packages/observe/src/observer_transform.dart
 file:///home/luiz/dev/git/redstone/redstone.dart/dartdoc-viewer/client/out/web/packages/observe/src/path_observer.dart
 file:///home/luiz/dev/git/redstone/redstone.dart/dartdoc-viewer/client/out/web/packages/observe/src/to_observable.dart
+file:///home/luiz/dev/git/redstone/redstone.dart/dartdoc-viewer/client/out/web/packages/path/path.dart
+file:///home/luiz/dev/git/redstone/redstone.dart/dartdoc-viewer/client/out/web/packages/path/src/context.dart
+file:///home/luiz/dev/git/redstone/redstone.dart/dartdoc-viewer/client/out/web/packages/path/src/parsed_path.dart
+file:///home/luiz/dev/git/redstone/redstone.dart/dartdoc-viewer/client/out/web/packages/path/src/path_exception.dart
+file:///home/luiz/dev/git/redstone/redstone.dart/dartdoc-viewer/client/out/web/packages/path/src/style.dart
+file:///home/luiz/dev/git/redstone/redstone.dart/dartdoc-viewer/client/out/web/packages/path/src/style/posix.dart
+file:///home/luiz/dev/git/redstone/redstone.dart/dartdoc-viewer/client/out/web/packages/path/src/style/url.dart
+file:///home/luiz/dev/git/redstone/redstone.dart/dartdoc-viewer/client/out/web/packages/path/src/style/windows.dart
 file:///home/luiz/dev/git/redstone/redstone.dart/dartdoc-viewer/client/out/web/packages/polymer/deserialize.dart
 file:///home/luiz/dev/git/redstone/redstone.dart/dartdoc-viewer/client/out/web/packages/polymer/polymer.dart
 file:///home/luiz/dev/git/redstone/redstone.dart/dartdoc-viewer/client/out/web/packages/polymer/src/build/utils.dart
