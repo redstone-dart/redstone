@@ -35,7 +35,7 @@ class _ManagerImpl implements Manager {
   
     };
     _interceptors.add(new _Interceptor(new RegExp(conf.urlPattern), name,
-                                       conf.chainIdx, conf.parseRequestBody, 
+                                       [conf.chainIdx], conf.parseRequestBody, 
                                        caller));
     
     _logger.info("Configured interceptor for ${conf.urlPattern} : $name");

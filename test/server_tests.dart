@@ -16,15 +16,17 @@ import 'services/arguments.dart';
 import 'services/errors.dart';
 import 'services/interceptors.dart';
 import 'services/dependency_injection.dart';
+import 'services/install_lib.dart';
+import 'services/plugins.dart';
 
 main() {
   
-  //app.setupConsoleLog(Level.All);
+  //app.setupConsoleLog(Level.ALL);
   
   group("Routes:", () {
     
     setUp(() => app.setUp([#routes]));
-    tearDown(() => app.tearDown());
+    tearDown(app.tearDown);
     
     test("path matching", () {
       var req = new MockRequest("/path/subpath");
@@ -62,7 +64,7 @@ main() {
   group("Response serialization:", () {
     
     setUp(() => app.setUp([#type_serialization]));
-    tearDown(() => app.tearDown());
+    tearDown(app.tearDown);
     
     test("String -> text/plain", () {
       var req = new MockRequest("/types/string");
@@ -125,7 +127,7 @@ main() {
   group("Route arguments:", () {
     
     setUp(() => app.setUp([#arguments]));
-    tearDown(() => app.tearDown());
+    tearDown(app.tearDown);
     
     test("path parameters", () {
       var req = new MockRequest("/args/arg/1/1.2");
@@ -233,7 +235,7 @@ main() {
   group("Error handling:", () {
     
     setUp(() => app.setUp([#errors]));
-    tearDown(() => app.tearDown());
+    tearDown(app.tearDown);
     
     test("wrong method", () {
       var req = new MockRequest("/wrong_method");
@@ -324,7 +326,7 @@ main() {
   group("Chain:", () {
     
     setUp(() => app.setUp([#interceptors]));
-    tearDown(() => app.tearDown());
+    tearDown(app.tearDown);
     
     test("interceptors", () {
       var req = new MockRequest("/target");
@@ -426,4 +428,82 @@ main() {
       });
     });
   });
+  
+  group("install library:", () {
+    
+    setUp(() => app.setUp([#install_lib]));
+    tearDown(app.tearDown);
+    
+    test("URL prefix", () {
+      var req = new MockRequest("/prefix/route");
+      var req2 = new MockRequest("/prefix/group/route");
+      var req3 = new MockRequest("/prefix/error");
+      
+      return app.dispatch(req).then((resp) {
+        expect(resp.mockContent, equals("interceptor_executed target_executed"));
+      }).then((_) => app.dispatch(req2)).then((resp) {
+        expect(resp.mockContent, equals("interceptor_executed target_executed"));
+      }).then((_) => app.dispatch(req3)).then((resp) {
+        expect(resp.mockContent, equals("error_handler_executed"));
+      });
+    });
+    
+    test("Chain", () {
+      var req = new MockRequest("/chain/route");
+      return app.dispatch(req).then((resp) {
+        expect(resp.mockContent, equals("root interceptor_1 interceptor_2 interceptor_3 interceptor_4 target "));
+      });
+    });
+    
+    test("@Ignore", () {
+      var req = new MockRequest("/ignore");
+      return app.dispatch(req).then((resp) {
+        expect(resp.statusCode, equals(404));
+      });
+    });
+  });
+  
+  group("Plugins:", () {
+    
+    setUp(() { 
+      app.addPlugin(FromJsonPlugin);
+      app.addPlugin(TestPlugin);
+      app.setUp([#plugins]);
+    });
+    tearDown(app.tearDown);
+    
+    test("Parameter provider", () {
+      
+      var req = new MockRequest("/user", method: app.POST, bodyType: app.JSON, body: {
+        "name": "name",
+        "username": "username"
+      });
+      return app.dispatch(req).then((resp) {
+        expect(resp.mockContent, equals("name: name username: username"));
+      });
+      
+    });
+    
+    test("Parameter provider - exception", () {
+      var req = new MockRequest("/user", method: app.POST, bodyType: app.FORM, body: {
+        "name": "name",
+        "username": "username"
+      });
+      return app.dispatch(req).then((resp) {
+        expect(resp.statusCode, equals(400));
+      });
+    });
+    
+    test("Routes", () {
+      var req = new MockRequest("/route/value");
+      var req2 = new MockRequest("/error");
+      
+      return app.dispatch(req).then((resp) {
+        expect(resp.mockContent, equals("interceptor value"));
+      }).then((_) => app.dispatch(req2)).then((resp) {
+        expect(resp.mockContent, equals("error_handler"));
+      });
+    });
+  });
+  
 }

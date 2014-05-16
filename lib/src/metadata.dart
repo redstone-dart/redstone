@@ -40,11 +40,6 @@ class Route {
                  this.allowMultipartRequest: false,
                  this.matchSubPaths: false});
 
-  Route._fromGroup(String this.urlTemplate, 
-              this.methods, this.responseType,
-              this.allowMultipartRequest,
-              this.matchSubPaths);
-
 }
 
 /**
@@ -149,8 +144,6 @@ class Interceptor {
   const Interceptor(String this.urlPattern, {int this.chainIdx: 0, bool this.parseRequestBody: false});
 
   Interceptor.conf(String this.urlPattern, {int this.chainIdx: 0, bool this.parseRequestBody: false});
-  
-  Interceptor._fromGroup(String this.urlPattern, int this.chainIdx, bool this.parseRequestBody);
 
 }
 
@@ -175,8 +168,6 @@ class ErrorHandler {
   const ErrorHandler(int this.statusCode, {String this.urlPattern});
   
   ErrorHandler.conf(int this.statusCode, {String this.urlPattern});
-  
-  ErrorHandler._fromGroup(int this.statusCode, String this.urlPattern);
 
 }
 
@@ -223,5 +214,20 @@ class Install {
   final int chainIdx;
   
   const Install({String this.urlPrefix, int this.chainIdx});
+  
+  Install.conf({String this.urlPrefix, int this.chainIdx});
+  
+  Install.defaultConf() :
+    urlPrefix = null,
+    chainIdx = null;
+}
+
+/**
+ * Use this annotation to import a library without installing
+ * its handlers
+ */
+class Ignore {
+  
+  const Ignore();
   
 }
