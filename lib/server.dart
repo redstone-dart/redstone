@@ -353,22 +353,22 @@ Future<HttpResponse> dispatch(UnparsedRequest request) => _dispatchRequest(reque
  * Allows to programmatically create routes, interceptors, error handlers
  * and parameter providers.
  * 
- * To access a [Manager] instance, you need to create and register a [RedstonePlugin]
+ * To access a [Manager] instance, you need to create and register a [RedstonePlugin].
  */
 abstract class Manager {
   
   /**
-   * Create a new route
+   * Create a new route.
    */
   void addRoute(Route conf, String name, RouteHandler route, {String bodyType});
   
   /**
-   * Create a new interceptor
+   * Create a new interceptor.
    */
   void addInterceptor(Interceptor conf, String name, Handler interceptor);
   
   /**
-   * Create a new error handler
+   * Create a new error handler.
    */
   void addErrorHandler(ErrorHandler conf, String name, Handler errorHandler);
   
@@ -383,6 +383,15 @@ abstract class Manager {
   void addParameterProvider(Type metadataType, ParamProvider parameterProvider, 
                             {List<String> handlerTypes: const [ROUTE]});
   
+  /**
+   * Create a new response processor.
+   * 
+   * [metadataType] is the annotation type that triggers this processor.
+   * [processor] is the function which will be invoked to transform the returned
+   * value. 
+   */
+  void addResponseProcessor(Type metadataType, ResponseProcessor processor);
+  
 }
 
 /**
@@ -392,19 +401,19 @@ abstract class Manager {
 typedef void RedstonePlugin(Manager manager);
 
 /**
- * A route programmatically created by a plugin
+ * A route programmatically created by a plugin.
  */
 typedef dynamic RouteHandler(Map<String, String> pathSegments, 
                              Injector injector, Request request);
 
 /**
- * An interceptor or error handler, programmatically created by a plugin
+ * An interceptor or error handler, programmatically created by a plugin.
  */
 typedef dynamic Handler(Injector injector);
 
 /**
  * A parameter provider is a function that can create parameters
- * for routes, interceptors and error handlers
+ * for routes, interceptors and error handlers.
  * 
  * It can be used, for example, to automatically validate
  * and parse the request's body and arguments.
@@ -412,3 +421,10 @@ typedef dynamic Handler(Injector injector);
 typedef Object ParamProvider(dynamic metadata, Type paramType, 
                              String handlerName, String paramName, 
                              Request request, Injector injector);
+
+/**
+ * A response processor is a function, that can transform values
+ * returned by routes.
+ */
+typedef Object ResponseProcessor(dynamic metadata, String handlerName, 
+                                 Object response, Injector injector);

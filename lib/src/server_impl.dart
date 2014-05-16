@@ -358,7 +358,7 @@ class _ChainImpl implements Chain {
 }
 
 Future _writeResponse(respValue, HttpResponse httpResp, String responseType, {int statusCode, 
-  bool abortIfChainInterrupted: false}) {
+  bool abortIfChainInterrupted: false, List<_ResponseHandlerInstance> processors}) {
 
   Completer completer = new Completer();
   
@@ -367,18 +367,37 @@ Future _writeResponse(respValue, HttpResponse httpResp, String responseType, {in
     completer.complete();
     
   } else if (respValue == null) {
+    
+    if (processors != null && !processors.isEmpty) {
+      respValue = processors.fold(respValue, (v, p) =>
+          p.processor(p.metadata, p.handlerName, v, _injector));
+      _writeResponse(respValue, httpResp, responseType, 
+          abortIfChainInterrupted: abortIfChainInterrupted).then((_) =>
+              completer.complete());
+    } else {
 
-    if (statusCode != null) {
-      httpResp.statusCode = statusCode;
+      if (statusCode != null) {
+        httpResp.statusCode = statusCode;
+      }
+      completer.complete();
+    
     }
-    completer.complete();
 
   } else if (respValue is Future) {
 
     (respValue as Future).then((fValue) =>
-      _writeResponse(fValue, httpResp, responseType).then((v) =>
-          completer.complete(v)));
+      _writeResponse(fValue, httpResp, responseType, 
+          abortIfChainInterrupted: abortIfChainInterrupted).then((_) =>
+              completer.complete()));
 
+  } else if (processors != null && !processors.isEmpty) { 
+    
+    respValue = processors.fold(respValue, (v, p) =>
+        p.processor(p.metadata, p.handlerName, v, _injector));
+    _writeResponse(respValue, httpResp, responseType, 
+        abortIfChainInterrupted: abortIfChainInterrupted).then((_) =>
+            completer.complete());
+    
   } else if (respValue is Map || respValue is List) {
 
     if (statusCode != null) {

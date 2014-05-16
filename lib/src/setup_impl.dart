@@ -15,6 +15,7 @@ final List<RedstonePlugin> _plugins = [];
 final List<Module> _modules = [];
 
 final Map<String, List<_ParamHandler>> _customParams = {};
+final List<_ResponseHandler> _responseProcessors = [];
 
 Injector _injector;
 
@@ -92,6 +93,27 @@ class _ParamHandler {
   
   _ParamHandler(this.metadataType, this.parameterProvider);
   
+}
+
+class _ResponseHandler {
+  
+  final Type metadataType;
+  final ResponseProcessor processor;
+    
+  _ResponseHandler(this.metadataType, this.processor);
+    
+}
+
+class _ResponseHandlerInstance {
+  
+  final dynamic metadata;
+  final String handlerName;
+  final ResponseProcessor processor;
+    
+  _ResponseHandlerInstance(this.metadata, 
+                           this.handlerName, 
+                           this.processor);
+    
 }
 
 class _Interceptor {
@@ -356,6 +378,7 @@ void _clearHandlers() {
   _modules.clear();
   _plugins.clear();
   _customParams.clear();
+  _responseProcessors.clear();
 
 }
 
@@ -558,6 +581,16 @@ void _configureTarget(Route route, ObjectMirror owner,
 
   var paramProcessors = _buildParamProcesors(handler);
   var handlerName = MirrorSystem.getName(handler.qualifiedName);
+  
+  var responseProcessors = [];
+  handler.metadata.forEach((m) {
+    var proc = _responseProcessors.firstWhere((p) => 
+        m.reflectee.runtimeType == p.metadataType, orElse: () => null);
+    if (proc != null) {
+      responseProcessors.add(
+          new _ResponseHandlerInstance(m.reflectee, handlerName, proc.processor));
+    }
+  });
 
   var caller = (UrlMatch match, Request request) {
     
@@ -589,7 +622,9 @@ void _configureTarget(Route route, ObjectMirror owner,
       var respValue = resp.reflectee;
 
       _logger.finer("Writing response for target $handlerName");
-      return _writeResponse(respValue, httpResp, route.responseType, abortIfChainInterrupted: true);
+      return _writeResponse(respValue, httpResp, route.responseType, 
+                            abortIfChainInterrupted: true,
+                            processors: responseProcessors);
 
     });    
 

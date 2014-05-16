@@ -75,4 +75,9 @@ class _ManagerImpl implements Manager {
       params.add(param);
     });
   }
+  
+  void addResponseProcessor(Type metadataType, ResponseProcessor processor) {
+    _ResponseHandler proc = new _ResponseHandler(metadataType, processor);
+    _responseProcessors.add(proc);
+  }
 }

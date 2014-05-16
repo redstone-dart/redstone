@@ -467,6 +467,7 @@ main() {
     
     setUp(() { 
       app.addPlugin(FromJsonPlugin);
+      app.addPlugin(ToJsonPlugin);
       app.addPlugin(TestPlugin);
       app.setUp([#plugins]);
     });
@@ -492,6 +493,17 @@ main() {
       return app.dispatch(req).then((resp) {
         expect(resp.statusCode, equals(400));
       });
+    });
+    
+    test("Response processor", () {
+      var req = new MockRequest("/user/find");
+      
+      return app.dispatch(req).then((resp) {
+        expect(JSON.decode(resp.mockContent), equals({
+          "name": "name",
+          "username": "username"
+        }));
+      }); 
     });
     
     test("Routes", () {

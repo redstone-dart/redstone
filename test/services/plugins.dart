@@ -38,11 +38,44 @@ class User {
     username = json["username"];
   }
   
+  toJson() {
+    return {
+      "name": name,
+      "username": username
+    };
+  }
+  
   toString() => "name: $name username: $username";
 }
 
 @app.Route("/user", methods: const[app.POST])
 printUser(@FromJson() User user) => user.toString();
+
+//plugin - response processor
+
+class ToJson {
+  
+  const ToJson();
+  
+}
+
+ToJsonPlugin(app.Manager manager) {
+  manager.addResponseProcessor(ToJson, (metadata, handlerName, value, injector) {
+    if (value == null) {
+      return value;
+    }
+    return value.toJson();
+  });
+}
+
+@app.Route("/user/find")
+@ToJson()
+returnUser() {
+  var user = new User();
+  user.name = "name";
+  user.username = "username";
+  return user;
+}
 
 //plugin - add routes, interceptors and error handlers
 
