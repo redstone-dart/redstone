@@ -1,3 +1,7 @@
+## v0.4.0
+- Added new annotations: `@Install` and `@Ignore` (see [documentation](https://github.com/luizmineo/redstone.dart/wiki/Importing-libraries))
+- Added support for plugins (see [documentation](https://github.com/luizmineo/redstone.dart/wiki/Plugins))
+
 ## v0.3.1
 - Renamed project to **Redstone.dart**
 - New and improved documentation
