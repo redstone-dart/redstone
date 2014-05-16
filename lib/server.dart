@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:mirrors';
 import 'dart:convert' as conv;
+import 'dart:math';
 
 import 'package:http_server/http_server.dart';
 import 'package:mime/mime.dart';
@@ -20,7 +21,9 @@ part 'package:redstone/src/metadata.dart';
 part 'package:redstone/src/logger.dart';
 part 'package:redstone/src/exception.dart';
 part 'package:redstone/src/setup_impl.dart';
+part 'package:redstone/src/plugin_impl.dart';
 part 'package:redstone/src/server_impl.dart';
+part 'package:redstone/src/blacklist.dart';
 
 const String GET = "GET";
 const String POST = "POST";
@@ -30,6 +33,10 @@ const String DELETE = "DELETE";
 const String JSON = "json";
 const String FORM = "form";
 const String TEXT = "text";
+
+const String ROUTE = "ROUTE";
+const String INTERCEPTOR = "INTERCEPTOR";
+const String ERROR_HANDLER = "ERROR_HANDLER";
 
 const String _DEFAULT_ADDRESS = "0.0.0.0";
 const int _DEFAULT_PORT = 8080;
@@ -157,7 +164,7 @@ Chain get chain => Zone.current[#chain];
 /**
  * Abort the current request.
  *
- * If there is a ErrorHandler registered to [statusCode], it
+ * If there is an ErrorHandler registered to [statusCode], it
  * will be invoked. Otherwise, the default ErrorHandler will be invoked.
  */
 void abort(int statusCode) {
@@ -239,6 +246,16 @@ void addModule(Module module) {
 }
 
 /**
+ * Register a plugin.
+ * 
+ * All plugins must be registered before invoking the [start] or
+ * [setUp] methods.
+ */
+void addPlugin(RedstonePlugin plugin) {
+  _plugins.add(plugin);
+}
+
+/**
  * Start the server.
  *
  * The [address] can be a [String] or an [InternetAddress]. The [staticDir] is an
@@ -316,12 +333,11 @@ void setUp([List<Symbol> libraries]) {
 }
 
 /**
- * Remove all modules, routes, interceptors and error handlers.
+ * Remove all modules, plugins, routes, interceptors and error handlers.
  * 
  * This method is intended to be used in unit tests.
  */
 void tearDown() {
-  _modules.clear();
   _clearHandlers();
 }
 
@@ -333,3 +349,83 @@ void tearDown() {
  */
 Future<HttpResponse> dispatch(UnparsedRequest request) => _dispatchRequest(request);
 
+
+/**
+ * Allows to programmatically create routes, interceptors, error handlers
+ * and parameter providers.
+ * 
+ * To access a [Manager] instance, you need to create and register a [RedstonePlugin].
+ */
+abstract class Manager {
+  
+  /**
+   * Create a new route.
+   */
+  void addRoute(Route conf, String name, RouteHandler route, {String bodyType});
+  
+  /**
+   * Create a new interceptor.
+   */
+  void addInterceptor(Interceptor conf, String name, Handler interceptor);
+  
+  /**
+   * Create a new error handler.
+   */
+  void addErrorHandler(ErrorHandler conf, String name, Handler errorHandler);
+  
+  /**
+   * Create a new parameter provider.
+   * 
+   * [metadataType] is the annotation type that triggers this provider. 
+   * [parameterProvider] is the function which will be invoked to create
+   * the parameter's value. [handlerTypes] are the handler types that can use
+   * this provider, and defaults to ROUTE.
+   */
+  void addParameterProvider(Type metadataType, ParamProvider parameterProvider, 
+                            {List<String> handlerTypes: const [ROUTE]});
+  
+  /**
+   * Create a new response processor.
+   * 
+   * [metadataType] is the annotation type that triggers this processor.
+   * [processor] is the function which will be invoked to transform the returned
+   * value. 
+   */
+  void addResponseProcessor(Type metadataType, ResponseProcessor processor);
+  
+}
+
+/**
+ * A plugin is a function which can dynamically add new features
+ * to an application.
+ */
+typedef void RedstonePlugin(Manager manager);
+
+/**
+ * A route programmatically created by a plugin.
+ */
+typedef dynamic RouteHandler(Map<String, String> pathSegments, 
+                             Injector injector, Request request);
+
+/**
+ * An interceptor or error handler, programmatically created by a plugin.
+ */
+typedef dynamic Handler(Injector injector);
+
+/**
+ * A parameter provider is a function that can create parameters
+ * for routes, interceptors and error handlers.
+ * 
+ * It can be used, for example, to automatically validate
+ * and parse the request's body and arguments.
+ */
+typedef Object ParamProvider(dynamic metadata, Type paramType, 
+                             String handlerName, String paramName, 
+                             Request request, Injector injector);
+
+/**
+ * A response processor is a function, that can transform values
+ * returned by routes.
+ */
+typedef Object ResponseProcessor(dynamic metadata, String handlerName, 
+                                 Object response, Injector injector);
