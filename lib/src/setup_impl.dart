@@ -17,6 +17,8 @@ final List<Module> _modules = [];
 final Map<String, List<_ParamHandler>> _customParams = {};
 final List<_ResponseHandler> _responseProcessors = [];
 
+final Set<Symbol> _blacklistSet = _buildBlacklistSet();
+
 Injector _injector;
 
 class _HandlerCfg<T> {
@@ -176,7 +178,8 @@ List<_Lib> _scanDependencies(Set<Symbol> cache, _Lib lib) {
   var dependencies = [];
   
   lib.def.libraryDependencies.forEach((LibraryDependencyMirror d) {
-    if (cache.contains(d.targetLibrary.simpleName)) {
+    if (cache.contains(d.targetLibrary.simpleName) || 
+        _blacklistSet.contains(d.targetLibrary.simpleName)) {
       return;
     }
     cache.add(d.targetLibrary.simpleName);
@@ -213,22 +216,23 @@ List<_Lib> _scanLibraries(Iterable<LibraryMirror> libraries) {
   
   List<_Lib> libs = [];
   
-  libraries.forEach((LibraryMirror l) {
-    Install conf = null;
-    for (InstanceMirror m in l.metadata) {
-      if (m.reflectee is Ignore) {
-        return;
-      } else if (m.reflectee is Install) {
-        conf = m.reflectee;
-        break;
-      }
-    }
-    if (conf == null) {
-      conf = new Install.defaultConf();
-    }
-    _Lib lib = new _Lib(l, conf, 0);
-    libs.add(lib);
-    libs.addAll(_scanDependencies(new Set<Symbol>(), lib));
+  libraries.where((l) => !_blacklistSet.contains(l.simpleName)).
+    forEach((LibraryMirror l) {
+        Install conf = null;
+        for (InstanceMirror m in l.metadata) {
+          if (m.reflectee is Ignore) {
+            return;
+          } else if (m.reflectee is Install) {
+            conf = m.reflectee;
+            break;
+          }
+        }
+        if (conf == null) {
+          conf = new Install.defaultConf();
+        }
+        _Lib lib = new _Lib(l, conf, 0);
+        libs.add(lib);
+        libs.addAll(_scanDependencies(new Set<Symbol>(), lib));
   });
   
   return libs;

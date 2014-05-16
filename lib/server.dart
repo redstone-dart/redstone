@@ -23,6 +23,7 @@ part 'package:redstone/src/exception.dart';
 part 'package:redstone/src/setup_impl.dart';
 part 'package:redstone/src/plugin_impl.dart';
 part 'package:redstone/src/server_impl.dart';
+part 'package:redstone/src/blacklist.dart';
 
 const String GET = "GET";
 const String POST = "POST";

@@ -68,6 +68,8 @@ ToJsonPlugin(app.Manager manager) {
   });
 }
 
+//test plugin
+
 @app.Route("/user/find")
 @ToJson()
 returnUser() {
