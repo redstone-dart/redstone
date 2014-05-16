@@ -163,14 +163,17 @@ void _closeResponse() {
   }
 }
 
-void _handleError(String message, Object error, {StackTrace stack, HttpRequest req}) {
-  _logger.severe(message, error, stack);
+void _handleError(String message, Object error, {StackTrace stack, HttpRequest req, 
+                  int statusCode, Level logLevel: Level.SEVERE}) {
+  _logger.log(logLevel, message, error, stack);
 
   if (req != null) {
     var resp = req.response;
     try {
-
-      if (error is RequestException) {
+      
+      if (statusCode != null) {
+        resp.statusCode = statusCode;
+      } else if (error is RequestException) {
         resp.statusCode = HttpStatus.BAD_REQUEST;
       } else {
         resp.statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
@@ -196,24 +199,26 @@ bool _verifyRequest(_Target target, UnparsedRequest req) {
   
   //verify method
   if (!target.route.methods.contains(req.method)) {
-    resp.statusCode = HttpStatus.METHOD_NOT_ALLOWED;
-    _notifyError(resp, req.httpRequest.uri.path);
+    _handleError("Invalid request", 
+        new RequestException(target.handlerName, 
+            "${req.method} method not allowed for this target"), req: req.httpRequest, 
+                statusCode: HttpStatus.METHOD_NOT_ALLOWED, logLevel: Level.FINE);
     return false;
   }
   //verify multipart
   if (req.isMultipart && !target.route.allowMultipartRequest) {
-    resp.statusCode = HttpStatus.BAD_REQUEST;
-    _notifyError(resp, req.httpRequest.uri.path, 
-        new RequestException(target.handlerName, 
-            "multipart requests are not allowed for this target"));
+    _handleError("Invalid request", 
+      new RequestException(target.handlerName, 
+          "multipart requests are not allowed for this target"), 
+              req: req.httpRequest, logLevel: Level.FINE);
     return false;
   }
   //verify body type
   if (target.bodyType != null && target.bodyType != req.bodyType) {
-    resp.statusCode = HttpStatus.BAD_REQUEST;
-    _notifyError(resp, req.httpRequest.uri.path, 
-        new RequestException(target.handlerName, 
-            "${req.bodyType} data not supported for this target"));
+    _handleError("Invalid request", 
+       new RequestException(target.handlerName, 
+          "${req.bodyType} data not supported for this target"),
+              req: req.httpRequest, logLevel: Level.FINE);
     return false;
   }
   

@@ -1,5 +1,5 @@
 name: redstone
-version: 0.3.1
+version: 0.4.0
 author: Luiz Mineo <luiz.mineo@gmail.com>
 description: A metadata driven microframework for Dart
 homepage: http://luizmineo.github.io/redstone.dart
@@ -12,4 +12,4 @@ dependencies:
   route_hierarchical: '>=0.4.20 <0.5.0'
   di: ">=0.0.40 <0.1.0"
 dev_dependencies:
-  unittest: '>=0.10.0 <0.11.0'
+  unittest: '>=0.10.0 <0.12.0'
