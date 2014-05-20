@@ -15,7 +15,7 @@ class _ManagerImpl implements Manager {
         var respValue = route(match.parameters, _injector, request);
 
         _logger.finer("Writing response for target $name");
-        return _writeResponse(respValue, request.response, 
+        return _writeResponse(respValue, 
             conf.responseType, abortIfChainInterrupted: true);
       });
   

@@ -2,12 +2,16 @@ library redstone_mocks;
 
 import 'dart:io';
 import 'dart:collection';
-import 'dart:convert';
+import 'dart:convert' as conv;
 import 'dart:async';
 
 import 'package:crypto/crypto.dart';
 
 import 'package:redstone/server.dart';
+import 'package:shelf/shelf.dart' as shelf;
+import 'package:http/http.dart' as http;
+import 'package:http/src/utils.dart';
+import 'package:http_parser/src/media_type.dart';
 
 part 'package:redstone/src/http_mock.dart';
 
@@ -21,70 +25,120 @@ part 'package:redstone/src/http_mock.dart';
  *       ...
  *     });
  */
-class MockRequest extends UnparsedRequest {
-  
-  final String method;
-  final Map<String, String> queryParams;
-  final String bodyType;
-  dynamic _mockBody;
-  final bool isMultipart;
+class MockRequest extends ShelfTransformer with HttpRequestParser implements RequestHandler {
+
   final Map _attributes = {};
   
-  dynamic body;
   Future _parsedBody;
   
   HttpHeaders _headers;
   HttpResponse _response;
   HttpRequest _httpRequest;
+  shelf.Request shelfRequest;
   
   final HttpSession session;
   
-  MockRequest(String uri, {String this.method: GET, 
-              Map<String, String> this.queryParams: const {},
-              String this.bodyType, dynamic body,
-              bool this.isMultipart: false,
-              Map<String, String> headers: const {},
+  MockRequest(String path, {String method: GET,
+              String scheme: "http", String host: "localhost",
+              int port: 8080, Map<String, String> queryParams: const {},
+              String bodyType: BINARY, dynamic body, String contentType,
+              bool isMultipart: false,
+              Map<String, String> headers,
               Credentials basicAuth, 
               HttpSession this.session}) {
     
-    this._mockBody = body;
+    if (headers == null) {
+      headers = {};
+    }
+    var bodyStream = _handleBody(bodyType, body, contentType, isMultipart, headers);
     
     var hValues = {};
     headers.forEach((k, v) => hValues[k] = [v]);
     
     if (basicAuth != null) {
       String auth = CryptoUtils.bytesToBase64(
-          UTF8.encode("${basicAuth.username}:${basicAuth.password}"));
+          conv.UTF8.encode("${basicAuth.username}:${basicAuth.password}"));
       hValues[HttpHeaders.AUTHORIZATION] = ["Basic $auth"];
     }
     
     _headers = new MockHttpHeaders(hValues);
 
-    Uri uriObj = Uri.parse(uri);
-    _httpRequest = new MockHttpRequest(uriObj, method, _headers);
+    Uri requestedUri = new Uri(scheme: scheme, host: host, port: port, 
+        path: path, queryParameters: queryParams);
+    Uri uri = new Uri(path: path);
+    _httpRequest = new MockHttpRequest(requestedUri, uri, method, _headers, bodyStream, session: session);
     _response = _httpRequest.response;
+    
+    shelfRequest = buildShelfRequest(_httpRequest);
     
   }
   
-  HttpHeaders get headers => _headers;
+  Stream<List<int>> _handleBody(String bodyType, dynamic body, 
+      String contentType, bool isMultipart, Map<String, String> headerValues) {
+    var serializedBody = const [];
+    if (body == null) {
+      return new Stream.fromIterable(serializedBody);
+    }
+    switch(bodyType) {
+      case JSON:
+        headerValues["content-type"] = 
+          contentType != null ? contentType : "application/json";
+        serializedBody = conv.UTF8.encode(conv.JSON.encode(body));
+        break;
+      case TEXT:
+        headerValues["content-type"] = 
+          contentType != null ? contentType : "text/plain";
+        serializedBody = conv.UTF8.encode(body.toString());
+        break;
+      case FORM:
+        if (isMultipart) {
+          var m = new http.MultipartRequest("POST", new Uri());
+          (body as Map).forEach((String key, value) {
+            if (value is HttpBodyFileUpload) {
+              m.files.add(new http.MultipartFile(
+                  key, new Stream.fromIterable([value.content]), 
+                      value.content.length, filename: value.filename, 
+                        contentType: new MediaType.parse(value.contentType.mimeType)));
+            } else {
+              m.fields[key] = value.toString();
+            }
+          });
+          var stream = m.finalize();
+          headerValues.addAll(m.headers);
+          return stream;
+        } else {
+          headerValues["content-type"] = 
+            contentType != null ? contentType : "application/x-www-form-urlencoded";
+          serializedBody = conv.UTF8.encode(mapToQuery(body, encoding: conv.UTF8));
+        }
+        break;
+      default:
+        serializedBody = conv.UTF8.encode(body.toString());
+    }
+    
+    return new Stream.fromIterable([serializedBody]);
+  }
+  
+  Uri get requestedUri => shelfRequest.requestedUri;
+    
+  Uri get url => shelfRequest.url;
+  
+  String get method => shelfRequest.method;
+  
+  Map<String, String> get queryParams => shelfRequest.url.queryParameters;
+  
+  Map<String, String> get headers => shelfRequest.headers;
   
   HttpResponse get response => _response;
   
-  HttpRequest get httpRequest => _httpRequest;
-  
   Map get attributes => _attributes;
 
-  Future parseBody() {
-    if (_parsedBody != null) {
-      return _parsedBody;
-    }
+  void parseBodyType() => parseHttpRequestBodyType(headers);
     
-    _parsedBody = new Future(() {
-      body = _mockBody;
-      return _mockBody;
-    });
-    return _parsedBody;
-  }
+  Future parseBody() => parseHttpRequestBody(shelfRequest.read());
+  
+  Future<HttpResponse> writeResponse(shelf.Response resp) =>
+      writeHttpResponse(resp, _response).then((_) => _response);
 }
 
 /**

@@ -73,6 +73,9 @@ class MockHttpHeaders implements HttpHeaders {
     }
     return values[0];
   }
+  
+  void forEach(void f(String name, List<String> values)) => 
+      _headers.forEach(f);
 
   String toString() => '$runtimeType : $_headers';
 
@@ -187,7 +190,7 @@ class MockHttpResponse implements HttpResponse {
 
   void write(Object obj) {
     var str = obj.toString();
-    add(UTF8.encode(str));
+    add(conv.UTF8.encode(str));
   }
 
   /*
@@ -196,7 +199,7 @@ class MockHttpResponse implements HttpResponse {
   dynamic noSuchMethod(Invocation invocation) =>
       super.noSuchMethod(invocation);
 
-  String get mockContent => UTF8.decode(_buffer);
+  String get mockContent => conv.UTF8.decode(_buffer);
 
   bool get mockDone => _isDone;
 
@@ -214,26 +217,41 @@ class MockHttpResponse implements HttpResponse {
   }
 }
 
-class MockHttpRequest implements HttpRequest {
+class MockHttpRequest extends Stream implements HttpRequest {
 
+  final Uri requestedUri;
   final Uri uri;
+  
   final MockHttpResponse response = new MockHttpResponse();
   final HttpHeaders headers;
   final String method;
   final bool followRedirects;
   final HttpSession session;
+  final Stream<List<int>> body;
 
-  MockHttpRequest(this.uri, this.method, this.headers, {this.session, 
+  MockHttpRequest(this.requestedUri, this.uri, this.method, this.headers, 
+      this.body, {this.session, 
       this.followRedirects: true, DateTime ifModifiedSince}) {
     if(ifModifiedSince != null) {
       headers.ifModifiedSince = ifModifiedSince;
     }
   }
 
+  @override
+  StreamSubscription listen(void onData(event), {Function onError, void onDone(), bool cancelOnError}) {
+    return body.listen(onData, onError: onError, onDone: onDone, cancelOnError: cancelOnError);
+  }
+
+  @override
+  int get contentLength => -1;
+  
+  @override
+  String get protocolVersion => "1.1";
+  
   /*
    * Implemented to remove editor warnings
    */
-  dynamic noSuchMethod(Invocation invocation) =>
-      super.noSuchMethod(invocation);
-
+  dynamic noSuchMethod(Invocation invocation) {
+    return super.noSuchMethod(invocation);
+  }
 }

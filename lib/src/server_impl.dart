@@ -5,89 +5,42 @@ typedef void _RunInterceptor();
 typedef void _HandleError();
 typedef dynamic _ConvertFunction(String value, dynamic defaultValue);
 
-VirtualDirectory _virtualDirectory;
-
 class _RequestState {
   
   bool errorHandlerInvoked = false;
+  shelf.Response response;
   
 }
 
-class _RequestImpl extends UnparsedRequest {
+class _RequestImpl extends ShelfTransformer with HttpRequestParser implements UnparsedRequest {
 
   HttpRequest _httpRequest;
-  HttpRequestBody _requestBody;
-  String _bodyType;
-  bool _isMultipart = false;
+  shelf.Request shelfRequest;
+  
   final Map _attributes = {};
   
-  Future _bodyParsed = null;
-  
   _RequestImpl(this._httpRequest) {
-    _parseBodyType();
+    shelfRequest = buildShelfRequest(_httpRequest);
   }
   
-  void _parseBodyType() {
-    ContentType contentType = _httpRequest.headers.contentType;
-    if (contentType == null) {
-      return;
-    }
-    switch (contentType.primaryType) {
-      case "text":
-        _bodyType = TEXT;
-        break;
-      case "application":
-        switch (contentType.subType) {
-          case "json":
-            _bodyType = JSON;
-            break;
-          case "x-www-form-urlencoded":
-            _bodyType = FORM;
-            break;
-        }
-        break;
-      case "multipart":
-        _isMultipart = true;
-        switch (contentType.subType) {
-          case "form-data":
-            _bodyType = FORM;
-            break;
-        }
-        break;
-    }
-  }
+  Uri get requestedUri => shelfRequest.requestedUri;
   
-  get body => _requestBody != null ? _requestBody.body : null;
+  Uri get url => shelfRequest.url;
 
-  String get bodyType => _bodyType;
-  
-  bool get isMultipart => _isMultipart;
-
-  HttpHeaders get headers => _httpRequest.headers;
-
-  HttpRequest get httpRequest => _httpRequest;
+  Map<String, String> get headers => shelfRequest.headers;
 
   Map get attributes => _attributes;
   
-  String get method => _httpRequest.method;
+  String get method => shelfRequest.method;
 
-  Future parseBody() {
-    if (_bodyParsed != null) {
-      return _bodyParsed;
-    }
-    
-    _bodyParsed = HttpBodyHandler.processRequest(_httpRequest).then((HttpRequestBody reqBody) {
-      _requestBody = reqBody;
-      return reqBody.body;
-    });
-    return _bodyParsed;
-  }
-
-  Map<String, String> get queryParams => _httpRequest.uri.queryParameters;
-
-  HttpResponse get response => _httpRequest.response;
+  Map<String, String> get queryParams => shelfRequest.url.queryParameters;
 
   HttpSession get session => _httpRequest.session;
+  
+  void parseBodyType() => parseHttpRequestBodyType(headers);
+  
+  Future parseBody() => parseHttpRequestBody(shelfRequest.read());
+  
 }
 
 List<_Interceptor> _getInterceptors(Uri uri) {
@@ -110,19 +63,19 @@ _Target _getTarget(Uri uri) {
   return null;
 }
 
-Future<HttpResponse> _dispatchRequest(UnparsedRequest req) {
+Future<shelf.Response> _dispatchRequest(UnparsedRequest req) {
   
   var completer = new Completer();
   
   Chain chain;
   try {
     
-    List<_Interceptor> interceptors = _getInterceptors(req.httpRequest.uri);
-    _Target target = _getTarget(req.httpRequest.uri);
+    List<_Interceptor> interceptors = _getInterceptors(req.url);
+    _Target target = _getTarget(req.url);
 
-    chain = new _ChainImpl(interceptors, target, req);
+    chain = new _ChainImpl(interceptors, target, req, _initHandler, _finalHandler);
   } catch(e, s) {
-    _handleError("Failed to handle request.", e, stack: s, req: req.httpRequest);
+    _handleError("Failed to handle request.", e, stack: s);
     completer.completeError(e, s);
     return completer.future;
   }
@@ -132,20 +85,35 @@ Future<HttpResponse> _dispatchRequest(UnparsedRequest req) {
   return completer.future;
 }
 
-void _process(UnparsedRequest req, Chain chain, Completer completer) {
+Future _writeHttpResponse(shelf.Response response, HttpResponse httpResponse) {
+  return new Future.sync(() {
+    httpResponse.statusCode = response.statusCode;
+
+    response.headers.forEach((header, value) {
+      if (value == null) return;
+      httpResponse.headers.set(header, value);
+    });
+
+    if (response.headers[HttpHeaders.SERVER] == null) {
+      var value = httpResponse.headers.value(HttpHeaders.SERVER);
+      httpResponse.headers.set(HttpHeaders.SERVER, '$value with Shelf');
+    }
+    return httpResponse.addStream(response.read())
+        .then((_) => httpResponse.close());
+  });
+}
+
+void _process(UnparsedRequest req, _ChainImpl chain, Completer completer) {
   runZoned(() {
         
     runZoned(() {
-      chain.done.then((_) {
-        _closeResponse();
-        _logger.finer("Closed request for: ${request.httpRequest.uri}");
-        completer.complete(req.response);
+      chain._init().then((shelf.Response resp) {
+        _logger.finer("Closed request for: ${request.url}");
+        completer.complete(response);
       });
-      chain.next();
     }, onError: (e, s) {
-      _handleError("Failed to handle request.", e, stack: s, req: req.httpRequest);
-      _closeResponse();
-      completer.complete(req.response);
+      _handleError("Failed to handle request.", e, stack: s, req: req);
+      completer.complete(response);
     });
 
   }, zoneValues: {
@@ -155,43 +123,29 @@ void _process(UnparsedRequest req, Chain chain, Completer completer) {
   });
 }
 
-void _closeResponse() {
-  try {
-    request.response.close();
-  } catch (_) {
-    //response already closed
-  }
-}
-
-void _handleError(String message, Object error, {StackTrace stack, HttpRequest req, 
+void _handleError(String message, Object error, {StackTrace stack, Request req, 
                   int statusCode, Level logLevel: Level.SEVERE}) {
   _logger.log(logLevel, message, error, stack);
 
   if (req != null) {
-    var resp = req.response;
-    try {
       
-      if (statusCode != null) {
-        resp.statusCode = statusCode;
-      } else if (error is RequestException) {
-        resp.statusCode = HttpStatus.BAD_REQUEST;
+    if (statusCode == null) {
+      if (error is RequestException) {
+        statusCode = HttpStatus.BAD_REQUEST;
       } else {
-        resp.statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
+        statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
       }
+    }
 
-      _RequestState state = Zone.current[#state];
-      if (!state.errorHandlerInvoked) {
-        state.errorHandlerInvoked = true;
-        _notifyError(req.response, req.uri.path, error, stack);
-      }
-    } catch(e, s) {
-      _logger.severe("Failed to handle error", e, s);
+    _RequestState state = Zone.current[#state];
+    if (!state.errorHandlerInvoked) {
+      state.errorHandlerInvoked = true;
+      _notifyError(statusCode, req.url.path, error, stack);
     }
   }
 }
 
 bool _verifyRequest(_Target target, UnparsedRequest req) {
-  var resp = req.response;
   
   if (target == null) {
     return true;
@@ -201,7 +155,7 @@ bool _verifyRequest(_Target target, UnparsedRequest req) {
   if (!target.route.methods.contains(req.method)) {
     _handleError("Invalid request", 
         new RequestException(target.handlerName, 
-            "${req.method} method not allowed for this target"), req: req.httpRequest, 
+            "${req.method} method not allowed for this target"), req: req, 
                 statusCode: HttpStatus.METHOD_NOT_ALLOWED, logLevel: Level.FINE);
     return false;
   }
@@ -210,7 +164,7 @@ bool _verifyRequest(_Target target, UnparsedRequest req) {
     _handleError("Invalid request", 
       new RequestException(target.handlerName, 
           "multipart requests are not allowed for this target"), 
-              req: req.httpRequest, logLevel: Level.FINE);
+              req: req, logLevel: Level.FINE);
     return false;
   }
   //verify body type
@@ -218,14 +172,14 @@ bool _verifyRequest(_Target target, UnparsedRequest req) {
     _handleError("Invalid request", 
        new RequestException(target.handlerName, 
           "${req.bodyType} data not supported for this target"),
-              req: req.httpRequest, logLevel: Level.FINE);
+              req: req, logLevel: Level.FINE);
     return false;
   }
   
   return true;
 }
 
-Future _runTarget(_Target target, UnparsedRequest req) {
+Future _runTarget(_Target target, UnparsedRequest req, shelf.Handler handler) {
 
   return new Future(() {
 
@@ -238,18 +192,18 @@ Future _runTarget(_Target target, UnparsedRequest req) {
     }
     
     if (f == null) {
-      try {
-        if (_virtualDirectory != null) {
-          _logger.fine("Forwarding request to VirtualDirectory");
-          f = _virtualDirectory.serveRequest(req.httpRequest);
+      if (handler != null) {
+        var r = handler(req.shelfRequest);
+        if (r is Future) {
+          f = r.then((resp) => response = resp);
         } else {
-          _logger.fine("Resource not found: ${req.httpRequest.uri}");
-          req.response.statusCode = HttpStatus.NOT_FOUND;
-          _notifyError(req.response, req.httpRequest.uri.path);
+          response = r;
           f = new Future.value();
         }
-      } catch(e) {
-        _handleError("Failed to send response to user.", e);
+      } else {
+        _logger.fine("resource not found: ${req.url}");
+
+        _notifyError(HttpStatus.NOT_FOUND, req.url.path);
         f = new Future.value();
       }
     }
@@ -262,11 +216,16 @@ Future _runTarget(_Target target, UnparsedRequest req) {
 
 class _ChainImpl implements Chain {
 
+  shelf.Handler _initHandler;
+  shelf.Handler _finalHandler;
+  
   List<_Interceptor> _interceptors;
   _Target _target;
+  
   _Interceptor _currentInterceptor;
   UnparsedRequest _request;
-  
+
+  bool _bodyTypeParsed = false;
   bool _targetInvoked = false;
   bool _interrupted = false;
 
@@ -276,9 +235,24 @@ class _ChainImpl implements Chain {
   
   dynamic _error;
 
-  _ChainImpl(this._interceptors, this._target, this._request);
-  
-  Future<bool> get done => _completer.future;
+  _ChainImpl(this._interceptors, this._target, this._request,
+             shelf.Pipeline initHandler, this._finalHandler) {
+    
+    var h = (shelf.Request req) {
+      _request.shelfRequest = req;
+      _request.attributes.addAll(req.context);
+      var c = new Completer();
+      next(() => c.complete(response));
+      return c.future;
+    };
+    
+    if (initHandler != null) {
+      _initHandler = initHandler.addHandler(h);
+    } else {
+      _initHandler = h;
+    }
+    
+  }
   
   dynamic get error => _error;
   
@@ -289,19 +263,29 @@ class _ChainImpl implements Chain {
         return f;
       }
       return new Future.value();
-    });
+    }).then((_) => _callbacks.clear());
+  }
+  
+  Future<shelf.Response> _init() {
+    return new Future.sync(() => _initHandler(_request.shelfRequest));
   }
 
   void next([callback()]) {
     new Future.sync(() {
       if (_interrupted) {
         var name = _currentInterceptor != null ? _currentInterceptor.interceptorName : null;
-        throw new ChainException(request.httpRequest.uri.path, 
+        throw new ChainException(request.url.path, 
                                  "invalid state: chain already interrupted",
                                  interceptorName: name);
       }
       if (_interceptors.isEmpty && _targetInvoked) {
-        throw new ChainException(request.httpRequest.uri.path, "chain.next() must be called from an interceptor.");
+        throw new ChainException(request.url.path, "chain.next() must be called from an interceptor.");
+      }
+      
+      if (!_bodyTypeParsed) {
+        response = new shelf.Response.ok(null);
+        _request.parseBodyType();
+        _bodyTypeParsed = true;
       }
       
       if (callback != null) {
@@ -322,21 +306,17 @@ class _ChainImpl implements Chain {
         _currentInterceptor = null;
         _targetInvoked = true;
         new Future(() {
-          _runTarget(_target, request).then((_) {
-            return _invokeCallbacks().then((_) {
-              if (!interrupted) {
-                _completer.complete();
-              }
-            });
+          _runTarget(_target, request, _finalHandler).then((_) {
+            if (!_interrupted) {
+              return _invokeCallbacks();
+            }
           }).catchError((e, s) {
-            _error = e;
-            _handleError("Failed to execute ${_target.handlerName}", e, 
-                stack: s, req: request.httpRequest);
-            return _invokeCallbacks().then((_) {
-              if (!interrupted) {
-                _completer.complete();
-              }
-            });
+            if (!_interrupted) {
+              _error = e;
+              _handleError("Failed to execute ${_target.handlerName}", e, 
+                  stack: s, req: request);
+              return _invokeCallbacks();
+            }
           });
         });
       }
@@ -344,25 +324,28 @@ class _ChainImpl implements Chain {
     });
   }
 
-  void interrupt({int statusCode: HttpStatus.OK, Object response, String responseType}) {
+  void interrupt({int statusCode, Object responseValue, String responseType}) {
     if (_interrupted) {
       var name = _currentInterceptor != null ? _currentInterceptor.interceptorName : null;
-      throw new ChainException(request.httpRequest.uri.path, 
+      throw new ChainException(request.url.path, 
                                "invalid state: chain already interrupted",
                                interceptorName: name);
     }
 
     _interrupted = true;
 
-    _writeResponse(response, request.response, responseType, statusCode: statusCode).
-        then((_) => _completer.complete());
+    Future f = new Future.value();
+    if (statusCode != null || responseValue != null) {
+      f = _writeResponse(responseValue, responseType, statusCode: statusCode);
+    }
+    f.then((_) => _invokeCallbacks());
   }
   
   bool get interrupted => _interrupted;
 
 }
 
-Future _writeResponse(respValue, HttpResponse httpResp, String responseType, {int statusCode, 
+Future _writeResponse(respValue, String responseType, {int statusCode: 200, 
   bool abortIfChainInterrupted: false, List<_ResponseHandlerInstance> processors}) {
 
   Completer completer = new Completer();
@@ -376,14 +359,12 @@ Future _writeResponse(respValue, HttpResponse httpResp, String responseType, {in
     if (processors != null && !processors.isEmpty) {
       respValue = processors.fold(respValue, (v, p) =>
           p.processor(p.metadata, p.handlerName, v, _injector));
-      _writeResponse(respValue, httpResp, responseType, 
+      _writeResponse(respValue, responseType, 
           abortIfChainInterrupted: abortIfChainInterrupted).then((_) =>
               completer.complete());
     } else {
 
-      if (statusCode != null) {
-        httpResp.statusCode = statusCode;
-      }
+      response = new shelf.Response(statusCode);
       completer.complete();
     
     }
@@ -391,7 +372,7 @@ Future _writeResponse(respValue, HttpResponse httpResp, String responseType, {in
   } else if (respValue is Future) {
 
     (respValue as Future).then((fValue) =>
-      _writeResponse(fValue, httpResp, responseType, 
+      _writeResponse(fValue, responseType, 
           abortIfChainInterrupted: abortIfChainInterrupted).then((_) =>
               completer.complete()));
 
@@ -399,61 +380,44 @@ Future _writeResponse(respValue, HttpResponse httpResp, String responseType, {in
     
     respValue = processors.fold(respValue, (v, p) =>
         p.processor(p.metadata, p.handlerName, v, _injector));
-    _writeResponse(respValue, httpResp, responseType, 
+    _writeResponse(respValue, responseType, 
         abortIfChainInterrupted: abortIfChainInterrupted).then((_) =>
             completer.complete());
     
   } else if (respValue is Map || respValue is List) {
 
-    if (statusCode != null) {
-      httpResp.statusCode = statusCode;
-    }
     respValue = conv.JSON.encode(respValue);
-    try {
-      if (responseType != null) {
-        httpResp.headers.set(HttpHeaders.CONTENT_TYPE, responseType);
-      } else {
-        httpResp.headers.contentType = new ContentType("application", "json", charset: "UTF-8");
-      }
-    } catch (e) {
-      _logger.finer("Couldn't set the response's content type. Maybe it was already set?");
+    if (responseType == null) {
+      responseType = "application/json";
     }
-    httpResp.write(respValue);
+    response = new shelf.Response(statusCode, body: respValue, headers: {
+      "content-type": responseType
+    }, encoding: conv.UTF8);
+    
     completer.complete();
 
   } else if (respValue is File) { 
-    
-    if (statusCode != null) {
-      httpResp.statusCode = statusCode;
-    }
+   
     File f = respValue as File;
-    try {
-      if (responseType != null) {
-        httpResp.headers.set(HttpHeaders.CONTENT_TYPE, responseType);
-      } else {
-        String contentType = lookupMimeType(f.path);
-        httpResp.headers.set(HttpHeaders.CONTENT_TYPE, contentType);
-      }
-    } catch (e) {
-      _logger.finer("Couldn't set the response's content type. Maybe it was already set?", e);
+    if (responseType == null) {
+      String contentType = lookupMimeType(f.path);
+      responseType = contentType;
     }
-    httpResp.addStream(f.openRead()).then((_) => completer.complete());
+    response = new shelf.Response(statusCode, body: f.openRead(), headers: {
+      "content-type": responseType
+    });
+    
+    completer.complete();
 
   } else {
 
-    if (statusCode != null) {
-      httpResp.statusCode = statusCode;
+    if (responseType == null) {
+      responseType = "text/plain";
     }
-    try {
-      if (responseType != null) {
-        httpResp.headers.set(HttpHeaders.CONTENT_TYPE, responseType);
-      } else {
-        httpResp.headers.contentType = new ContentType("text", "plain");
-      }
-    } catch (e) {
-      _logger.finer("Couldn't set the response's content type. Maybe it was already set?");
-    }
-    httpResp.write(respValue);
+    response = new shelf.Response(statusCode, body: respValue.toString(), headers: {
+      "content-type": responseType
+    });
+    
     completer.complete();
 
   }
@@ -480,20 +444,18 @@ _ErrorHandler _findErrorHandler(int statusCode, String path) {
   }, orElse: () => null);
 }
 
-void _notifyError(HttpResponse resp, String resource, [Object error, StackTrace stack]) {
-  int statusCode = resp.statusCode;
+void _notifyError(int statusCode, String resource, [Object error, StackTrace stack]) {
 
-  _ErrorHandler handler = _findErrorHandler(statusCode, request.httpRequest.uri.path);
+  _ErrorHandler handler = _findErrorHandler(statusCode, request.url.path);
   if (handler != null) {
     handler.errorHandler();
   } else {
-    _writeErrorPage(resp, resource, error, stack);
+    _writeErrorPage(statusCode, resource, error, stack);
   }
 }
 
-void _writeErrorPage(HttpResponse resp, String resource, [Object error, StackTrace stack]) {
+void _writeErrorPage(int statusCode, String resource, [Object error, StackTrace stack]) {
 
-  int statusCode = resp.statusCode;
   String description = _getStatusDescription(statusCode);
 
   String errorTemplate = 
@@ -556,8 +518,10 @@ void _writeErrorPage(HttpResponse resp, String resource, [Object error, StackTra
 </body>
 </html>''';
 
-  resp.headers.contentType = new ContentType("text", "html");
-  resp.write(errorTemplate);
+  response = new shelf.Response(statusCode, body: errorTemplate, headers: {
+    "content-type": "text/html"
+  }, encoding: conv.UTF8);
+
 }
 
 String _getStatusDescription(int statusCode) {

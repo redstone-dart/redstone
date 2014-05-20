@@ -3,6 +3,7 @@ library interceptors;
 import "dart:async";
 
 import 'package:redstone/server.dart' as app;
+import 'package:shelf/shelf.dart' as shelf;
 
 @app.Route("/target")
 target() => "target_executed";
@@ -10,18 +11,22 @@ target() => "target_executed";
 @app.Interceptor("/target", chainIdx: 0)
 interceptor1() {
   new Future(() {
-    app.request.response.write("before_interceptor1|");
     app.chain.next(() {
-      return new Future(() => app.request.response.write("|after_interceptor1"));
+      return app.response.readAsString().then((resp) {
+        app.response = new shelf.Response.ok(
+            "before_interceptor1|$resp|after_interceptor1");
+      });
     });
   });
 }
 
 @app.Interceptor("/target", chainIdx: 1)
 interceptor2() {
-  app.request.response.write("before_interceptor2|");
   app.chain.next(() {
-    app.request.response.write("|after_interceptor2");
+    return app.response.readAsString().then((resp) {
+      app.response = new shelf.Response.ok(
+          "before_interceptor2|$resp|after_interceptor2");
+    });
   });
 }
 
@@ -30,7 +35,7 @@ target2() => "not_reached";
 
 @app.Interceptor("/interrupt")
 interceptor3() {
-  app.chain.interrupt(statusCode: 401, response: "chain_interrupted");
+  app.chain.interrupt(statusCode: 401, responseValue: "chain_interrupted");
 }
 
 @app.Route("/redirect")
@@ -58,8 +63,10 @@ target5() => "basic_auth";
 
 @app.Interceptor("/basicauth")
 interceptor6() { 
-   if (app.authenticateBasic('Aladdin', 'open sesame', realm: 'Redstone', abortOnFail: true)) {
+   if (app.authenticateBasic('Aladdin', 'open sesame', realm: 'Redstone')) {
      app.chain.next();
+   } else {
+     app.chain.interrupt();
    }
 }
 

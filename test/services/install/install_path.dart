@@ -1,21 +1,24 @@
 library install_routes;
 
 import 'package:redstone/server.dart' as app;
+import 'package:shelf/shelf.dart' as shelf;
 
 @app.Route("/route")
 route() => "target_executed";
 
 @app.Interceptor("/route")
 interceptor() {
-  app.request.response.write("interceptor_executed ");
-  app.chain.next();
+  app.chain.next(() {
+    return app.response.readAsString().then((resp) =>
+        app.response = new shelf.Response.ok("interceptor_executed $resp"));
+  });
 }
 
 @app.Route("/error")
 error() => throw "error";
 
 @app.ErrorHandler(500)
-errorHandler() => app.request.response.write("error_handler_executed");
+errorHandler() => app.response = new shelf.Response.internalServerError(body: "error_handler_executed");
 
 @app.Group("/group")
 class Group {
@@ -25,8 +28,11 @@ class Group {
 
   @app.Interceptor("/route")
   interceptor() {
-    app.request.response.write("interceptor_executed ");
-    app.chain.next();
+    app.chain.next(() {
+      return app.response.readAsString().then((resp) {
+        app.response = new shelf.Response.ok("interceptor_executed $resp");
+      });
+    });
   }
   
 }

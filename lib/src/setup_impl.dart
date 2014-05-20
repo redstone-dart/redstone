@@ -17,6 +17,9 @@ final List<Module> _modules = [];
 final Map<String, List<_ParamHandler>> _customParams = {};
 final List<_ResponseHandler> _responseProcessors = [];
 
+shelf.Pipeline _initHandler = null;
+shelf.Handler _finalHandler = null;
+
 final Set<Symbol> _blacklistSet = _buildBlacklistSet();
 
 Injector _injector;
@@ -70,7 +73,7 @@ class _Target {
 
   Future handleRequest(Request req) {
     if (_match == null) {
-      if (!match(req.httpRequest.uri)) {
+      if (!match(req.url)) {
         return null;
       }
     }
@@ -602,7 +605,6 @@ void _configureTarget(Route route, ObjectMirror owner,
 
     return new Future(() {
 
-      var httpResp = request.response;
       var pathParams = match.parameters;
       
       var posParams = [];
@@ -626,7 +628,7 @@ void _configureTarget(Route route, ObjectMirror owner,
       var respValue = resp.reflectee;
 
       _logger.finer("Writing response for target $handlerName");
-      return _writeResponse(respValue, httpResp, route.responseType, 
+      return _writeResponse(respValue, route.responseType, 
                             abortIfChainInterrupted: true,
                             processors: responseProcessors);
 

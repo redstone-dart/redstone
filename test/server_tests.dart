@@ -365,8 +365,8 @@ main() {
      });
     
     test("wrong basic auth", () {
-       var req = new MockRequest("/basicauth");
-       req.headers.set(HttpHeaders.AUTHORIZATION, "Basic xxx");
+       var headers = {HttpHeaders.AUTHORIZATION: "Basic xxx"};
+       var req = new MockRequest("/basicauth", headers: headers);
        return app.dispatch(req).then((resp) {
          expect(resp.headers[HttpHeaders.WWW_AUTHENTICATE][0], equals('Basic realm="Redstone"'));   
          expect(resp.statusCode, equals(401));   
@@ -374,10 +374,10 @@ main() {
      });
     
     test("basic auth", () {
-       var req = new MockRequest("/basicauth");
        // username: 'Aladdin' password: 'open sesame'
        // Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==
-       req.headers.set(HttpHeaders.AUTHORIZATION, 'Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==');
+       var headers = {HttpHeaders.AUTHORIZATION: 'Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ=='};
+       var req = new MockRequest("/basicauth", headers: headers);
        return app.dispatch(req).then((resp) {
          expect(resp.statusCode, equals(200));
          expect(resp.mockContent, equals("basic_auth"));

@@ -3,6 +3,7 @@ library errors;
 import "dart:async";
 
 import 'package:redstone/server.dart' as app;
+import 'package:shelf/shelf.dart' as shelf;
 
 @app.Route("/wrong_method", methods: const [app.POST])
 wrongMethod() => "this route accepts only POST requests";
@@ -47,13 +48,14 @@ redirect() {
 }
 
 @app.ErrorHandler(404)
-notFoundHandler() => app.request.response.write("not_found");
+notFoundHandler() => app.response = new shelf.Response.notFound("not_found");
 
 @app.ErrorHandler(500)
-serverErrorHandler() => app.request.response.write("server_error");
+serverErrorHandler() => app.response = new shelf.Response.internalServerError(body: "server_error");
 
 @app.Route("/sub_handler")
 subHandler() => throw "server_error";
 
 @app.ErrorHandler(500, urlPattern: "/sub_handler?")
-subErrorHandler() => app.request.response.write("${app.chain.error} sub_error_handler");
+subErrorHandler() => app.response = new shelf.Response.internalServerError(
+    body: "${app.chain.error} sub_error_handler");

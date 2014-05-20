@@ -6,12 +6,11 @@ import 'dart:mirrors';
 import 'dart:convert' as conv;
 import 'dart:math';
 
-import 'package:http_server/http_server.dart';
+import 'package:shelf/shelf.dart' as shelf;
 import 'package:mime/mime.dart';
 import 'package:route_hierarchical/url_matcher.dart';
 import 'package:route_hierarchical/url_template.dart';
 import 'package:logging/logging.dart';
-import 'package:path/path.dart' as path;
 import 'package:crypto/crypto.dart';
 
 import 'package:di/di.dart';
@@ -24,6 +23,7 @@ part 'package:redstone/src/setup_impl.dart';
 part 'package:redstone/src/plugin_impl.dart';
 part 'package:redstone/src/server_impl.dart';
 part 'package:redstone/src/blacklist.dart';
+part 'package:redstone/src/http_body_parser.dart';
 
 const String GET = "GET";
 const String POST = "POST";
@@ -33,6 +33,7 @@ const String DELETE = "DELETE";
 const String JSON = "json";
 const String FORM = "form";
 const String TEXT = "text";
+const String BINARY = "binary";
 
 const String ROUTE = "ROUTE";
 const String INTERCEPTOR = "INTERCEPTOR";
@@ -40,13 +41,26 @@ const String ERROR_HANDLER = "ERROR_HANDLER";
 
 const String _DEFAULT_ADDRESS = "0.0.0.0";
 const int _DEFAULT_PORT = 8080;
-const String _DEFAULT_STATIC_DIR = "../web";
-const List<String> _DEFAULT_INDEX_FILES = const ["index.html"];
 
 /**
  * The request's information and content.
  */
 abstract class Request {
+  
+  /// The original [Uri] for the request.
+  Uri get requestedUri;
+  
+  /// The remainder of the [requestedUri] path and query designating the virtual
+  /// "location" of the request's target within the handler.
+  ///
+  /// [url] may be an empty, if [requestedUri]targets the handler
+  /// root and does not have a trailing slash.
+  ///
+  /// [url] is never null. If it is not empty, it will start with `/`.
+  ///
+  /// [scriptName] and [url] combine to create a valid path that should
+  /// correspond to the [requestedUri] path.
+  Uri get url;
 
   ///The method, such as 'GET' or 'POST', for the request (read-only).
   String get method;
@@ -63,13 +77,13 @@ abstract class Request {
   /**
    * The request body.
    *
-   * [body] can be a [Map], [List] or [String]. See [HttpRequestBody]
+   * [body] can be a [Map], [List] or [String]. See [HttpBody]
    * for more information.
    */ 
   dynamic get body;
 
   ///The headers of the request
-  HttpHeaders get headers;
+  Map<String, String> get headers;
 
   ///The session for the given request (read-only).
   HttpSession get session;
@@ -80,13 +94,10 @@ abstract class Request {
    * Attributes are objects that can be shared between
    * interceptors and routes
    */
-  Map get attributes;
-
-  ///The [HttpResponse] object, used for sending back the response to the client (read-only).
-  HttpResponse get response;
-
-  ///The [HttpRequest] object of the given request (read-only).
-  HttpRequest get httpRequest;
+  Map<String, Object> get attributes;
+  
+  ///The original Shelf request
+  shelf.Request get shelfRequest;
 
 }
 
@@ -95,7 +106,115 @@ abstract class Request {
  */
 abstract class UnparsedRequest extends Request {
   
+  void parseBodyType();
+  
   Future parseBody();
+  
+  set shelfRequest(shelf.Request req);
+  
+}
+
+/**
+ * A writer which can serialize a response to the client
+ */
+abstract class Writer {
+  
+  Future<HttpResponse> writeResponse(shelf.Response response);
+  
+}
+
+/**
+ * Request handler
+ */
+abstract class RequestHandler implements UnparsedRequest, Writer {}
+
+/**
+ * HttpRequest parser
+ */
+class HttpRequestParser {
+  
+  String _bodyType;
+  bool _isMultipart = false;
+  ContentType _contentType;
+  HttpBody _requestBody;
+  Future _bodyParsed = null;
+  
+  String get bodyType => _bodyType;
+  bool get isMultipart => _isMultipart;
+  get body => _requestBody != null ? _requestBody.body : null;
+  
+  void parseHttpRequestBodyType(Map<String, String> headers) {
+    var ct = headers["content-type"];
+    if (ct == null) {
+      return;
+    }
+    _contentType = ContentType.parse(ct);
+    if (_contentType == null) {
+      return;
+    }
+    switch (_contentType.primaryType) {
+      case "text":
+        _bodyType = TEXT;
+        break;
+      case "application":
+        switch (_contentType.subType) {
+          case "json":
+            _bodyType = JSON;
+            break;
+          case "x-www-form-urlencoded":
+            _bodyType = FORM;
+            break;
+        }
+        break;
+      case "multipart":
+        _isMultipart = true;
+        switch (_contentType.subType) {
+          case "form-data":
+            _bodyType = FORM;
+            break;
+        }
+        break;
+      default:
+        _bodyType = "binary";
+        break;
+    }
+  }
+  
+  Future parseHttpRequestBody(Stream<List<int>> body) {
+    if (_bodyParsed != null) {
+      return _bodyParsed;
+    }
+    
+    _bodyParsed = _parseRequestBody(body, _contentType).
+        then((HttpBody reqBody) {
+          _requestBody = reqBody;
+          return reqBody.body;
+    });
+    return _bodyParsed;
+  }
+}
+
+/**
+ * Utility methods to handle shelf objects
+ */
+class ShelfTransformer {
+  
+  shelf.Request buildShelfRequest(HttpRequest req) {
+    var headers = {};
+    req.headers.forEach((k, v) {
+      // Multiple header values are joined with commas.
+      // See http://tools.ietf.org/html/draft-ietf-httpbis-p1-messaging-21#page-22
+      headers[k] = v.join(',');
+    });
+
+    return new shelf.Request(req.method, req.requestedUri,
+        protocolVersion: req.protocolVersion, headers: headers,
+        body: req);
+  }
+  
+  Future writeHttpResponse(shelf.Response response, HttpResponse httpResponse) {
+    return _writeHttpResponse(response, httpResponse);
+  }
   
 }
 
@@ -106,12 +225,6 @@ abstract class UnparsedRequest extends Request {
  * and it can be directly manipulated only by interceptors.
  */
 abstract class Chain {
-
-  /**
-   * Get a [Future] that will complete when this Chain
-   * has completed.
-   */
-  Future get done;
   
   ///The error object thrown by the target
   dynamic get error;
@@ -124,8 +237,9 @@ abstract class Chain {
    */
   void next([callback()]);
 
-  ///Interrupt this chain and closes the current request.
-  void interrupt({int statusCode: HttpStatus.OK, Object response, String responseType});
+  ///Interrupt this chain. If [statusCode] or [responseValue] is informed,
+  ///a new Response will be created. 
+  void interrupt({int statusCode, Object responseValue, String responseType});
   
   ///Returns true if this chain was interrupted
   bool get interrupted;
@@ -154,6 +268,13 @@ class Credentials {
 Request get request => Zone.current[#request];
 
 /**
+ * The [Response] object, used for sending back the response to the client.
+ */
+shelf.Response get response => Zone.current[#state].response;
+
+set response(shelf.Response value) => Zone.current[#state].response = value;
+
+/**
  * The request's chain.
  *
  * Since each request run in its own [Zone], it's completely safe
@@ -168,9 +289,8 @@ Chain get chain => Zone.current[#chain];
  * will be invoked. Otherwise, the default ErrorHandler will be invoked.
  */
 void abort(int statusCode) {
-  request.response.statusCode = statusCode;
-  _notifyError(request.response, request.httpRequest.uri.path);
-  chain.interrupt(statusCode: statusCode);
+  _notifyError(statusCode, request.url.path);
+  chain.interrupt();
 }
 
 /**
@@ -179,8 +299,8 @@ void abort(int statusCode) {
  * [url] can be absolute, or relative to the url of the current request.
  */
 void redirect(String url) {
-  chain.interrupt(statusCode: HttpStatus.MOVED_TEMPORARILY);
-  request.response.redirect(request.httpRequest.uri.resolve(url));
+  chain.interrupt();
+  response = new shelf.Response.found(request.url.resolve(url));
 }
 
 /**
@@ -189,7 +309,7 @@ void redirect(String url) {
  */
 Credentials parseAuthorizationHeader() {
   if (request.headers[HttpHeaders.AUTHORIZATION] != null) {
-    String authorization = request.headers[HttpHeaders.AUTHORIZATION][0];
+    String authorization = request.headers[HttpHeaders.AUTHORIZATION];
     List<String> tokens = authorization.split(" ");
     if ("Basic" == tokens[0]) {
       String auth = conv.UTF8.decode(CryptoUtils.base64StringToBytes(tokens[1]));
@@ -208,15 +328,14 @@ Credentials parseAuthorizationHeader() {
  * Http Basic access authentication
  *
  * Returns true if the current request contains the authorization header for [username] and [password]. 
- * If authentication fails and [abortOnFail] is true, then [abort] will be 
- * called with the 401 status code. If authentication fails and [realm] is provided, 
- * a 'www-authenticate' header will be added to response.
+ * If authentication fails and [realm] is provided, then a new response with 401 status code and
+ * a 'www-authenticate' header will be created.
  */
-bool authenticateBasic(String username, String password, {String realm, bool abortOnFail: false}){
+bool authenticateBasic(String username, String password, {String realm}){
   bool r = false;
   var headers = request.headers;
   if (request.headers[HttpHeaders.AUTHORIZATION] != null) {
-    String authorization = request.headers[HttpHeaders.AUTHORIZATION][0];
+    String authorization = request.headers[HttpHeaders.AUTHORIZATION];
     List<String> tokens = authorization.split(" ");
     String auth = CryptoUtils.bytesToBase64(conv.UTF8.encode("$username:$password"));
     if ("Basic" == tokens[0] && auth == tokens[1]) {
@@ -225,10 +344,10 @@ bool authenticateBasic(String username, String password, {String realm, bool abo
   }
   if (!r) {
     if (realm != null) {
-      request.response.headers.add(HttpHeaders.WWW_AUTHENTICATE, 'Basic realm="$realm"');
-    }
-    if (abortOnFail) {
-      abort(HttpStatus.UNAUTHORIZED);
+      Map headers = new Map.from(response.headers);
+      headers[HttpHeaders.WWW_AUTHENTICATE] = 'Basic realm="$realm"';
+      response = new shelf.Response(HttpStatus.UNAUTHORIZED, 
+          body: response.read(), headers: headers);
     }
   }
   
@@ -256,55 +375,50 @@ void addPlugin(RedstonePlugin plugin) {
 }
 
 /**
+ * Register a Shelf Middleware.
+ * 
+ * Middlewares are invoked before any interceptor or route. 
+ */
+void addShelfMiddleware(shelf.Middleware middleware) {
+  if (_initHandler == null) {
+    _initHandler = new shelf.Pipeline();
+  }
+  _initHandler = _initHandler.addMiddleware(middleware);
+}
+
+/**
+ * Register a Shelf Handler.
+ * 
+ * The [handler] will be invoked when all interceptors are
+ * completed, and no route is found for the requested URL.
+ */
+void setShelfHandler(shelf.Handler handler) {
+  _finalHandler = handler;
+}
+
+/**
  * Start the server.
  *
- * The [address] can be a [String] or an [InternetAddress]. The [staticDir] is an
- * absolute or relative path to static files, which defaults to the 'web' directory
- * of the project or build. If no static files will be handled by this server, the [staticDir]
- * can be setted to null.
+ * The [address] can be a [String] or an [InternetAddress].
  */
-Future<HttpServer> start({address: _DEFAULT_ADDRESS, int port: _DEFAULT_PORT, 
-                          String staticDir: _DEFAULT_STATIC_DIR,
-                          List<String> indexFiles: _DEFAULT_INDEX_FILES,
-                          bool followLinks: false, bool jailRoot: true}) {
+Future<HttpServer> start({address: _DEFAULT_ADDRESS, int port: _DEFAULT_PORT}) {
   return new Future(() {
     
     setUp();
-
-    if (staticDir != null) {
-      String dir = Platform.script.resolve(staticDir).toFilePath();
-      _logger.info("Setting up VirtualDirectory for ${dir} - followLinks: $followLinks - jailRoot: $jailRoot - index files: $indexFiles");
-      _virtualDirectory = new VirtualDirectory(dir);
-      _virtualDirectory..followLinks = followLinks
-                       ..jailRoot = jailRoot
-                       ..allowDirectoryListing = true;
-      if (indexFiles != null && !indexFiles.isEmpty) {
-        _virtualDirectory.directoryHandler = (dir, req) {
-          int count = 0;
-          for (String index in indexFiles) {
-            var indexPath = path.join(dir.path, index);
-            File f = new File(indexPath);
-            if (f.existsSync() || count++ == indexFiles.length - 1) {
-              _virtualDirectory.serveFile(f, req);
-              break;
-            }
-          }
-        };
-      }
-      _virtualDirectory.errorPageHandler = (req) {
-        _logger.fine("Resource not found: ${req.uri}");
-        _notifyError(req.response, req.uri.path);
-        req.response.close();
-      };
-
-    }
 
     return runZoned(() {
       return HttpServer.bind(address, port).then((server) {
         server.listen((HttpRequest req) {
 
             _logger.fine("Received request for: ${req.uri}");
-            _dispatchRequest(new _RequestImpl(req));
+            _dispatchRequest(new _RequestImpl(req)).then((shelf.Response resp) {
+              return _writeHttpResponse(resp, req.response);
+            }, onError: (e) {
+              shelf.Response resp = new shelf.Response.internalServerError();
+              return _writeHttpResponse(resp, req.response);
+            }).catchError((e, s) {
+              _logger.severe("Failed to handle request for ${req.uri}", e, s);
+            });
 
           });
   
@@ -315,6 +429,16 @@ Future<HttpServer> start({address: _DEFAULT_ADDRESS, int port: _DEFAULT_PORT,
       _logger.severe("Failed to handle request", e, s);
     });
   });
+}
+
+/**
+ * Serve a [Stream] of [HttpRequest]s.
+ * 
+ * [HttpServer] implements [Stream<HttpRequest>], so it can be passed directly
+ * to [serveRequests].
+ */
+void serveRequests(Stream<HttpRequest> requests) {
+  
 }
 
 /**
@@ -347,7 +471,8 @@ void tearDown() {
  * This method is intended to be used in unit tests, where you
  * can create new requests with [MockRequest]
  */
-Future<HttpResponse> dispatch(UnparsedRequest request) => _dispatchRequest(request);
+Future<HttpResponse> dispatch(RequestHandler request) => 
+    _dispatchRequest(request).then((resp) => request.writeResponse(resp));
 
 
 /**

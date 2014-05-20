@@ -1,6 +1,7 @@
 library dependency_injection;
 
 import 'package:redstone/server.dart' as app;
+import 'package:shelf/shelf.dart' as shelf;
 
 class A {
   
@@ -49,4 +50,4 @@ class Group {
 }
 
 @app.ErrorHandler(404)
-errorHandler(C objC) => app.request.response.write(objC.value); 
+errorHandler(C objC) => app.response = new shelf.Response.notFound(objC.value);
