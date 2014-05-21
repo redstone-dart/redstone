@@ -414,27 +414,23 @@ Future<HttpServer> start({address: _DEFAULT_ADDRESS, int port: _DEFAULT_PORT}) {
     
     setUp();
 
-    return runZoned(() {
-      return HttpServer.bind(address, port).then((server) {
-        server.listen((HttpRequest req) {
+    return HttpServer.bind(address, port).then((server) {
+      server.listen((HttpRequest req) {
 
-            _logger.fine("Received request for: ${req.uri}");
-            _dispatchRequest(new _RequestImpl(req)).then((shelf.Response resp) {
-              return _writeHttpResponse(resp, req.response);
-            }, onError: (e) {
-              shelf.Response resp = new shelf.Response.internalServerError();
-              return _writeHttpResponse(resp, req.response);
-            }).catchError((e, s) {
-              _logger.severe("Failed to handle request for ${req.uri}", e, s);
-            });
-
+          _logger.fine("Received request for: ${req.uri}");
+          _dispatchRequest(new _RequestImpl(req)).then((shelf.Response resp) {
+            return _writeHttpResponse(resp, req.response);
+          }, onError: (e) {
+            shelf.Response resp = new shelf.Response.internalServerError();
+            return _writeHttpResponse(resp, req.response);
+          }).catchError((e, s) {
+            _logger.severe("Failed to handle request for ${req.uri}", e, s);
           });
-  
-        _logger.info("Running on $address:$port");
-        return server;
-      });
-    }, onError: (e, s) {
-      _logger.severe("Failed to handle request", e, s);
+
+        });
+
+      _logger.info("Running on $address:$port");
+      return server;
     });
   });
 }
@@ -446,6 +442,22 @@ Future<HttpServer> start({address: _DEFAULT_ADDRESS, int port: _DEFAULT_PORT}) {
  * to [serveRequests].
  */
 void serveRequests(Stream<HttpRequest> requests) {
+  
+  setUp();
+  
+  requests.listen((HttpRequest req) {
+
+    _logger.fine("Received request for: ${req.uri}");
+    _dispatchRequest(new _RequestImpl(req)).then((shelf.Response resp) {
+      return _writeHttpResponse(resp, req.response);
+    }, onError: (e) {
+      shelf.Response resp = new shelf.Response.internalServerError();
+      return _writeHttpResponse(resp, req.response);
+    }).catchError((e, s) {
+      _logger.severe("Failed to handle request for ${req.uri}", e, s);
+    });
+
+  });
   
 }
 
