@@ -237,7 +237,7 @@ abstract class Chain {
    */
   void next([callback()]);
 
-  ///Interrupt this chain. If [statusCode] or [responseValue] is informed,
+  ///Interrupt this chain. If [statusCode] or [responseValue] is provided,
   ///a new Response will be created. 
   void interrupt({int statusCode, Object responseValue, String responseType});
   
@@ -272,6 +272,9 @@ Request get request => Zone.current[#request];
  */
 shelf.Response get response => Zone.current[#state].response;
 
+/**
+ * The [Response] object, used for sending back the response to the client.
+ */
 set response(shelf.Response value) => Zone.current[#state].response = value;
 
 /**
