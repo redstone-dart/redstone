@@ -16,7 +16,7 @@ class Group {
   interceptor() {
     app.chain.next(() {
       return app.response.readAsString().then((String resp) =>
-        app.response = new shelf.Response.ok("interceptor $resp"));
+        new shelf.Response.ok("interceptor $resp"));
     });
   }
   

@@ -14,7 +14,7 @@ import 'install/ignore.dart';
 interceptorRoot() {
   app.chain.next(() {
     return app.response.readAsString().then((resp) =>
-        app.response = new shelf.Response.ok("root $resp"));
+        new shelf.Response.ok("root $resp"));
   });
 }
 

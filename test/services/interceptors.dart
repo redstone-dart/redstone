@@ -12,10 +12,9 @@ target() => "target_executed";
 interceptor1() {
   new Future(() {
     app.chain.next(() {
-      return app.response.readAsString().then((resp) {
-        app.response = new shelf.Response.ok(
-            "before_interceptor1|$resp|after_interceptor1");
-      });
+      return app.response.readAsString().then((resp) =>
+        new shelf.Response.ok(
+            "before_interceptor1|$resp|after_interceptor1"));
     });
   });
 }
@@ -23,10 +22,9 @@ interceptor1() {
 @app.Interceptor("/target", chainIdx: 1)
 interceptor2() {
   app.chain.next(() {
-    return app.response.readAsString().then((resp) {
-      app.response = new shelf.Response.ok(
-          "before_interceptor2|$resp|after_interceptor2");
-    });
+    return app.response.readAsString().then((resp) =>
+      new shelf.Response.ok(
+          "before_interceptor2|$resp|after_interceptor2"));
   });
 }
 

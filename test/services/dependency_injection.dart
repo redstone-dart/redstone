@@ -50,4 +50,4 @@ class Group {
 }
 
 @app.ErrorHandler(404)
-errorHandler(C objC) => app.response = new shelf.Response.notFound(objC.value);
+errorHandler(C objC) => new shelf.Response.notFound(objC.value);

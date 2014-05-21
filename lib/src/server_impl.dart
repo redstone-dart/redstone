@@ -2,12 +2,13 @@ part of redstone_server;
 
 typedef Future _RequestHandler(UrlMatch match, Request request);
 typedef void _RunInterceptor();
-typedef void _HandleError();
+typedef Future _HandleError();
 typedef dynamic _ConvertFunction(String value, dynamic defaultValue);
 
 class _RequestState {
   
   bool errorHandlerInvoked = false;
+  bool requestAborted = false;
   shelf.Response response;
   
 }
@@ -75,8 +76,8 @@ Future<shelf.Response> _dispatchRequest(UnparsedRequest req) {
 
     chain = new _ChainImpl(interceptors, target, req, _initHandler, _finalHandler);
   } catch(e, s) {
-    _handleError("Failed to handle request.", e, stack: s);
-    completer.completeError(e, s);
+    _handleError("Failed to handle request.", e, stack: s).then((_) =>
+        completer.completeError(e, s));
     return completer.future;
   }
     
@@ -112,8 +113,8 @@ void _process(UnparsedRequest req, _ChainImpl chain, Completer completer) {
         completer.complete(response);
       });
     }, onError: (e, s) {
-      _handleError("Failed to handle request.", e, stack: s, req: req);
-      completer.complete(response);
+      _handleError("Failed to handle request.", e, stack: s, req: req).then((_) =>
+          completer.complete(response));
     });
 
   }, zoneValues: {
@@ -123,69 +124,72 @@ void _process(UnparsedRequest req, _ChainImpl chain, Completer completer) {
   });
 }
 
-void _handleError(String message, Object error, {StackTrace stack, Request req, 
+Future _handleError(String message, Object error, {StackTrace stack, Request req, 
                   int statusCode, Level logLevel: Level.SEVERE}) {
   _logger.log(logLevel, message, error, stack);
 
-  if (req != null) {
-      
-    if (statusCode == null) {
-      if (error is RequestException) {
-        statusCode = HttpStatus.BAD_REQUEST;
-      } else {
-        statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
+  return new Future.sync(() {
+    if (req != null) {
+          
+      if (statusCode == null) {
+        if (error is RequestException) {
+          statusCode = HttpStatus.BAD_REQUEST;
+        } else {
+          statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
+        }
+      }
+
+      _RequestState state = Zone.current[#state];
+      if (!state.errorHandlerInvoked) {
+        state.errorHandlerInvoked = true;
+        return _notifyError(statusCode, req.url.path, error, stack);
       }
     }
-
-    _RequestState state = Zone.current[#state];
-    if (!state.errorHandlerInvoked) {
-      state.errorHandlerInvoked = true;
-      _notifyError(statusCode, req.url.path, error, stack);
-    }
-  }
+  });
 }
 
-bool _verifyRequest(_Target target, UnparsedRequest req) {
+Future<bool> _verifyRequest(_Target target, UnparsedRequest req) {
   
   if (target == null) {
-    return true;
+    return new Future.value(true);
   }
   
   //verify method
   if (!target.route.methods.contains(req.method)) {
-    _handleError("Invalid request", 
+    return _handleError("Invalid request", 
         new RequestException(target.handlerName, 
             "${req.method} method not allowed for this target"), req: req, 
-                statusCode: HttpStatus.METHOD_NOT_ALLOWED, logLevel: Level.FINE);
-    return false;
+                statusCode: HttpStatus.METHOD_NOT_ALLOWED, logLevel: Level.FINE).
+            then((_) => false);
   }
   //verify multipart
   if (req.isMultipart && !target.route.allowMultipartRequest) {
-    _handleError("Invalid request", 
-      new RequestException(target.handlerName, 
-          "multipart requests are not allowed for this target"), 
-              req: req, logLevel: Level.FINE);
-    return false;
+    return _handleError("Invalid request", 
+        new RequestException(target.handlerName, 
+            "multipart requests are not allowed for this target"), 
+                req: req, logLevel: Level.FINE).
+            then((_) => false);
   }
   //verify body type
   if (target.bodyType != null && target.bodyType != req.bodyType) {
-    _handleError("Invalid request", 
+    return _handleError("Invalid request", 
        new RequestException(target.handlerName, 
-          "${req.bodyType} data not supported for this target"),
-              req: req, logLevel: Level.FINE);
-    return false;
+           "${req.bodyType} data not supported for this target"),
+              req: req, logLevel: Level.FINE).
+           then((_) => false);
   }
   
-  return true;
+  return new Future.value(true);
 }
 
 Future _runTarget(_Target target, UnparsedRequest req, shelf.Handler handler) {
 
-  return new Future(() {
+  return _verifyRequest(target, req).then((bool validRequest) {
 
-    if (!_verifyRequest(target, req)) {
+    if (!validRequest) {
       return null;
     }
+    
     Future f = null;
     if (target != null) {
       f = req.parseBody().then((_) => target.handleRequest(req));
@@ -203,8 +207,7 @@ Future _runTarget(_Target target, UnparsedRequest req, shelf.Handler handler) {
       } else {
         _logger.fine("resource not found: ${req.url}");
 
-        _notifyError(HttpStatus.NOT_FOUND, req.url.path);
-        f = new Future.value();
+        f = _notifyError(HttpStatus.NOT_FOUND, req.url.path);
       }
     }
 
@@ -258,9 +261,18 @@ class _ChainImpl implements Chain {
   
   Future _invokeCallbacks() {
     return Future.forEach(_callbacks.reversed, (c) {
-      var f = c();
-      if (f != null && f is Future) {
-        return f;
+      var v = c();
+      if (v != null) {
+        if (v is Future) {
+          return v.then((r) {
+            if (r is shelf.Response) {
+              response = r;
+            }
+          });
+        }
+        if (v is shelf.Response) {
+          response = v;
+        }
       }
       return new Future.value();
     }).then((_) => _callbacks.clear());
@@ -307,15 +319,14 @@ class _ChainImpl implements Chain {
         _targetInvoked = true;
         new Future(() {
           _runTarget(_target, request, _finalHandler).then((_) {
-            if (!_interrupted) {
+            if (!_interrupted && !Zone.current[#state].requestAborted) {
               return _invokeCallbacks();
             }
           }).catchError((e, s) {
             if (!_interrupted) {
               _error = e;
-              _handleError("Failed to execute ${_target.handlerName}", e, 
-                  stack: s, req: request);
-              return _invokeCallbacks();
+              return _handleError("Failed to execute ${_target.handlerName}", e, 
+                  stack: s, req: request).then((_) => _invokeCallbacks());
             }
           });
         });
@@ -444,14 +455,16 @@ _ErrorHandler _findErrorHandler(int statusCode, String path) {
   }, orElse: () => null);
 }
 
-void _notifyError(int statusCode, String resource, [Object error, StackTrace stack]) {
+Future _notifyError(int statusCode, String resource, [Object error, StackTrace stack]) {
 
-  _ErrorHandler handler = _findErrorHandler(statusCode, request.url.path);
-  if (handler != null) {
-    handler.errorHandler();
-  } else {
-    _writeErrorPage(statusCode, resource, error, stack);
-  }
+  return new Future.sync(() {
+    _ErrorHandler handler = _findErrorHandler(statusCode, request.url.path);
+    if (handler != null) {
+      return handler.errorHandler();
+    } else {
+      _writeErrorPage(statusCode, resource, error, stack);
+    }
+  });
 }
 
 void _writeErrorPage(int statusCode, String resource, [Object error, StackTrace stack]) {

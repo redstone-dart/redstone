@@ -48,14 +48,15 @@ redirect() {
 }
 
 @app.ErrorHandler(404)
-notFoundHandler() => app.response = new shelf.Response.notFound("not_found");
+notFoundHandler() => new shelf.Response.notFound("not_found");
 
 @app.ErrorHandler(500)
-serverErrorHandler() => app.response = new shelf.Response.internalServerError(body: "server_error");
+serverErrorHandler() => app.response.readAsString().then((resp) => 
+    new shelf.Response.internalServerError(body: "${resp}server_error"));
 
 @app.Route("/sub_handler")
 subHandler() => throw "server_error";
 
 @app.ErrorHandler(500, urlPattern: "/sub_handler?")
-subErrorHandler() => app.response = new shelf.Response.internalServerError(
+subErrorHandler() => new shelf.Response.internalServerError(
     body: "${app.chain.error} sub_error_handler");

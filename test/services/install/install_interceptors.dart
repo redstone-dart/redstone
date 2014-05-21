@@ -9,8 +9,7 @@ import 'install_interceptors_level_1.dart';
 @app.Interceptor("/.+")
 interceptor() {
   app.chain.next(() {
-    return app.response.readAsString().then((resp) {
-      app.response = new shelf.Response.ok("interceptor_1 $resp");
-    });
+    return app.response.readAsString().then((resp) =>
+      new shelf.Response.ok("interceptor_1 $resp"));
   });
 }

@@ -386,6 +386,9 @@ void _clearHandlers() {
   _plugins.clear();
   _customParams.clear();
   _responseProcessors.clear();
+  
+  _initHandler = null;
+  _finalHandler = null;
 
 }
 
@@ -559,8 +562,18 @@ void _configureErrorHandler(ErrorHandler errorHandler,
   var caller = () {
 
     _logger.finer("Invoking error handler: $handlerName");
-    owner.invoke(handler.simpleName, posParams, namedParams);
-
+    var value = owner.invoke(handler.simpleName, posParams, namedParams);
+    if (value.reflectee is Future) {
+      return value.reflectee.then((r) {
+        if (r is shelf.Response) {
+          response = r;
+        }
+      });
+    } else if (value.reflectee is shelf.Response) {
+      response = value.reflectee;
+    }
+    
+    return new Future.value();
   };
 
   var name = MirrorSystem.getName(handler.qualifiedName);

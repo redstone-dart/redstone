@@ -96,9 +96,8 @@ TestPlugin(app.Manager manager) {
   
   manager.addInterceptor(interceptor, "testInterceptor", (injector) {
     app.chain.next(() {
-      return app.response.readAsString().then((resp) {
-        app.response = new shelf.Response.ok("interceptor $resp");
-      });
+      return app.response.readAsString().then((resp) =>
+        new shelf.Response.ok("interceptor $resp"));
     });
   });
   
@@ -107,7 +106,7 @@ TestPlugin(app.Manager manager) {
   });
   
   manager.addErrorHandler(errorHandler, "testErrorHandler", (injector) {
-    app.response = new shelf.Response.internalServerError(body: "error_handler");
+    return new shelf.Response.internalServerError(body: "error_handler");
   });
   
 }

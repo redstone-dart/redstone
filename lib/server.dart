@@ -289,8 +289,13 @@ Chain get chain => Zone.current[#chain];
  * will be invoked. Otherwise, the default ErrorHandler will be invoked.
  */
 void abort(int statusCode) {
-  _notifyError(statusCode, request.url.path);
-  chain.interrupt();
+  if (chain.interrupted) {
+    throw new ChainException(request.url.path, "invalid state: chain already interrupted");
+  }
+  Zone.current[#state].requestAborted = true;
+  _notifyError(statusCode, request.url.path).then((_) {
+    chain.interrupt();
+  });
 }
 
 /**
@@ -299,8 +304,11 @@ void abort(int statusCode) {
  * [url] can be absolute, or relative to the url of the current request.
  */
 void redirect(String url) {
-  chain.interrupt();
+  if (chain.interrupted) {
+    throw new ChainException(request.url.path, "invalid state: chain already interrupted");
+  }
   response = new shelf.Response.found(request.url.resolve(url));
+  chain.interrupt();
 }
 
 /**

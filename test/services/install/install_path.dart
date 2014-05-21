@@ -10,7 +10,7 @@ route() => "target_executed";
 interceptor() {
   app.chain.next(() {
     return app.response.readAsString().then((resp) =>
-        app.response = new shelf.Response.ok("interceptor_executed $resp"));
+        new shelf.Response.ok("interceptor_executed $resp"));
   });
 }
 
@@ -18,7 +18,7 @@ interceptor() {
 error() => throw "error";
 
 @app.ErrorHandler(500)
-errorHandler() => app.response = new shelf.Response.internalServerError(body: "error_handler_executed");
+errorHandler() => new shelf.Response.internalServerError(body: "error_handler_executed");
 
 @app.Group("/group")
 class Group {
@@ -29,9 +29,8 @@ class Group {
   @app.Interceptor("/route")
   interceptor() {
     app.chain.next(() {
-      return app.response.readAsString().then((resp) {
-        app.response = new shelf.Response.ok("interceptor_executed $resp");
-      });
+      return app.response.readAsString().then((resp) =>
+        new shelf.Response.ok("interceptor_executed $resp"));
     });
   }
   

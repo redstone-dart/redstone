@@ -9,18 +9,16 @@ import 'install_interceptors_level_2.dart';
 @app.Interceptor("/.+", chainIdx: 0)
 interceptor() {
   app.chain.next(() {
-    return app.response.readAsString().then((resp) {
-      app.response = new shelf.Response.ok("interceptor_2 $resp");
-    });
+    return app.response.readAsString().then((resp) =>
+      new shelf.Response.ok("interceptor_2 $resp"));
   });
 }
 
 @app.Interceptor("/.+", chainIdx: 2)
 interceptor2() {
   app.chain.next(() {
-    return app.response.readAsString().then((resp) {
-      app.response = new shelf.Response.ok("interceptor_4 $resp");
-    });
+    return app.response.readAsString().then((resp) =>
+      new shelf.Response.ok("interceptor_4 $resp"));
   });
 }
 

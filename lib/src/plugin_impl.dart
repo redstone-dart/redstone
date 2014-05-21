@@ -45,8 +45,16 @@ class _ManagerImpl implements Manager {
     var caller = () {
 
       _logger.finer("Invoking error handler: $name");
-      errorHandler(_injector);
-
+      var v = errorHandler(_injector);
+      if (v is Future) {
+        return v.then((r) {
+          if (r is shelf.Response) {
+            response = r;
+          }
+        });
+      } else if (v is shelf.Response) {
+        response = v;
+      }
     };
 
     List<_ErrorHandler> handlers = _errorHandlers[conf.statusCode];

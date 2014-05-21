@@ -1,6 +1,7 @@
 library test_lib;
 
 import 'package:redstone/server.dart' as app;
+import 'package:shelf/shelf.dart' as shelf;
 
 @app.Route("/")
 helloWorld() => "Hello, World!";
@@ -10,9 +11,10 @@ getUsername(String username) => ">> $username";
 
 @app.Interceptor(r'/user/.+')
 doge() {
-  app.request.response.write("wow! such user!\n\n");
   app.chain.next(() {
-    app.request.response.write("\n\nso smart!");
+    return app.response.readAsString().then((user) {
+      app.response = new shelf.Response.ok("wow! such user!\n\n$user\n\nso smart!");
+    });
   });
 }
 
