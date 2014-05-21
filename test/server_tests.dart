@@ -7,6 +7,7 @@ import 'package:unittest/unittest.dart';
 
 import 'package:di/di.dart';
 import 'package:redstone/server.dart' as app;
+import 'package:shelf/shelf.dart' as shelf;
 import 'package:redstone/mocks.dart';
 import 'package:logging/logging.dart';
 
@@ -514,6 +515,42 @@ main() {
         expect(resp.mockContent, equals("interceptor value"));
       }).then((_) => app.dispatch(req2)).then((resp) {
         expect(resp.mockContent, equals("error_handler"));
+      });
+    });
+  });
+  
+  group("Shelf:", () {
+    
+    tearDown(app.tearDown);
+    
+    test("Middlewares", () {
+      
+      app.addShelfMiddleware(shelf.createMiddleware(responseHandler: (shelf.Response resp) {
+        return resp.readAsString().then((value) =>
+            new shelf.Response.ok("middleware_1 $value"));
+      }));
+      app.addShelfMiddleware(shelf.createMiddleware(responseHandler: (shelf.Response resp) {
+        return resp.readAsString().then((value) =>
+            new shelf.Response.ok("middleware_2 $value"));
+      }));
+      app.setUp([#routes]);
+      
+      MockRequest req = new MockRequest("/path");
+      app.dispatch(req).then((resp) {
+        expect(resp.mockContent, equals("middleware_1 middleware_2 main_route"));
+      });
+      
+    });
+    
+    test("Handler", () {
+      app.setShelfHandler((shelf.Request req) {
+        return new shelf.Response.ok("handler_executed");
+      });
+      app.setUp([#routes]);
+      MockRequest req = new MockRequest("/invalid_path");
+      app.dispatch(req).then((resp) {
+        expect(resp.mockContent, equals("handler_executed"));
+        expect(resp.statusCode, equals(200));
       });
     });
   });
