@@ -420,6 +420,11 @@ Future _writeResponse(respValue, String responseType, {int statusCode: 200,
     
     completer.complete();
 
+  } else if (respValue is shelf.Response) { 
+    response = respValue;
+    
+    completer.complete();
+    
   } else {
 
     if (responseType == null) {

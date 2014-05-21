@@ -5,6 +5,7 @@ import 'dart:io';
 import 'dart:convert';
 
 import 'package:redstone/server.dart' as app;
+import 'package:shelf/shelf.dart' as shelf;
 
 @app.Route("/types/string")
 stringType() => "string";
@@ -26,6 +27,9 @@ otherType() => new _OtherType();
 
 @app.Route("/types/file")
 fileType() => new _MockFile();
+
+@app.Route("/types/shelf_response")
+shelfResponse() => new shelf.Response.ok("target_executed");
 
 class _OtherType {
   

@@ -123,6 +123,13 @@ main() {
       });
     });
     
+    test("Shelf Response", () {
+      var req = new MockRequest("/types/shelf_response");
+      return app.dispatch(req).then((resp) {
+        expect(resp.mockContent, equals("target_executed"));
+      });
+    });
+    
   });
   
   group("Route arguments:", () {
