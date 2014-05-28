@@ -1,3 +1,11 @@
+## v0.5.0
+- Added support for Shelf middlewares and handlers (see [documentation](https://github.com/luizmineo/redstone.dart/wiki/Shelf-Middlewares))
+- BREAKING CHANGE: Redstone.dart will no longer serve static files directly. You can use a Shelf handler for this (see [documention](https://github.com/luizmineo/redstone.dart/wiki/Server-Configuration))
+- BREAKING CHANGE: It's no longer possible to access `HttpRequest` and `HttpResponse`. If you need to inspect or modify the response, you can use the global `response` object (see [documentation](https://github.com/luizmineo/redstone.dart/wiki/Routes#the-response-object))
+- It's now possible to define multiple routes to the same path (see [documentation](https://github.com/luizmineo/redstone.dart/wiki/Routes#http-methods))
+- Added `@DefaultRoute` annotation (see [documentation](https://github.com/luizmineo/redstone.dart/wiki/Groups))
+- Added `serveRequests(Stream<HttpRequest> requests)` method, which is an alternative to the `start()` method.
+
 ## v0.4.0
 - Added new annotations: `@Install` and `@Ignore` (see [documentation](https://github.com/luizmineo/redstone.dart/wiki/Importing-libraries))
 - Added support for plugins (see [documentation](https://github.com/luizmineo/redstone.dart/wiki/Plugins))
