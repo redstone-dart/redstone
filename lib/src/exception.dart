@@ -15,10 +15,11 @@ class RequestException implements Exception {
   
   final String handler;
   final String message;
+  final int statusCode;
 
-  RequestException(String this.handler, String this.message);
+  RequestException(String this.handler, String this.message, [int this.statusCode = 400]);
 
-  String toString() => "RequestException: [$handler] $message";
+  String toString() => "RequestException($statusCode): [$handler] $message";
 }
 
 class ChainException implements Exception {

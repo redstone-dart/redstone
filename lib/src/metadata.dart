@@ -8,7 +8,7 @@ part of redstone_server;
  * The [responseType] is the content type of the response. If it's not provided,
  * the framework will generate it based on the value returned by the method;
  * If [allowMultipartRequest] is true, then the Route is allowed to receive
- * multipart requests (file upload);
+ * multipart requests (file upload).
  *
  * Example:
  *
@@ -202,6 +202,38 @@ class Group {
 
   const Group(String this.urlPrefix);
 
+}
+
+/**
+ * An annotation to define a target which must be bound 
+ * to the URL of its group.
+ * 
+ * If [pathSuffix] is provided, only requests that match
+ * the suffix will be handled. [methods] are the HTTP 
+ * methods accepted by this target, and defaults to GET.
+ * The [responseType] is the content type of the response. 
+ * If it's not provided, the framework will generate it based on 
+ * the value returned by the method; If [allowMultipartRequest] 
+ * is true, then the Route is allowed to receive multipart 
+ * requests (file upload).
+ * 
+ */
+class DefaultRoute {
+  
+  final String pathSuffix;
+  
+  final List<String> methods;
+
+  final String responseType;
+    
+  final bool allowMultipartRequest;
+    
+  final bool matchSubPaths;
+  
+  const DefaultRoute({String this.pathSuffix, 
+                      List<String> this.methods: const [GET],
+                      String this.responseType, bool this.allowMultipartRequest: false,
+                      bool this.matchSubPaths: false});
 }
 
 /**

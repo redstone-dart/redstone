@@ -7,6 +7,8 @@ var _stringType = reflectClass(String);
 var _dynamicType = reflectType(dynamic);
 var _voidType = currentMirrorSystem().voidType;
 
+final Map<String, _Target> _targetsCache = {};
+
 final List<_Target> _targets = [];
 final List<_Interceptor> _interceptors = [];
 final Map<int, List<_ErrorHandler>> _errorHandlers = {};
@@ -16,6 +18,9 @@ final List<Module> _modules = [];
 
 final Map<String, List<_ParamHandler>> _customParams = {};
 final List<_ResponseHandler> _responseProcessors = [];
+
+shelf.Pipeline _initHandler = null;
+shelf.Handler _finalHandler = null;
 
 final Set<Symbol> _blacklistSet = _buildBlacklistSet();
 
@@ -34,16 +39,18 @@ class _HandlerCfg<T> {
 class _Target {
   
   final UrlTemplate urlTemplate;
-  final _RequestHandler handler;
+  _RequestHandler handler;
   
-  final String handlerName;
-  final Route route;
-  final String bodyType;
+  String handlerName;
+  Route route;
+  final Set<String> bodyTypes = new Set();
   
   UrlMatch _match;
 
   _Target(this.urlTemplate, this.handlerName, 
-          this.handler, this.route, this.bodyType);
+          this.handler, this.route, [String bodyType = "*"]) {
+    bodyTypes.add(bodyType);
+  }
   
   bool match(Uri uri) {
     UrlMatch match = urlTemplate.match(uri.path);
@@ -70,12 +77,78 @@ class _Target {
 
   Future handleRequest(Request req) {
     if (_match == null) {
-      if (!match(req.httpRequest.uri)) {
+      if (!match(req.url)) {
         return null;
       }
     }
 
     return handler(_match, req);
+  }
+}
+
+class _TargetWrapper extends _Target {
+  
+  final List<_Target> _innerTargets = [];
+  
+  _TargetWrapper(_Target target) :
+    super(target.urlTemplate, target.handlerName, target.handler, target.route) {
+    bodyTypes.addAll(target.bodyTypes);
+    
+    _innerTargets.add(target);
+  }
+  
+  void addTarget(_Target target) {
+    bodyTypes.addAll(target.bodyTypes);
+    _innerTargets.add(target);
+  }
+  
+  void build() {
+    _buildHandlerName();
+    _buildRoute();
+    _buildRequestHandler();
+  }
+  
+  void _buildHandlerName() {
+    var str = new StringBuffer("Target(${_innerTargets[0].handlerName}");
+    _innerTargets.sublist(1).forEach((t) {
+      str.write(", ${t.handlerName}");
+    });
+    str.write(")");
+    handlerName = str.toString();
+  }
+  
+  void _buildRoute() {
+    Set<String> methods = new Set();
+    bool allowMultipartRequest = false;
+    bool matchSubPaths = false;
+    
+    _innerTargets.forEach((t) {
+      methods.addAll(t.route.methods);
+      if (t.route.allowMultipartRequest) {
+        allowMultipartRequest = true;
+      }
+      if (t.route.matchSubPaths) {
+        matchSubPaths = true;
+      }
+    });
+    
+    route = new Route.conf(route.urlTemplate, methods: new List.from(methods), 
+        allowMultipartRequest: allowMultipartRequest, matchSubPaths: matchSubPaths);
+    
+  }
+  
+  void _buildRequestHandler() {
+    handler = (UrlMatch match, Request req) {
+      
+      return new Future(() {
+        _Target target = _innerTargets.firstWhere((t) => 
+            t.route.methods.contains(req.method));  
+        
+        return _verifyRequest(target, req)
+            .then((_) => target.handleRequest(req));
+      });
+      
+    };
   }
 }
 
@@ -335,6 +408,12 @@ void _scanHandlers([List<Symbol> libraries]) {
           levelHist, urlPrefix: g.lib.conf.urlPrefix);
   });
   
+  _targets.addAll(_targetsCache.values.map((t) {
+    if (t is _TargetWrapper) {
+      t.build();
+    }
+    return t;
+  }));
   _targets.sort((t1, t2) => t1.urlTemplate.compareTo(t2.urlTemplate));
   _interceptors.sort((i1, i2) {
     var idxs1 = i1.chainIdxByLevel;
@@ -383,6 +462,9 @@ void _clearHandlers() {
   _plugins.clear();
   _customParams.clear();
   _responseProcessors.clear();
+  
+  _initHandler = null;
+  _finalHandler = null;
 
 }
 
@@ -408,7 +490,20 @@ void _configureGroup(Group group, ClassMirror clazz, Injector injector,
   clazz.instanceMembers.values.forEach((MethodMirror method) {
 
     method.metadata.forEach((InstanceMirror metadata) {
-      if (metadata.reflectee is Route) {
+      if (metadata.reflectee is DefaultRoute) {
+        
+        DefaultRoute info = metadata.reflectee as DefaultRoute;
+        var url = prefix;
+        if (info.pathSuffix != null) {
+          url = prefix + info.pathSuffix;
+        }
+        Route route = new Route.conf(url, methods: info.methods, 
+            responseType: info.responseType, 
+            allowMultipartRequest: info.allowMultipartRequest,
+            matchSubPaths: info.matchSubPaths);
+        
+        _configureTarget(route, instance, method);
+      } else if (metadata.reflectee is Route) {
         
         Route route = metadata.reflectee as Route;
 
@@ -556,8 +651,18 @@ void _configureErrorHandler(ErrorHandler errorHandler,
   var caller = () {
 
     _logger.finer("Invoking error handler: $handlerName");
-    owner.invoke(handler.simpleName, posParams, namedParams);
-
+    var value = owner.invoke(handler.simpleName, posParams, namedParams);
+    if (value.reflectee is Future) {
+      return value.reflectee.then((r) {
+        if (r is shelf.Response) {
+          response = r;
+        }
+      });
+    } else if (value.reflectee is shelf.Response) {
+      response = value.reflectee;
+    }
+    
+    return new Future.value();
   };
 
   var name = MirrorSystem.getName(handler.qualifiedName);
@@ -602,7 +707,6 @@ void _configureTarget(Route route, ObjectMirror owner,
 
     return new Future(() {
 
-      var httpResp = request.response;
       var pathParams = match.parameters;
       
       var posParams = [];
@@ -626,7 +730,7 @@ void _configureTarget(Route route, ObjectMirror owner,
       var respValue = resp.reflectee;
 
       _logger.finer("Writing response for target $handlerName");
-      return _writeResponse(respValue, httpResp, route.responseType, 
+      return _writeResponse(respValue, route.responseType, 
                             abortIfChainInterrupted: true,
                             processors: responseProcessors);
 
@@ -639,9 +743,28 @@ void _configureTarget(Route route, ObjectMirror owner,
     url = _joinUrl(urlPrefix, url);
   }
 
-  _targets.add(new _Target(new UrlTemplate(url), handlerName, caller, route, paramProcessors.bodyType));
+  UrlTemplate urlTemplate = new UrlTemplate(url);
+  _Target target;
+  if (paramProcessors.bodyType == null) {
+    target = new _Target(urlTemplate, handlerName, caller, route);
+  } else {
+    target = new _Target(urlTemplate, handlerName, caller, route, 
+        paramProcessors.bodyType);
+  }
+  
+  String key = urlTemplate.toString();
+  _Target currentTarget = _targetsCache[key];
+  if (currentTarget != null) {
+    if (currentTarget is! _TargetWrapper) {
+      currentTarget = new _TargetWrapper(currentTarget);
+    }
+    (currentTarget as _TargetWrapper).addTarget(target);
+    _targetsCache[key] = currentTarget;
+  } else {
+    _targetsCache[key] = target;
+  }
 
-  _logger.info("Configured target for ${url} : $handlerName");
+  _logger.info("Configured target for ${url} ${route.methods}: $handlerName");
 }
 
 _ParamProcessors _buildParamProcesors(MethodMirror handler) {

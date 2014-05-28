@@ -3,6 +3,7 @@ library plugins;
 import 'dart:mirrors';
 
 import 'package:redstone/server.dart' as app;
+import 'package:shelf/shelf.dart' as shelf;
 
 //plugin - parameter provider
 
@@ -94,8 +95,10 @@ TestPlugin(app.Manager manager) {
   });
   
   manager.addInterceptor(interceptor, "testInterceptor", (injector) {
-    app.request.response.write("interceptor ");
-    app.chain.next();
+    app.chain.next(() {
+      return app.response.readAsString().then((resp) =>
+        new shelf.Response.ok("interceptor $resp"));
+    });
   });
   
   manager.addRoute(routeError, "testError", (pathSegments, injector, request) {
@@ -103,7 +106,7 @@ TestPlugin(app.Manager manager) {
   });
   
   manager.addErrorHandler(errorHandler, "testErrorHandler", (injector) {
-    app.request.response.write("error_handler");
+    return new shelf.Response.internalServerError(body: "error_handler");
   });
   
 }

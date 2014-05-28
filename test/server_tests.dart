@@ -7,6 +7,7 @@ import 'package:unittest/unittest.dart';
 
 import 'package:di/di.dart';
 import 'package:redstone/server.dart' as app;
+import 'package:shelf/shelf.dart' as shelf;
 import 'package:redstone/mocks.dart';
 import 'package:logging/logging.dart';
 
@@ -47,6 +48,9 @@ main() {
       var req2 = new MockRequest("/group/path/anotherpath");
       var req3 = new MockRequest("/group/path");
       var req4 = new MockRequest("/group/paths");
+      var req5 = new MockRequest("/group");
+      var req6 = new MockRequest("/group.json");
+      var req7 = new MockRequest("/group", method: app.POST);
       
       return app.dispatch(req).then((resp) {
         expect(resp.mockContent, equals("interceptor sub_route"));
@@ -56,9 +60,25 @@ main() {
         expect(resp.mockContent, equals("interceptor main_route"));
       }).then((_) => app.dispatch(req4)).then((resp) {
         expect(resp.statusCode, equals(404));
+      }).then((_) => app.dispatch(req5)).then((resp) {
+        expect(resp.mockContent, equals("default_route"));
+      }).then((_) => app.dispatch(req6)).then((resp) {
+        expect(resp.mockContent, equals("default_route_json"));
+      }).then((_) => app.dispatch(req7)).then((resp) {
+        expect(resp.mockContent, equals("default_route_post"));
       });
     });
     
+    test("multiple handlers", () {
+      var req = new MockRequest("/handler_by_method");
+      var req2 = new MockRequest("/handler_by_method", method: app.POST);
+      
+      return app.dispatch(req).then((resp) {
+        expect(resp.mockContent, equals("get_handler"));
+      }).then((_) => app.dispatch(req2)).then((resp) {
+        expect(resp.mockContent, equals("post_handler"));
+      });
+    });
   });
   
   group("Response serialization:", () {
@@ -119,6 +139,13 @@ main() {
       return app.dispatch(req).then((resp) {
         expect(resp.headers.value("content-type"), contains("application/json"));
         expect(JSON.decode(resp.mockContent), equals({"key": "value"}));
+      });
+    });
+    
+    test("Shelf Response", () {
+      var req = new MockRequest("/types/shelf_response");
+      return app.dispatch(req).then((resp) {
+        expect(resp.mockContent, equals("target_executed"));
       });
     });
     
@@ -365,8 +392,8 @@ main() {
      });
     
     test("wrong basic auth", () {
-       var req = new MockRequest("/basicauth");
-       req.headers.set(HttpHeaders.AUTHORIZATION, "Basic xxx");
+       var headers = {HttpHeaders.AUTHORIZATION: "Basic xxx"};
+       var req = new MockRequest("/basicauth", headers: headers);
        return app.dispatch(req).then((resp) {
          expect(resp.headers[HttpHeaders.WWW_AUTHENTICATE][0], equals('Basic realm="Redstone"'));   
          expect(resp.statusCode, equals(401));   
@@ -374,10 +401,10 @@ main() {
      });
     
     test("basic auth", () {
-       var req = new MockRequest("/basicauth");
        // username: 'Aladdin' password: 'open sesame'
        // Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==
-       req.headers.set(HttpHeaders.AUTHORIZATION, 'Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==');
+       var headers = {HttpHeaders.AUTHORIZATION: 'Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ=='};
+       var req = new MockRequest("/basicauth", headers: headers);
        return app.dispatch(req).then((resp) {
          expect(resp.statusCode, equals(200));
          expect(resp.mockContent, equals("basic_auth"));
@@ -514,6 +541,42 @@ main() {
         expect(resp.mockContent, equals("interceptor value"));
       }).then((_) => app.dispatch(req2)).then((resp) {
         expect(resp.mockContent, equals("error_handler"));
+      });
+    });
+  });
+  
+  group("Shelf:", () {
+    
+    tearDown(app.tearDown);
+    
+    test("Middlewares", () {
+      
+      app.addShelfMiddleware(shelf.createMiddleware(responseHandler: (shelf.Response resp) {
+        return resp.readAsString().then((value) =>
+            new shelf.Response.ok("middleware_1 $value"));
+      }));
+      app.addShelfMiddleware(shelf.createMiddleware(responseHandler: (shelf.Response resp) {
+        return resp.readAsString().then((value) =>
+            new shelf.Response.ok("middleware_2 $value"));
+      }));
+      app.setUp([#routes]);
+      
+      MockRequest req = new MockRequest("/path");
+      app.dispatch(req).then((resp) {
+        expect(resp.mockContent, equals("middleware_1 middleware_2 main_route"));
+      });
+      
+    });
+    
+    test("Handler", () {
+      app.setShelfHandler((shelf.Request req) {
+        return new shelf.Response.ok("handler_executed");
+      });
+      app.setUp([#routes]);
+      MockRequest req = new MockRequest("/invalid_path");
+      app.dispatch(req).then((resp) {
+        expect(resp.mockContent, equals("handler_executed"));
+        expect(resp.statusCode, equals(200));
       });
     });
   });

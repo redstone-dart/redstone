@@ -15,14 +15,19 @@ class _ManagerImpl implements Manager {
         var respValue = route(match.parameters, _injector, request);
 
         _logger.finer("Writing response for target $name");
-        return _writeResponse(respValue, request.response, 
+        return _writeResponse(respValue, 
             conf.responseType, abortIfChainInterrupted: true);
       });
   
     };
     
-    _targets.add(new _Target(new UrlTemplate(conf.urlTemplate), name, 
-                              caller, conf, bodyType));
+    if (bodyType == null) {
+      _targets.add(new _Target(new UrlTemplate(conf.urlTemplate), name, 
+                                caller, conf));
+    } else {
+      _targets.add(new _Target(new UrlTemplate(conf.urlTemplate), name, 
+                                caller, conf, bodyType));
+    }
     
     _logger.info("Configured target for ${conf.urlTemplate} : $name");
   }
@@ -45,8 +50,16 @@ class _ManagerImpl implements Manager {
     var caller = () {
 
       _logger.finer("Invoking error handler: $name");
-      errorHandler(_injector);
-
+      var v = errorHandler(_injector);
+      if (v is Future) {
+        return v.then((r) {
+          if (r is shelf.Response) {
+            response = r;
+          }
+        });
+      } else if (v is shelf.Response) {
+        response = v;
+      }
     };
 
     List<_ErrorHandler> handlers = _errorHandlers[conf.statusCode];
