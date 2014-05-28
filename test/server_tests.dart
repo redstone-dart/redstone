@@ -48,6 +48,9 @@ main() {
       var req2 = new MockRequest("/group/path/anotherpath");
       var req3 = new MockRequest("/group/path");
       var req4 = new MockRequest("/group/paths");
+      var req5 = new MockRequest("/group");
+      var req6 = new MockRequest("/group.json");
+      var req7 = new MockRequest("/group", method: app.POST);
       
       return app.dispatch(req).then((resp) {
         expect(resp.mockContent, equals("interceptor sub_route"));
@@ -57,9 +60,25 @@ main() {
         expect(resp.mockContent, equals("interceptor main_route"));
       }).then((_) => app.dispatch(req4)).then((resp) {
         expect(resp.statusCode, equals(404));
+      }).then((_) => app.dispatch(req5)).then((resp) {
+        expect(resp.mockContent, equals("default_route"));
+      }).then((_) => app.dispatch(req6)).then((resp) {
+        expect(resp.mockContent, equals("default_route_json"));
+      }).then((_) => app.dispatch(req7)).then((resp) {
+        expect(resp.mockContent, equals("default_route_post"));
       });
     });
     
+    test("multiple handlers", () {
+      var req = new MockRequest("/handler_by_method");
+      var req2 = new MockRequest("/handler_by_method", method: app.POST);
+      
+      return app.dispatch(req).then((resp) {
+        expect(resp.mockContent, equals("get_handler"));
+      }).then((_) => app.dispatch(req2)).then((resp) {
+        expect(resp.mockContent, equals("post_handler"));
+      });
+    });
   });
   
   group("Response serialization:", () {

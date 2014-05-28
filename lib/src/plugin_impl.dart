@@ -21,8 +21,13 @@ class _ManagerImpl implements Manager {
   
     };
     
-    _targets.add(new _Target(new UrlTemplate(conf.urlTemplate), name, 
-                              caller, conf, bodyType));
+    if (bodyType == null) {
+      _targets.add(new _Target(new UrlTemplate(conf.urlTemplate), name, 
+                                caller, conf));
+    } else {
+      _targets.add(new _Target(new UrlTemplate(conf.urlTemplate), name, 
+                                caller, conf, bodyType));
+    }
     
     _logger.info("Configured target for ${conf.urlTemplate} : $name");
   }

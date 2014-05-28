@@ -171,7 +171,7 @@ Future _verifyRequest(_Target target, UnparsedRequest req) {
     }
     
     //verify body type
-    if (target.bodyType != null && target.bodyType != req.bodyType) {
+    if (!target.bodyTypes.contains("*") && !target.bodyTypes.contains(req.bodyType)) {
       throw new RequestException(target.handlerName, 
         "${req.bodyType} data not supported for this target");
     }
