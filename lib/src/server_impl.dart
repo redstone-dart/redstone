@@ -7,6 +7,7 @@ typedef dynamic _ConvertFunction(String value, dynamic defaultValue);
 
 class _RequestState {
   
+  bool chainInitialized = false;
   bool errorHandlerInvoked = false;
   bool requestAborted = false;
   shelf.Response response;
@@ -133,7 +134,7 @@ Future _handleError(String message, Object error, {StackTrace stack, Request req
           
       if (statusCode == null) {
         if (error is RequestException) {
-          statusCode = HttpStatus.BAD_REQUEST;
+          statusCode = error.statusCode;
         } else {
           statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
         }
@@ -148,47 +149,40 @@ Future _handleError(String message, Object error, {StackTrace stack, Request req
   });
 }
 
-Future<bool> _verifyRequest(_Target target, UnparsedRequest req) {
+Future _verifyRequest(_Target target, UnparsedRequest req) {
   
-  if (target == null) {
-    return new Future.value(true);
-  }
+  return new Future.sync(() {
+    
+    if (target == null) {
+      return null;
+    }
+    
+    //verify method
+    if (!target.route.methods.contains(req.method)) {
+      throw new RequestException(target.handlerName, 
+        "${req.method} method not allowed for this target", 
+        HttpStatus.METHOD_NOT_ALLOWED);
+    }
+    
+    //verify multipart
+    if (req.isMultipart && !target.route.allowMultipartRequest) {
+      throw new RequestException(target.handlerName, 
+        "multipart requests are not allowed for this target");
+    }
+    
+    //verify body type
+    if (target.bodyType != null && target.bodyType != req.bodyType) {
+      throw new RequestException(target.handlerName, 
+        "${req.bodyType} data not supported for this target");
+    }
+    
+  });
   
-  //verify method
-  if (!target.route.methods.contains(req.method)) {
-    return _handleError("Invalid request", 
-        new RequestException(target.handlerName, 
-            "${req.method} method not allowed for this target"), req: req, 
-                statusCode: HttpStatus.METHOD_NOT_ALLOWED, logLevel: Level.FINE).
-            then((_) => false);
-  }
-  //verify multipart
-  if (req.isMultipart && !target.route.allowMultipartRequest) {
-    return _handleError("Invalid request", 
-        new RequestException(target.handlerName, 
-            "multipart requests are not allowed for this target"), 
-                req: req, logLevel: Level.FINE).
-            then((_) => false);
-  }
-  //verify body type
-  if (target.bodyType != null && target.bodyType != req.bodyType) {
-    return _handleError("Invalid request", 
-       new RequestException(target.handlerName, 
-           "${req.bodyType} data not supported for this target"),
-              req: req, logLevel: Level.FINE).
-           then((_) => false);
-  }
-  
-  return new Future.value(true);
 }
 
 Future _runTarget(_Target target, UnparsedRequest req, shelf.Handler handler) {
 
-  return _verifyRequest(target, req).then((bool validRequest) {
-
-    if (!validRequest) {
-      return null;
-    }
+  return _verifyRequest(target, req).then((_) {
     
     Future f = null;
     if (target != null) {
@@ -235,8 +229,6 @@ class _ChainImpl implements Chain {
   final Completer _completer = new Completer();
   
   List _callbacks = [];
-  
-  dynamic _error;
 
   _ChainImpl(this._interceptors, this._target, this._request,
              shelf.Pipeline initHandler, this._finalHandler) {
@@ -244,6 +236,7 @@ class _ChainImpl implements Chain {
     var h = (shelf.Request req) {
       _request.shelfRequest = req;
       _request.attributes.addAll(req.context);
+      Zone.current[#state].chainInitialized = true;
       var c = new Completer();
       next(() => c.complete(response));
       return c.future;
@@ -256,8 +249,6 @@ class _ChainImpl implements Chain {
     }
     
   }
-  
-  dynamic get error => _error;
   
   Future _invokeCallbacks() {
     return Future.forEach(_callbacks.reversed, (c) {
@@ -281,6 +272,8 @@ class _ChainImpl implements Chain {
   Future<shelf.Response> _init() {
     return new Future.sync(() => _initHandler(_request.shelfRequest));
   }
+  
+  dynamic error;
 
   void next([callback()]) {
     new Future.sync(() {
@@ -309,9 +302,21 @@ class _ChainImpl implements Chain {
         new Future(() {
           if (_currentInterceptor.parseRequestBody) {
             return _request.parseBody().then((_) =>
-                _currentInterceptor.runInterceptor());
+                _currentInterceptor.runInterceptor()).catchError((e, s) {
+              if (!_interrupted) {
+                error = e;
+                return _handleError("Failed to execute ${_target.handlerName}", e, 
+                    stack: s, req: request).then((_) => _invokeCallbacks());
+              }
+            });
           } else {
-            _currentInterceptor.runInterceptor();
+            new Future.sync(() => _currentInterceptor.runInterceptor()).catchError((e, s) {
+              if (!_interrupted) {
+                error = e;
+                return _handleError("Failed to execute ${_target.handlerName}", e, 
+                    stack: s, req: request).then((_) => _invokeCallbacks());
+              }
+            });
           }
         });
       } else {
@@ -324,7 +329,7 @@ class _ChainImpl implements Chain {
             }
           }).catchError((e, s) {
             if (!_interrupted) {
-              _error = e;
+              error = e;
               return _handleError("Failed to execute ${_target.handlerName}", e, 
                   stack: s, req: request).then((_) => _invokeCallbacks());
             }

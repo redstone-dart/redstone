@@ -227,7 +227,7 @@ class ShelfTransformer {
 abstract class Chain {
   
   ///The error object thrown by the target
-  dynamic get error;
+  dynamic error;
   
   /**
    * Call the next element of this chain (an interceptor or a target)
