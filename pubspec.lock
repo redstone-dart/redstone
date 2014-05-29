@@ -36,7 +36,7 @@ packages:
   grinder:
     description: grinder
     source: hosted
-    version: "0.5.2"
+    version: "0.5.4"
   http:
     description: http
     source: hosted
@@ -60,7 +60,7 @@ packages:
   path:
     description: path
     source: hosted
-    version: "1.1.0"
+    version: "1.2.0"
   quiver:
     description: quiver
     source: hosted
@@ -68,7 +68,7 @@ packages:
   route_hierarchical:
     description: route_hierarchical
     source: hosted
-    version: "0.4.20"
+    version: "0.4.21"
   shelf:
     description: shelf
     source: hosted
@@ -76,11 +76,11 @@ packages:
   source_maps:
     description: source_maps
     source: hosted
-    version: "0.9.0"
+    version: "0.9.1"
   stack_trace:
     description: stack_trace
     source: hosted
-    version: "0.9.3+1"
+    version: "0.9.3+2"
   string_scanner:
     description: string_scanner
     source: hosted

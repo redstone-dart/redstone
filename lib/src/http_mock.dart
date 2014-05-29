@@ -217,7 +217,7 @@ class MockHttpResponse implements HttpResponse {
   }
 }
 
-class MockHttpRequest extends Stream implements HttpRequest {
+class MockHttpRequest extends Stream<List<int>> implements HttpRequest {
 
   final Uri requestedUri;
   final Uri uri;
