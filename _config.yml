@@ -1,0 +1,16 @@
+# Site settings
+title: Redstone.dart
+email: luiz.mineo@gmail.com
+description: "Server-side microframework for Dart."
+baseurl: ""
+url: "http://luizmineo.github.io/redstone.dart"
+
+# Build settings
+markdown: redcarpet
+redcarpet:
+  extensions: ["no_intra_emphasis", "fenced_code_blocks", "autolink", "tables", "with_toc_data"]
+permalink: pretty
+
+collections:
+  doc:
+    output: true

@@ -11,18 +11,14 @@
   color: white;
 }
 
-.code {
-  border:1px solid #ccc !important;
+.highlight {
   margin: 10px 0px 10px 0px;
-  padding: 10px !important;
+  padding: 5px !important;
 }
 
-.code a {
+a.dart-popover {
   text-decoration: none;
   background: rgba(204, 49, 0, 0.65);
   padding: 2px 3px;
-}
-
-.code a span {
   color: white !important;
 }

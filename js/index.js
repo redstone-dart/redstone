@@ -1,1 +1,1 @@
-$('.dart-popover').popover();
+$('.dart-popover').popover({container: 'body'});

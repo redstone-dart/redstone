@@ -1,0 +1,65 @@
+---
+layout: default
+---
+<div class="container">
+  <div class="row">
+    <div class="col-md-3 hidden-xs hidden-sm sidebar">
+      <ul>
+        <ul class="nav sidenav">
+          <li>
+            <b>Quick Start Guide</b>
+            <ul class="nav">
+              <li {% if page.title == 'Introduction' %}class="active" {% endif %}><a href="/doc">Introduction</a></li>
+              <li {% if page.title == 'Installation' %}class="active" {% endif %}><a href="/doc/Installation.html">Installation</a></li>
+              <li {% if page.title == 'Feature Tour' %}class="active" {% endif %}><a href="/doc/Feature-tour.html">Feature tour</a></li>
+            </ul>
+          </li>
+          <li>
+            <b>Reference</b>
+            <ul class="nav">
+              <li {% if page.title == 'Routes' %}class="active" {% endif %}><a href="/doc/Routes.html">Routes</a></li>
+              <li {% if page.title == 'Interceptors' %}class="active" {% endif %}><a href="/doc/Interceptors.html">Interceptors</a></li>
+              <li {% if page.title == 'Error Handlers' %}class="active" {% endif %}><a href="/doc/Error-handlers.html">Error handlers</a></li>
+              <li {% if page.title == 'Groups' %}class="active" {% endif %}><a href="/doc/Groups.html">Groups</a></li>
+              <li {% if page.title == 'Dependency Injection' %}class="active" {% endif %}><a href="/doc/Dependency-Injection.html">Dependency injection</a></li>
+              <li {% if page.title == 'Importing Libraries' %}class="active" {% endif %}><a href="/doc/Importing-libraries.html">Importing libraries</a></li>
+              <li {% if page.title == 'Plugins' %}class="active" {% endif %}><a href="/doc/Plugins.html">Plugins</a></li>
+              <li {% if page.title == 'Shelf Middlewares' %}class="active" {% endif %}><a href="/doc/Shelf-Middlewares.html">Shelf Middlewares</a></li>
+              <li {% if page.title == 'Unit Test' %}class="active" {% endif %}><a href="/doc/Unit-test.html">Unit test</a></li>
+              <li {% if page.title == 'Server Configuration' %}class="active" {% endif %}><a href="/doc/Server-Configuration.html">Server Configuration</a></li>
+              <li {% if page.title == 'Deploy' %}class="active" {% endif %}><a href="/doc/Deploy.html">Deploy</a></li>
+            </ul>
+          </li>
+        </ul>
+      </ul>
+    </div>
+    <div class="col-md-9 col-xs-12">
+      <div class="section-title page-header">
+        <h1>{{ page.title }}</h1>
+      </div>
+      {{ content }}
+      <div class="section-footer">
+        <div class="row">
+          <div class="col-xs-6">
+            <div class="pull-right">
+              {% if page.prev == null%}
+              <a href="#" class="btn btn-primary " role="button" disabled="disabled"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
+              {% else if %}
+              <a href="/doc/{{page.prev}}.html" class="btn btn-primary" role="button"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
+              {% endif %}
+            </div>
+          </div>
+          <div class="col-xs-6">
+            <div class="pull-left">
+              {% if page.next == null%}
+              <a href="#" class="btn btn-primary" role="button" disabled="disabled">Next <span class="glyphicon glyphicon-arrow-right"></span></a>
+              {% else if %}
+              <a href="/doc/{{page.next}}.html" class="btn btn-primary" role="button">Next <span class="glyphicon glyphicon-arrow-right"></span></a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
