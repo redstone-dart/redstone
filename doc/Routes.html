@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Redstone.dart - Server-side microframework for Dart</title>
+
+  <!-- Bootstrap -->
+  <link href="/redstone.dart/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/redstone.dart/css/syntax.css" rel="stylesheet">
+  
+  <link href="/redstone.dart/css/documentation.css" rel="stylesheet">
+  
+  <link href="/redstone.dart/css/footer.css" rel="stylesheet">
+
+  <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+</head>
+
+
+    <body>
+
+    <nav class="navbar navbar-default" role="navigation">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="/redstone.dart">Redstone.dart</a>
+    </div>
+
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+        <li  class="active" ><a href="/redstone.dart/doc">Documentation</a></li>
+        <li><a href="/redstone.dart/api/index.html">API Reference</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+
+    <div class="container">
+  <div class="row">
+    <div class="col-md-3 hidden-xs hidden-sm sidebar">
+      <ul>
+        <ul class="nav sidenav">
+          <li>
+            <b>Quick Start Guide</b>
+            <ul class="nav">
+              <li ><a href="/doc">Introduction</a></li>
+              <li ><a href="/doc/Installation.html">Installation</a></li>
+              <li ><a href="/doc/Feature-tour.html">Feature tour</a></li>
+            </ul>
+          </li>
+          <li>
+            <b>Reference</b>
+            <ul class="nav">
+              <li class="active" ><a href="/doc/Routes.html">Routes</a></li>
+              <li ><a href="/doc/Interceptors.html">Interceptors</a></li>
+              <li ><a href="/doc/Error-handlers.html">Error handlers</a></li>
+              <li ><a href="/doc/Groups.html">Groups</a></li>
+              <li ><a href="/doc/Dependency-Injection.html">Dependency injection</a></li>
+              <li ><a href="/doc/Importing-libraries.html">Importing libraries</a></li>
+              <li ><a href="/doc/Plugins.html">Plugins</a></li>
+              <li ><a href="/doc/Shelf-Middlewares.html">Shelf Middlewares</a></li>
+              <li ><a href="/doc/Unit-test.html">Unit test</a></li>
+              <li ><a href="/doc/Server-Configuration.html">Server Configuration</a></li>
+              <li ><a href="/doc/Deploy.html">Deploy</a></li>
+            </ul>
+          </li>
+        </ul>
+      </ul>
+    </div>
+    <div class="col-md-9 col-xs-12">
+      <div class="section-title page-header">
+        <h1>Routes</h1>
+      </div>
+      <p>The <code>@Route</code> annotation is used to bind a function or method to an URL:</p>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Route</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+<span class="n">helloWorld</span><span class="p">()</span> <span class="o">=&gt;</span> <span class="s2">&quot;Hello, World!&quot;</span><span class="p">;</span>
+</code></pre></div>
+<p>The returned value will be serialized to the client according to its type. For example, if the value is a String, the client will receive a <em>text/plain</em> response.</p>
+
+<table><thead>
+<tr>
+<th>Returned Value</th>
+<th>Response type</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>String</td>
+<td>text/plain</td>
+</tr>
+<tr>
+<td>Map or List</td>
+<td>application/json</td>
+</tr>
+<tr>
+<td>File</td>
+<td>(MimeType of the file)</td>
+</tr>
+</tbody></table>
+
+<p>If a Future is returned, then the framework will wait for its completion. </p>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Route</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+<span class="n">helloWorld</span><span class="p">()</span> <span class="o">=&gt;</span> <span class="k">new</span> <span class="n">Future</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="s2">&quot;Hello, World!&quot;</span><span class="p">);</span>
+</code></pre></div>
+<p>If you need to, you can build a response using <a href="http://pub.dartlang.org/packages/shelf">Shelf</a>.</p>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="k">import</span> <span class="s1">&#39;package:redstone/server.dart&#39;</span> <span class="k">as</span> <span class="n">app</span><span class="p">;</span>
+<span class="k">import</span> <span class="s1">&#39;package:shelf/shelf.dart&#39;</span> <span class="k">as</span> <span class="n">shelf</span><span class="p">;</span>
+
+<span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Route</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+<span class="n">helloWorld</span><span class="p">()</span> <span class="o">=&gt;</span> <span class="k">new</span> <span class="n">shelf</span><span class="p">.</span><span class="n">Response</span><span class="p">.</span><span class="n">ok</span><span class="p">(</span><span class="s2">&quot;Hello, World!&quot;</span><span class="p">);</span>
+</code></pre></div>
+<p>For other types, Redstone.dart will convert the value to a String, and send it as <em>text/plain</em>.</p>
+
+<p>Also, it&#39;s possible to override the content type of the response:</p>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Route</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="nl">responseType:</span> <span class="s2">&quot;text/xml&quot;</span><span class="p">)</span>
+<span class="n">getXml</span><span class="p">()</span> <span class="o">=&gt;</span> <span class="s2">&quot;&lt;root&gt;&lt;node&gt;text&lt;/node&gt;&lt;/root&gt;&quot;</span><span class="p">;</span>
+</code></pre></div>
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="path-segments">Path segments</h3>
+
+<p>It&#39;s possible to bind path segments with arguments:</p>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Route</span><span class="p">(</span><span class="s2">&quot;/user/:username&quot;</span><span class="p">)</span>
+<span class="n">helloUser</span><span class="p">(</span><span class="kt">String</span> <span class="n">username</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="s2">&quot;hello </span><span class="si">$</span><span class="n">username</span><span class="s2">&quot;</span><span class="p">;</span>
+</code></pre></div>
+<p>The argument doesn&#39;t need to be a String. If it&#39;s an int, for example, the framework will try to convert the value for you (if the conversion fails, a 400 status code is sent to the client).</p>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Route</span><span class="p">(</span><span class="s2">&quot;/user/:username/:addressId&quot;</span><span class="p">)</span>
+<span class="n">getAddress</span><span class="p">(</span><span class="kt">String</span> <span class="n">username</span><span class="p">,</span> <span class="kt">int</span> <span class="n">addressId</span><span class="p">)</span> <span class="p">{</span>
+  <span class="p">...</span>
+<span class="p">};</span>
+</code></pre></div>
+<p>The supported types are: int, double and bool</p>
+
+<h3 id="query-parameters">Query parameters</h3>
+
+<p>Use the <code>@QueryParam</code> annotation to access a query parameter</p>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Route</span><span class="p">(</span><span class="s2">&quot;/user&quot;</span><span class="p">)</span>
+<span class="n">getUser</span><span class="p">(</span><span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">QueryParam</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span> <span class="kt">int</span> <span class="n">userId</span><span class="p">)</span> <span class="p">{</span>
+  <span class="p">...</span>
+<span class="p">};</span>
+</code></pre></div>
+<p>Like path parameters, the argument doesn&#39;t need to be a String. </p>
+
+<h3 id="request-body">Request body</h3>
+
+<p>You can access the request body as a form, json or text</p>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Route</span><span class="p">(</span><span class="s2">&quot;/adduser&quot;</span><span class="p">,</span> <span class="nl">methods:</span> <span class="kd">const</span> <span class="p">[</span><span class="n">app</span><span class="p">.</span><span class="n">POST</span><span class="p">])</span>
+<span class="n">addUser</span><span class="p">(</span><span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Body</span><span class="p">(</span><span class="n">app</span><span class="p">.</span><span class="n">JSON</span><span class="p">)</span> <span class="n">Map</span> <span class="n">json</span><span class="p">)</span> <span class="p">{</span>
+  <span class="p">...</span>
+<span class="p">};</span>
+</code></pre></div><div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Route</span><span class="p">(</span><span class="s2">&quot;/adduser&quot;</span><span class="p">,</span> <span class="nl">methods:</span> <span class="kd">const</span> <span class="p">[</span><span class="n">app</span><span class="p">.</span><span class="n">POST</span><span class="p">])</span>
+<span class="n">addUser</span><span class="p">(</span><span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Body</span><span class="p">(</span><span class="n">app</span><span class="p">.</span><span class="n">FORM</span><span class="p">)</span> <span class="n">Map</span> <span class="n">form</span><span class="p">)</span> <span class="p">{</span>
+  <span class="p">...</span>
+<span class="p">};</span>
+</code></pre></div>
+<h2 id="http-methods">HTTP Methods</h2>
+
+<p>By default, a route only responds to GET requests. You can change that with the <code>methods</code> arguments:</p>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Route</span><span class="p">(</span><span class="s2">&quot;/user/:username&quot;</span><span class="p">,</span> <span class="nl">methods:</span> <span class="kd">const</span> <span class="p">[</span><span class="n">app</span><span class="p">.</span><span class="n">GET</span><span class="p">,</span> <span class="n">app</span><span class="p">.</span><span class="n">POST</span><span class="p">])</span>
+<span class="n">helloUser</span><span class="p">(</span><span class="kt">String</span> <span class="n">username</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="s2">&quot;hello </span><span class="si">$</span><span class="n">username</span><span class="s2">&quot;</span><span class="p">;</span>
+</code></pre></div>
+<p>It&#39;s also possible to define multiple routes to the same path and different HTTP methods:</p>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Route</span><span class="p">(</span><span class="s2">&quot;/user&quot;</span><span class="p">,</span> <span class="nl">methods:</span> <span class="kd">const</span> <span class="p">[</span><span class="n">app</span><span class="p">.</span><span class="n">GET</span><span class="p">])</span>
+<span class="n">getUser</span><span class="p">()</span> <span class="p">{</span>
+ <span class="p">...</span>
+<span class="p">};</span>
+
+<span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Route</span><span class="p">(</span><span class="s2">&quot;/user&quot;</span><span class="p">,</span> <span class="nl">methods:</span> <span class="kd">const</span> <span class="p">[</span><span class="n">app</span><span class="p">.</span><span class="n">POST</span><span class="p">])</span>
+<span class="n">postUser</span><span class="p">(</span><span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Body</span><span class="p">(</span><span class="n">app</span><span class="p">.</span><span class="n">JSON</span><span class="p">)</span> <span class="n">Map</span> <span class="n">user</span><span class="p">)</span> <span class="p">{</span>
+ <span class="p">...</span>
+<span class="p">};</span>
+</code></pre></div>
+<h2 id="multipart-requests-(file-uploads)">Multipart requests (file uploads)</h2>
+
+<p>By default, Redstone.dart will refuse any multipart request. If your method needs to receive a multipart request, you can set <code>Route.allowMultipartRequest = true</code>. Example:</p>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Route</span><span class="p">(</span><span class="s2">&quot;/adduser&quot;</span><span class="p">,</span> <span class="nl">methods:</span> <span class="kd">const</span> <span class="p">[</span><span class="n">app</span><span class="p">.</span><span class="n">POST</span><span class="p">],</span> <span class="nl">allowMultipartRequest:</span> <span class="kc">true</span><span class="p">)</span>
+<span class="n">addUser</span><span class="p">(</span><span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Body</span><span class="p">(</span><span class="n">app</span><span class="p">.</span><span class="n">FORM</span><span class="p">)</span> <span class="n">Map</span> <span class="n">form</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="n">file</span> <span class="o">=</span> <span class="n">form</span><span class="p">[</span><span class="s2">&quot;file&quot;</span><span class="p">];</span>
+  <span class="n">print</span><span class="p">(</span><span class="n">file</span><span class="p">.</span><span class="n">filename</span><span class="p">);</span>
+  <span class="n">print</span><span class="p">(</span><span class="n">file</span><span class="p">.</span><span class="n">contentType</span><span class="p">);</span>
+  <span class="n">print</span><span class="p">(</span><span class="n">file</span><span class="p">.</span><span class="n">content</span><span class="p">);</span>
+  <span class="p">...</span>
+<span class="p">};</span>
+</code></pre></div>
+<h2 id="matching-sub-paths">Matching sub paths</h2>
+
+<p>If you set <code>Route.matchSubPaths = true</code>, then the route will matches requests which path starts with the URL pattern. Example:</p>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Route</span><span class="p">(</span><span class="s1">&#39;/path&#39;</span><span class="p">,</span> <span class="nl">matchSubPaths:</span> <span class="kc">true</span><span class="p">)</span>
+<span class="n">service</span><span class="p">()</span> <span class="p">{</span>
+ <span class="p">...</span>
+<span class="p">}</span>
+
+<span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Route</span><span class="p">(</span><span class="s1">&#39;/path/subpath&#39;</span><span class="p">)</span>
+<span class="n">serviceB</span><span class="p">()</span> <span class="p">{</span>
+ <span class="p">...</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>If a request for <code>/path/subpath</code> is received, then <code>serviceB</code> is executed, but if a request for <code>/path/another_path</code> is received, <code>service</code> is executed.</p>
+
+<h2 id="the-request-object">The request object</h2>
+
+<p>You can use the global <code>request</code> object to access the request&#39;s information and content:</p>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Route</span><span class="p">(</span><span class="s2">&quot;/user&quot;</span><span class="p">,</span> <span class="nl">methods:</span> <span class="kd">const</span> <span class="p">[</span><span class="n">app</span><span class="p">.</span><span class="n">GET</span><span class="p">,</span> <span class="n">app</span><span class="p">.</span><span class="n">POST</span><span class="p">])</span>
+<span class="n">user</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">app</span><span class="p">.</span><span class="n">request</span><span class="p">.</span><span class="n">method</span> <span class="o">==</span> <span class="n">app</span><span class="p">.</span><span class="n">GET</span><span class="p">)</span> <span class="p">{</span>
+    <span class="p">...</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">app</span><span class="p">.</span><span class="n">request</span><span class="p">.</span><span class="n">method</span> <span class="o">==</span> <span class="n">app</span><span class="p">.</span><span class="n">POST</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">app</span><span class="p">.</span><span class="n">request</span><span class="p">.</span><span class="n">bodyType</span> <span class="o">==</span> <span class="n">app</span><span class="p">.</span><span class="n">JSON</span><span class="p">)</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="n">json</span> <span class="o">=</span> <span class="n">app</span><span class="p">.</span><span class="n">request</span><span class="p">.</span><span class="n">body</span><span class="p">;</span>
+      <span class="p">...</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="p">...</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+</code></pre></div>
+<p>Each request is tied to its own <a href="https://www.dartlang.org/articles/zones/">Zone</a>, so it&#39;s also safe to access the request object in async operations.</p>
+
+<h2 id="the-response-object">The response object</h2>
+
+<p>Sometimes, you need to directly build a HTTP response, or inspect and modify a response created by another handler (a route, interceptor or error handler). For those cases, you can rely on the <code>response</code> object, which points to the last response created for the current request. Example:</p>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="k">import</span> <span class="s1">&#39;package:redstone/server.dart&#39;</span> <span class="k">as</span> <span class="n">app</span><span class="p">;</span>
+
+<span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Interceptor</span><span class="p">(</span><span class="s1">r&#39;/.*&#39;</span><span class="p">)</span>
+<span class="n">interceptor</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">app</span><span class="p">.</span><span class="n">chain</span><span class="p">.</span><span class="n">next</span><span class="p">(()</span> <span class="p">{</span>
+    <span class="n">app</span><span class="p">.</span><span class="n">response</span> <span class="o">=</span> <span class="n">app</span><span class="p">.</span><span class="n">response</span><span class="p">.</span><span class="n">change</span><span class="p">(</span><span class="nl">headers:</span> <span class="p">{</span>
+      <span class="s2">&quot;Access-Control-Allow-Origin&quot;</span><span class="o">:</span> <span class="s2">&quot;*&quot;</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Also, if you are building a response inside a <strong>chain callback</strong>, <strong>route</strong> or <strong>error handler</strong>, you can just return it:</p>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="k">import</span> <span class="s1">&#39;package:redstone/server.dart&#39;</span> <span class="k">as</span> <span class="n">app</span><span class="p">;</span>
+
+<span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Interceptor</span><span class="p">(</span><span class="s1">r&#39;/.*&#39;</span><span class="p">)</span>
+<span class="n">interceptor</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">app</span><span class="p">.</span><span class="n">chain</span><span class="p">.</span><span class="n">next</span><span class="p">(()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">app</span><span class="p">.</span><span class="n">response</span><span class="p">.</span><span class="n">change</span><span class="p">(</span><span class="nl">headers:</span> <span class="p">{</span>
+      <span class="s2">&quot;Access-Control-Allow-Origin&quot;</span><span class="o">:</span> <span class="s2">&quot;*&quot;</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">}</span>
+</code></pre></div>
+      <div class="section-footer">
+        <div class="row">
+          <div class="col-xs-6">
+            <div class="pull-right">
+              
+              <a href="/doc/Feature-tour.html" class="btn btn-primary" role="button"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
+              
+            </div>
+          </div>
+          <div class="col-xs-6">
+            <div class="pull-left">
+              
+              <a href="/doc/Interceptors.html" class="btn btn-primary" role="button">Next <span class="glyphicon glyphicon-arrow-right"></span></a>
+              
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="container-fluid footer">
+  <div class="row">
+    <div class="col-xs-12">
+      <div class="footer-panel">
+        <ul class="gh-links">
+          <li>
+            <iframe src="http://ghbtns.com/github-btn.html?user=luizmineo&repo=redstone.dart&type=watch&count=true" allowtransparency="true" frameborder="0" scrolling="0" width="110" height="20"></iframe>
+          </li>
+          <li>
+            <iframe src="http://ghbtns.com/github-btn.html?user=luizmineo&repo=redstone.dart&type=fork&count=true" allowtransparency="true" frameborder="0" scrolling="0" width="110" height="20"></iframe>
+          </li>
+          <li>
+            <iframe src="http://ghbtns.com/github-btn.html?user=luizmineo&repo=redstone.dart&type=follow" allowtransparency="true" frameborder="0" scrolling="0" width="150" height="20"></iframe>
+          </li>
+        </ul>
+        <p>Built and mantained by <a href="https://github.com/luizmineo" target="_blank">Luiz Mineo</a>. Code licensed under <a href="https://github.com/luizmineo/redstone.dart/blob/master/LICENSE" target="_blank">MIT</a>.</p>
+        <ul class="footer-links">
+          <li>Currently v0.5.0</li>
+          <li>-</li>
+          <li><a href="https://github.com/luizmineo/redstone.dart">Github</a></li>
+          <li>-</li>
+          <li><a href="/redstone.dart/doc">Documentation</a></li>
+          <li>-</li>
+          <li><a href="/redstone.dart/api/index.html">API Reference</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/redstone.dart/js/jquery-1.11.0.min.js"></script>
+<script src="/redstone.dart/js/bootstrap.min.js"></script>
+
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-50600290-1', 'luizmineo.github.io');
+  ga('send', 'pageview');
+
+</script>
+
+    </body>
+</html>

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Redstone.dart - Server-side microframework for Dart</title>
+
+  <!-- Bootstrap -->
+  <link href="/redstone.dart/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/redstone.dart/css/syntax.css" rel="stylesheet">
+  
+  <link href="/redstone.dart/css/documentation.css" rel="stylesheet">
+  
+  <link href="/redstone.dart/css/footer.css" rel="stylesheet">
+
+  <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+</head>
+
+
+    <body>
+
+    <nav class="navbar navbar-default" role="navigation">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="/redstone.dart">Redstone.dart</a>
+    </div>
+
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+        <li  class="active" ><a href="/redstone.dart/doc">Documentation</a></li>
+        <li><a href="/redstone.dart/api/index.html">API Reference</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+
+    <div class="container">
+  <div class="row">
+    <div class="col-md-3 hidden-xs hidden-sm sidebar">
+      <ul>
+        <ul class="nav sidenav">
+          <li>
+            <b>Quick Start Guide</b>
+            <ul class="nav">
+              <li ><a href="/doc">Introduction</a></li>
+              <li ><a href="/doc/Installation.html">Installation</a></li>
+              <li ><a href="/doc/Feature-tour.html">Feature tour</a></li>
+            </ul>
+          </li>
+          <li>
+            <b>Reference</b>
+            <ul class="nav">
+              <li ><a href="/doc/Routes.html">Routes</a></li>
+              <li class="active" ><a href="/doc/Interceptors.html">Interceptors</a></li>
+              <li ><a href="/doc/Error-handlers.html">Error handlers</a></li>
+              <li ><a href="/doc/Groups.html">Groups</a></li>
+              <li ><a href="/doc/Dependency-Injection.html">Dependency injection</a></li>
+              <li ><a href="/doc/Importing-libraries.html">Importing libraries</a></li>
+              <li ><a href="/doc/Plugins.html">Plugins</a></li>
+              <li ><a href="/doc/Shelf-Middlewares.html">Shelf Middlewares</a></li>
+              <li ><a href="/doc/Unit-test.html">Unit test</a></li>
+              <li ><a href="/doc/Server-Configuration.html">Server Configuration</a></li>
+              <li ><a href="/doc/Deploy.html">Deploy</a></li>
+            </ul>
+          </li>
+        </ul>
+      </ul>
+    </div>
+    <div class="col-md-9 col-xs-12">
+      <div class="section-title page-header">
+        <h1>Interceptors</h1>
+      </div>
+      <p>The <code>@Interceptor</code> annotation is used to define an interceptor:</p>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Interceptor</span><span class="p">(</span><span class="s1">r&#39;/.*&#39;</span><span class="p">)</span>
+<span class="n">handleResponseHeader</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">app</span><span class="p">.</span><span class="n">request</span><span class="p">.</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;OPTIONS&quot;</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">//overwrite the current response and interrupt the chain.</span>
+    <span class="n">app</span><span class="p">.</span><span class="n">response</span> <span class="o">=</span> <span class="k">new</span> <span class="n">shelf</span><span class="p">.</span><span class="n">Response</span><span class="p">.</span><span class="n">ok</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nl">headers:</span> <span class="n">_createCorsHeader</span><span class="p">());</span>
+    <span class="n">app</span><span class="p">.</span><span class="n">chain</span><span class="p">.</span><span class="n">interrupt</span><span class="p">();</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="c1">//process the chain and wrap the response</span>
+    <span class="n">app</span><span class="p">.</span><span class="n">chain</span><span class="p">.</span><span class="n">next</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="n">app</span><span class="p">.</span><span class="n">response</span><span class="p">.</span><span class="n">change</span><span class="p">(</span><span class="nl">headers:</span> <span class="n">_createCorsHeader</span><span class="p">()));</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="n">_createCorsHeader</span><span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span><span class="s2">&quot;Access-Control-Allow-Origin&quot;</span><span class="o">:</span> <span class="s2">&quot;*&quot;</span><span class="p">};</span>
+</code></pre></div>
+<h2 id="the-chain-object">The chain object</h2>
+
+<p>Each request is actually a chain, composed by 0 or more interceptors, and a target. A target is a function annotated with <code>Route</code>, or a static file. An interceptor is a structure that allows you to apply a common behavior to a group of targets. For example, you can use an interceptor to apply a security constraint, or to manage a resource:</p>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Interceptor</span><span class="p">(</span><span class="s1">r&#39;/admin/.*&#39;</span><span class="p">)</span>
+<span class="n">adminFilter</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">app</span><span class="p">.</span><span class="n">request</span><span class="p">.</span><span class="n">session</span><span class="p">[</span><span class="s2">&quot;username&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">app</span><span class="p">.</span><span class="n">chain</span><span class="p">.</span><span class="n">next</span><span class="p">();</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="n">app</span><span class="p">.</span><span class="n">chain</span><span class="p">.</span><span class="n">interrupt</span><span class="p">(</span><span class="nl">statusCode:</span> <span class="n">HttpStatus</span><span class="p">.</span><span class="n">UNAUTHORIZED</span><span class="p">);</span>
+    <span class="c1">//or app.redirect(&quot;/login.html&quot;);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div><div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Interceptor</span><span class="p">(</span><span class="s1">r&#39;/services/.+&#39;</span><span class="p">)</span>
+<span class="n">dbConnInterceptor</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="n">conn</span> <span class="o">=</span> <span class="k">new</span> <span class="n">DbConn</span><span class="p">();</span>
+  <span class="n">app</span><span class="p">.</span><span class="n">request</span><span class="p">.</span><span class="n">attributes</span><span class="p">[</span><span class="s2">&quot;dbConn&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">conn</span><span class="p">;</span>
+  <span class="n">app</span><span class="p">.</span><span class="n">chain</span><span class="p">.</span><span class="n">next</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="n">conn</span><span class="p">.</span><span class="n">close</span><span class="p">());</span>
+<span class="p">}</span>
+
+<span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Route</span><span class="p">(</span><span class="s1">&#39;/services/find&#39;</span><span class="p">)</span>
+<span class="n">find</span><span class="p">(</span><span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Attr</span><span class="p">()</span> <span class="n">dbConn</span><span class="p">)</span> <span class="p">{</span>
+  <span class="p">...</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>When a request is received, the framework will execute all interceptors that matches the URL, and then will look for a valid route. If a route is found, it will be executed, otherwise the server will look for a static file.</p>
+
+<p>Each interceptor must call the <code>chain.next()</code> or <code>chain.interrupt()</code> methods, otherwise, the request will be stuck. The <code>chain.next()</code> method can receive a callback, that is executed when the target completes. All callbacks are executed in the reverse order they are created. If a callback returns a <code>Future</code>, then the next callback will execute only when the future completes.</p>
+
+<p>For example, consider this script:</p>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="k">import</span> <span class="s1">&#39;package:redstone/server.dart&#39;</span> <span class="k">as</span> <span class="n">app</span><span class="p">;</span>
+<span class="k">import</span> <span class="s1">&#39;package:shelf/shelf.dart&#39;</span> <span class="k">as</span> <span class="n">shelf</span><span class="p">;</span>
+
+<span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Route</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+<span class="n">helloWorld</span><span class="p">()</span> <span class="o">=&gt;</span> <span class="s2">&quot;target</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">;</span>
+
+<span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Interceptor</span><span class="p">(</span><span class="s1">r&#39;/.*&#39;</span><span class="p">,</span> <span class="nl">chainIdx:</span> <span class="m">0</span><span class="p">)</span>
+<span class="n">interceptor1</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">app</span><span class="p">.</span><span class="n">chain</span><span class="p">.</span><span class="n">next</span><span class="p">(()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">app</span><span class="p">.</span><span class="n">response</span><span class="p">.</span><span class="n">readAsString</span><span class="p">().</span><span class="n">then</span><span class="p">((</span><span class="n">resp</span><span class="p">)</span> <span class="o">=&gt;</span>
+        <span class="k">new</span> <span class="n">shelf</span><span class="p">.</span><span class="n">Response</span><span class="p">.</span><span class="n">ok</span><span class="p">(</span>
+          <span class="s2">&quot;interceptor 1 - before target</span><span class="se">\n</span><span class="si">$</span><span class="n">resp</span><span class="s2">|interceptor 1 - after target</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">));</span>
+  <span class="p">});</span>
+<span class="p">}</span>
+
+<span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Interceptor</span><span class="p">(</span><span class="s1">r&#39;/.*&#39;</span><span class="p">,</span> <span class="nl">chainIdx:</span> <span class="m">1</span><span class="p">)</span>
+<span class="n">interceptor2</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">app</span><span class="p">.</span><span class="n">chain</span><span class="p">.</span><span class="n">next</span><span class="p">(()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">app</span><span class="p">.</span><span class="n">response</span><span class="p">.</span><span class="n">readAsString</span><span class="p">().</span><span class="n">then</span><span class="p">((</span><span class="n">resp</span><span class="p">)</span> <span class="o">=&gt;</span>
+        <span class="k">new</span> <span class="n">shelf</span><span class="p">.</span><span class="n">Response</span><span class="p">.</span><span class="n">ok</span><span class="p">(</span>
+          <span class="s2">&quot;interceptor 2 - before target</span><span class="se">\n</span><span class="si">$</span><span class="n">resp</span><span class="s2">|interceptor 2 - after target</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">));</span>
+  <span class="p">});</span>
+<span class="p">}</span>
+
+<span class="n">main</span><span class="p">()</span> <span class="p">{</span>
+
+  <span class="n">app</span><span class="p">.</span><span class="n">setupConsoleLog</span><span class="p">();</span>
+  <span class="n">app</span><span class="p">.</span><span class="n">start</span><span class="p">();</span>
+
+<span class="p">}</span>
+</code></pre></div>
+<p>When you access <a href="http://127.0.0.1:8080/">http://127.0.0.1:8080/</a>, the result is:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">interceptor 1 - before target
+interceptor 2 - before target
+target
+interceptor 2 - after target
+interceptor 1 - after target
+</code></pre></div>
+<p>It&#39;s also possible to verify if the target threw an error (if there is an error handler registered, it will be invoked before the callback):</p>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Interceptor</span><span class="p">(</span><span class="s1">r&#39;/.*&#39;</span><span class="p">)</span>
+<span class="n">interceptor</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">app</span><span class="p">.</span><span class="n">chain</span><span class="p">.</span><span class="n">next</span><span class="p">(()</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">app</span><span class="p">.</span><span class="n">chain</span><span class="p">.</span><span class="n">error</span> <span class="o">!=</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
+      <span class="p">...</span>
+    <span class="p">}</span>
+  <span class="p">});</span>
+<span class="p">}</span>
+</code></pre></div>
+<h2 id="the-request-body">The request body</h2>
+
+<p>By default, Redstone.dart won&#39;t parse the request body until all interceptors are called. If your interceptor need to inspect the request body, you must set <code>parseRequestBody = true</code>. Example:</p>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Interceptor</span><span class="p">(</span><span class="s1">r&#39;/service/.+&#39;</span><span class="p">,</span> <span class="nl">parseRequestBody:</span> <span class="kc">true</span><span class="p">)</span>
+<span class="n">verifyRequest</span><span class="p">()</span> <span class="p">{</span>
+  <span class="c1">//if parseRequestBody is not setted, request.body is null</span>
+  <span class="n">print</span><span class="p">(</span><span class="n">app</span><span class="p">.</span><span class="n">request</span><span class="p">.</span><span class="n">body</span><span class="p">);</span>
+  <span class="n">app</span><span class="p">.</span><span class="n">chain</span><span class="p">.</span><span class="n">next</span><span class="p">();</span>
+<span class="p">}</span>
+</code></pre></div>
+      <div class="section-footer">
+        <div class="row">
+          <div class="col-xs-6">
+            <div class="pull-right">
+              
+              <a href="/doc/Routes.html" class="btn btn-primary" role="button"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
+              
+            </div>
+          </div>
+          <div class="col-xs-6">
+            <div class="pull-left">
+              
+              <a href="/doc/Error-handlers.html" class="btn btn-primary" role="button">Next <span class="glyphicon glyphicon-arrow-right"></span></a>
+              
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="container-fluid footer">
+  <div class="row">
+    <div class="col-xs-12">
+      <div class="footer-panel">
+        <ul class="gh-links">
+          <li>
+            <iframe src="http://ghbtns.com/github-btn.html?user=luizmineo&repo=redstone.dart&type=watch&count=true" allowtransparency="true" frameborder="0" scrolling="0" width="110" height="20"></iframe>
+          </li>
+          <li>
+            <iframe src="http://ghbtns.com/github-btn.html?user=luizmineo&repo=redstone.dart&type=fork&count=true" allowtransparency="true" frameborder="0" scrolling="0" width="110" height="20"></iframe>
+          </li>
+          <li>
+            <iframe src="http://ghbtns.com/github-btn.html?user=luizmineo&repo=redstone.dart&type=follow" allowtransparency="true" frameborder="0" scrolling="0" width="150" height="20"></iframe>
+          </li>
+        </ul>
+        <p>Built and mantained by <a href="https://github.com/luizmineo" target="_blank">Luiz Mineo</a>. Code licensed under <a href="https://github.com/luizmineo/redstone.dart/blob/master/LICENSE" target="_blank">MIT</a>.</p>
+        <ul class="footer-links">
+          <li>Currently v0.5.0</li>
+          <li>-</li>
+          <li><a href="https://github.com/luizmineo/redstone.dart">Github</a></li>
+          <li>-</li>
+          <li><a href="/redstone.dart/doc">Documentation</a></li>
+          <li>-</li>
+          <li><a href="/redstone.dart/api/index.html">API Reference</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/redstone.dart/js/jquery-1.11.0.min.js"></script>
+<script src="/redstone.dart/js/bootstrap.min.js"></script>
+
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-50600290-1', 'luizmineo.github.io');
+  ga('send', 'pageview');
+
+</script>
+
+    </body>
+</html>
