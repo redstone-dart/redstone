@@ -390,7 +390,7 @@ Future _writeResponse(respValue, String responseType, {int statusCode: 200,
     (respValue as Future).then((fValue) =>
       _writeResponse(fValue, responseType, 
           abortIfChainInterrupted: abortIfChainInterrupted).then((_) =>
-              completer.complete()));
+              completer.complete())).catchError((e, s) => completer.completeError(e, s));
 
   } else if (processors != null && !processors.isEmpty) { 
     

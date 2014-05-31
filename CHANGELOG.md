@@ -1,3 +1,6 @@
+## v0.5.1
+- Fix: Correctly handle route exceptions.
+
 ## v0.5.0
 - Added support for Shelf middlewares and handlers (see [documentation](https://github.com/luizmineo/redstone.dart/wiki/Shelf-Middlewares))
 - BREAKING CHANGE: Redstone.dart will no longer serve static files directly. You can use a Shelf handler for this (see [documention](https://github.com/luizmineo/redstone.dart/wiki/Server-Configuration))
