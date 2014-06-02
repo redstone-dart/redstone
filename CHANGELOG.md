@@ -1,3 +1,6 @@
+## v0.5.2
+- Fix: Request's state is being improperly cached (see issue #16).
+
 ## v0.5.1
 - Fix: Correctly handle route exceptions.
 

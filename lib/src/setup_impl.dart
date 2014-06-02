@@ -44,45 +44,41 @@ class _Target {
   String handlerName;
   Route route;
   final Set<String> bodyTypes = new Set();
-  
-  UrlMatch _match;
 
   _Target(this.urlTemplate, this.handlerName, 
           this.handler, this.route, [String bodyType = "*"]) {
     bodyTypes.add(bodyType);
   }
   
-  bool match(Uri uri) {
+  UrlMatch match(Uri uri) {
     UrlMatch match = urlTemplate.match(uri.path);
     if (match != null) {
       if (route.matchSubPaths) {
         if (uri.path.endsWith("/") || match.tail.startsWith("/")) {
-          _match = match;
-          return true;
+          return match;
         }
       } else {
         if (match.tail.isEmpty) {
-          _match = match;
-          return true;
+          return match;
         }
       }
     }
     
     if (match != null && match.tail.isEmpty) {
-      _match = match;
-      return true;
+      return match;
     }
-    return false;
+    return null;
   }
 
-  Future handleRequest(Request req) {
-    if (_match == null) {
-      if (!match(req.url)) {
+  Future handleRequest(Request req, [UrlMatch urlMatch]) {
+    if (urlMatch == null) {
+      urlMatch = match(req.url);
+      if (urlMatch == null) {
         return null;
       }
     }
 
-    return handler(_match, req);
+    return handler(urlMatch, req);
   }
 }
 
@@ -597,7 +593,7 @@ void _configureInterceptor(Interceptor interceptor, ObjectMirror owner,
                                      chainIdxByLevel, interceptor.parseRequestBody, 
                                      caller));
 
-  _logger.info("Configured interceptor for ${interceptor.urlPattern} : $handlerName");
+  _logger.info("Configured interceptor for $url : $handlerName");
 }
 
 void _configureErrorHandler(ErrorHandler errorHandler, 

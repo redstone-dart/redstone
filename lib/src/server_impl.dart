@@ -7,6 +7,7 @@ typedef dynamic _ConvertFunction(String value, dynamic defaultValue);
 
 class _RequestState {
   
+  UrlMatch urlMatch;
   bool chainInitialized = false;
   bool errorHandlerInvoked = false;
   bool requestAborted = false;
@@ -56,9 +57,11 @@ List<_Interceptor> _getInterceptors(Uri uri) {
   }));
 }
 
-_Target _getTarget(Uri uri) {
+_Target _getTarget(Uri uri, _RequestState state) {
   for (var target in _targets) {
-    if (target.match(uri)) {
+    UrlMatch match = target.match(uri);
+    if (match != null) {
+      state.urlMatch = match;
       return target;
     }
   }
@@ -68,12 +71,13 @@ _Target _getTarget(Uri uri) {
 Future<shelf.Response> _dispatchRequest(UnparsedRequest req) {
   
   var completer = new Completer();
+  var state = new _RequestState();
   
   Chain chain;
   try {
     
     List<_Interceptor> interceptors = _getInterceptors(req.url);
-    _Target target = _getTarget(req.url);
+    _Target target = _getTarget(req.url, state);
 
     chain = new _ChainImpl(interceptors, target, req, _initHandler, _finalHandler);
   } catch(e, s) {
@@ -82,7 +86,7 @@ Future<shelf.Response> _dispatchRequest(UnparsedRequest req) {
     return completer.future;
   }
     
-  _process(req, chain, completer);
+  _process(req, state, chain, completer);
     
   return completer.future;
 }
@@ -105,7 +109,8 @@ Future _writeHttpResponse(shelf.Response response, HttpResponse httpResponse) {
   });
 }
 
-void _process(UnparsedRequest req, _ChainImpl chain, Completer completer) {
+void _process(UnparsedRequest req, _RequestState state, 
+              _ChainImpl chain, Completer completer) {
   runZoned(() {
         
     runZoned(() {
@@ -121,7 +126,7 @@ void _process(UnparsedRequest req, _ChainImpl chain, Completer completer) {
   }, zoneValues: {
     #request: req,
     #chain: chain,
-    #state: new _RequestState()
+    #state: state
   });
 }
 
@@ -186,7 +191,7 @@ Future _runTarget(_Target target, UnparsedRequest req, shelf.Handler handler) {
     
     Future f = null;
     if (target != null) {
-      f = req.parseBody().then((_) => target.handleRequest(req));
+      f = req.parseBody().then((_) => target.handleRequest(req, Zone.current[#state].urlMatch));
     }
     
     if (f == null) {
