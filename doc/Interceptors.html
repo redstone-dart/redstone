@@ -99,7 +99,7 @@
 </code></pre></div>
 <h2 id="the-chain-object">The chain object</h2>
 
-<p>Each request is actually a chain, composed by 0 or more interceptors, and a target. A target is a function annotated with <code>Route</code>, or a static file. An interceptor is a structure that allows you to apply a common behavior to a group of targets. For example, you can use an interceptor to apply a security constraint, or to manage a resource:</p>
+<p>Each request is actually a chain, composed by 0 or more interceptors, and a route. An interceptor is a structure that allows you to apply a common behavior to a group of targets. For example, you can use an interceptor to apply a security constraint, or to manage a resource:</p>
 <div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Interceptor</span><span class="p">(</span><span class="s1">r&#39;/admin/.*&#39;</span><span class="p">)</span>
 <span class="n">adminFilter</span><span class="p">()</span> <span class="p">{</span>
   <span class="k">if</span> <span class="p">(</span><span class="n">app</span><span class="p">.</span><span class="n">request</span><span class="p">.</span><span class="n">session</span><span class="p">[</span><span class="s2">&quot;username&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
@@ -121,7 +121,7 @@
   <span class="p">...</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>When a request is received, the framework will execute all interceptors that matches the URL, and then will look for a valid route. If a route is found, it will be executed, otherwise the server will look for a static file.</p>
+<p>When a request is received, the framework will execute all interceptors that matches the URL, and then will look for a valid route. If a route is found, it will be executed.</p>
 
 <p>Each interceptor must call the <code>chain.next()</code> or <code>chain.interrupt()</code> methods, otherwise, the request will be stuck. The <code>chain.next()</code> method can receive a callback, that is executed when the target completes. All callbacks are executed in the reverse order they are created. If a callback returns a <code>Future</code>, then the next callback will execute only when the future completes.</p>
 
@@ -223,7 +223,7 @@ interceptor 1 - after target
         </ul>
         <p>Built and mantained by <a href="https://github.com/luizmineo" target="_blank">Luiz Mineo</a>. Code licensed under <a href="https://github.com/luizmineo/redstone.dart/blob/master/LICENSE" target="_blank">MIT</a>.</p>
         <ul class="footer-links">
-          <li>Currently v0.5.1</li>
+          <li>Currently v0.5.2</li>
           <li>-</li>
           <li><a href="https://github.com/luizmineo/redstone.dart">Github</a></li>
           <li>-</li>
