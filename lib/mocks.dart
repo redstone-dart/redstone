@@ -25,7 +25,7 @@ part 'package:redstone/src/http_mock.dart';
  *       ...
  *     });
  */
-class MockRequest extends ShelfTransformer with HttpRequestParser implements RequestHandler {
+class MockRequest extends HttpRequestParser implements UnparsedRequest {
 
   final Map _attributes = {};
   
@@ -33,7 +33,7 @@ class MockRequest extends ShelfTransformer with HttpRequestParser implements Req
   
   HttpHeaders _headers;
   HttpResponse _response;
-  HttpRequest _httpRequest;
+  HttpRequest httpRequest;
   shelf.Request shelfRequest;
   
   final HttpSession session;
@@ -66,10 +66,8 @@ class MockRequest extends ShelfTransformer with HttpRequestParser implements Req
     Uri requestedUri = new Uri(scheme: scheme, host: host, port: port, 
         path: path, queryParameters: queryParams);
     Uri uri = new Uri(path: path);
-    _httpRequest = new MockHttpRequest(requestedUri, uri, method, _headers, bodyStream, session: session);
-    _response = _httpRequest.response;
-    
-    shelfRequest = buildShelfRequest(_httpRequest);
+    httpRequest = new MockHttpRequest(requestedUri, uri, method, _headers, bodyStream, session: session);
+    _response = httpRequest.response;
     
   }
   
@@ -136,9 +134,7 @@ class MockRequest extends ShelfTransformer with HttpRequestParser implements Req
   void parseBodyType() => parseHttpRequestBodyType(headers);
     
   Future parseBody() => parseHttpRequestBody(shelfRequest.read());
-  
-  Future<HttpResponse> writeResponse(shelf.Response resp) =>
-      writeHttpResponse(resp, _response).then((_) => _response);
+ 
 }
 
 /**

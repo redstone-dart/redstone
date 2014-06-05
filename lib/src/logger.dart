@@ -8,7 +8,7 @@ void setupConsoleLog([Level level = Level.INFO]) {
   Logger.root.onRecord.listen((LogRecord rec) {
     if (rec.level >= Level.SEVERE) {
       var stack = rec.stackTrace != null ? rec.stackTrace : "";
-      print('${rec.level.name}: ${rec.time}: ${rec.message} - ${rec.error} $stack');
+      print('${rec.level.name}: ${rec.time}: ${rec.message} - ${rec.error}\n${Trace.format(stack)}');
     } else {
       print('${rec.level.name}: ${rec.time}: ${rec.message}');
     }

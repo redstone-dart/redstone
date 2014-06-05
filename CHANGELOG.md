@@ -1,3 +1,8 @@
+## v0.5.3
+- Improved integration with Shelf
+- `shelf.Request.hijack()` method is now supported (although it does not work in unit tests)
+- The default error handler now uses the `stack_trace` package to print stack traces.
+
 ## v0.5.2
 - Fix: Request's state is being improperly cached (see issue #16).
 

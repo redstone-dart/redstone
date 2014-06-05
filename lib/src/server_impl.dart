@@ -15,16 +15,14 @@ class _RequestState {
   
 }
 
-class _RequestImpl extends ShelfTransformer with HttpRequestParser implements UnparsedRequest {
+class _RequestImpl extends HttpRequestParser implements UnparsedRequest {
 
-  HttpRequest _httpRequest;
+  HttpRequest httpRequest;
   shelf.Request shelfRequest;
   
   final Map _attributes = {};
   
-  _RequestImpl(this._httpRequest) {
-    shelfRequest = buildShelfRequest(_httpRequest);
-  }
+  _RequestImpl(this.httpRequest);
   
   Uri get requestedUri => shelfRequest.requestedUri;
   
@@ -38,7 +36,7 @@ class _RequestImpl extends ShelfTransformer with HttpRequestParser implements Un
 
   Map<String, String> get queryParams => shelfRequest.url.queryParameters;
 
-  HttpSession get session => _httpRequest.session;
+  HttpSession get session => httpRequest.session;
   
   void parseBodyType() => parseHttpRequestBodyType(headers);
   
@@ -68,7 +66,7 @@ _Target _getTarget(Uri uri, _RequestState state) {
   return null;
 }
 
-Future<shelf.Response> _dispatchRequest(UnparsedRequest req) {
+Future<HttpResponse> _dispatchRequest(UnparsedRequest req) {
   
   var completer = new Completer();
   var state = new _RequestState();
@@ -76,8 +74,8 @@ Future<shelf.Response> _dispatchRequest(UnparsedRequest req) {
   Chain chain;
   try {
     
-    List<_Interceptor> interceptors = _getInterceptors(req.url);
-    _Target target = _getTarget(req.url, state);
+    List<_Interceptor> interceptors = _getInterceptors(req.httpRequest.uri);
+    _Target target = _getTarget(req.httpRequest.uri, state);
 
     chain = new _ChainImpl(interceptors, target, req, _initHandler, _finalHandler);
   } catch(e, s) {
@@ -91,36 +89,13 @@ Future<shelf.Response> _dispatchRequest(UnparsedRequest req) {
   return completer.future;
 }
 
-Future _writeHttpResponse(shelf.Response response, HttpResponse httpResponse) {
-  return new Future.sync(() {
-    httpResponse.statusCode = response.statusCode;
-
-    response.headers.forEach((header, value) {
-      if (value == null) return;
-      httpResponse.headers.set(header, value);
-    });
-
-    if (response.headers[HttpHeaders.SERVER] == null) {
-      var value = httpResponse.headers.value(HttpHeaders.SERVER);
-      httpResponse.headers.set(HttpHeaders.SERVER, '$value with Shelf');
-    }
-    return httpResponse.addStream(response.read())
-        .then((_) => httpResponse.close());
-  });
-}
-
 void _process(UnparsedRequest req, _RequestState state, 
               _ChainImpl chain, Completer completer) {
   runZoned(() {
-        
-    runZoned(() {
-      chain._init().then((shelf.Response resp) {
-        _logger.finer("Closed request for: ${request.url}");
-        completer.complete(response);
-      });
-    }, onError: (e, s) {
-      _handleError("Failed to handle request.", e, stack: s, req: req).then((_) =>
-          completer.complete(response));
+    
+    handleRequest(req.httpRequest, chain._initHandler).then((_) {
+      _logger.finer("Closed request for: ${request.url}");
+      completer.complete(req.httpRequest.response);
     });
 
   }, zoneValues: {
@@ -132,25 +107,33 @@ void _process(UnparsedRequest req, _RequestState state,
 
 Future _handleError(String message, Object error, {StackTrace stack, Request req, 
                   int statusCode, Level logLevel: Level.SEVERE}) {
+  
+  if (error is shelf.HijackException) {
+    return new Future.error(error);
+  }
+  
   _logger.log(logLevel, message, error, stack);
-
+  
+  if (req == null) {
+    return new Future.value();
+  }
+  
   return new Future.sync(() {
-    if (req != null) {
-          
-      if (statusCode == null) {
-        if (error is RequestException) {
-          statusCode = error.statusCode;
-        } else {
-          statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
-        }
-      }
-
-      _RequestState state = Zone.current[#state];
-      if (!state.errorHandlerInvoked) {
-        state.errorHandlerInvoked = true;
-        return _notifyError(statusCode, req.url.path, error, stack);
+      
+    if (statusCode == null) {
+      if (error is RequestException) {
+        statusCode = error.statusCode;
+      } else {
+        statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
       }
     }
+
+    _RequestState state = Zone.current[#state];
+    if (!state.errorHandlerInvoked) {
+      state.errorHandlerInvoked = true;
+      return _notifyError(statusCode, req.url.path, error, stack);
+    }
+
   });
 }
 
@@ -242,21 +225,24 @@ class _ChainImpl implements Chain {
       _request.shelfRequest = req;
       _request.attributes.addAll(req.context);
       Zone.current[#state].chainInitialized = true;
-      var c = new Completer();
-      next(() => c.complete(response));
-      return c.future;
+      next();
+      return _completer.future;
     };
     
     if (initHandler != null) {
       _initHandler = initHandler.addHandler(h);
     } else {
-      _initHandler = h;
+      _initHandler = new shelf.Pipeline()
+            .addMiddleware(_mainMiddleware)
+            .addHandler(h);
     }
     
   }
   
   Future _invokeCallbacks() {
-    return Future.forEach(_callbacks.reversed, (c) {
+    var callbacks = _callbacks.reversed;
+    _callbacks = [];
+    return Future.forEach(callbacks, (c) {
       var v = c();
       if (v != null) {
         if (v is Future) {
@@ -271,11 +257,7 @@ class _ChainImpl implements Chain {
         }
       }
       return new Future.value();
-    }).then((_) => _callbacks.clear());
-  }
-  
-  Future<shelf.Response> _init() {
-    return new Future.sync(() => _initHandler(_request.shelfRequest));
+    }).then((_) => _completer.complete(response));
   }
   
   dynamic error;
@@ -485,6 +467,11 @@ Future _notifyError(int statusCode, String resource, [Object error, StackTrace s
 void _writeErrorPage(int statusCode, String resource, [Object error, StackTrace stack]) {
 
   String description = _getStatusDescription(statusCode);
+  
+  String formattedStack = null;
+  if (stack != null) {
+    formattedStack = Trace.format(stack);
+  }
 
   String errorTemplate = 
 '''<!DOCTYPE>
@@ -539,7 +526,7 @@ void _writeErrorPage(int statusCode, String resource, [Object error, StackTrace 
     <p><b>Resource: </b> $resource</p>
 
     <div class="info" style="display:${error != null ? "block" : "none"}">
-      <pre>${error}${stack != null ? "\n\n" + stack.toString() : ""}</pre>
+      <pre>${error}${formattedStack != null ? "\n\n" + formattedStack : ""}</pre>
     </div>
   </div>
   <div class="footer">Redstone Server - 2014 - Luiz Mineo</div>

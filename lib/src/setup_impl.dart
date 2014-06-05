@@ -22,6 +22,37 @@ final List<_ResponseHandler> _responseProcessors = [];
 shelf.Pipeline _initHandler = null;
 shelf.Handler _finalHandler = null;
 
+final shelf.Middleware _mainMiddleware = (shelf.Handler handler) {
+  return (shelf.Request shelfRequest) {
+    var completer = new Completer();
+    runZoned(() {
+      var resp = handler(shelfRequest);
+      if (resp is Future) {
+        resp.then((r) {
+          if (!completer.isCompleted) {
+            completer.complete(r);
+          }
+        });
+      } else {
+        if (!completer.isCompleted) {
+          completer.complete(resp);
+        }
+      }
+    }, onError: (e, s) {
+      if (!completer.isCompleted) {
+        _handleError("Failed to handle request.", e, 
+           stack: s, req: request)
+             .then((_) {
+               if (!completer.isCompleted) {
+                completer.complete(response);
+               }
+             });
+      }
+    });
+    return completer.future;
+  };
+};
+
 final Set<Symbol> _blacklistSet = _buildBlacklistSet();
 
 Injector _injector;
@@ -450,6 +481,7 @@ void _scanHandlers([List<Symbol> libraries]) {
 
 void _clearHandlers() {
 
+  _targetsCache.clear();
   _targets.clear();
   _interceptors.clear();
   _errorHandlers.clear();

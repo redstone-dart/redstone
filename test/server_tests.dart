@@ -562,7 +562,7 @@ main() {
       app.setUp([#routes]);
       
       MockRequest req = new MockRequest("/path");
-      app.dispatch(req).then((resp) {
+      return app.dispatch(req).then((resp) {
         expect(resp.mockContent, equals("middleware_1 middleware_2 main_route"));
       });
       
@@ -574,7 +574,7 @@ main() {
       });
       app.setUp([#routes]);
       MockRequest req = new MockRequest("/invalid_path");
-      app.dispatch(req).then((resp) {
+      return app.dispatch(req).then((resp) {
         expect(resp.mockContent, equals("handler_executed"));
         expect(resp.statusCode, equals(200));
       });

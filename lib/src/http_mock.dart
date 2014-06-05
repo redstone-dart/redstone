@@ -34,6 +34,24 @@ class MockHttpHeaders implements HttpHeaders {
     _set(HttpHeaders.IF_MODIFIED_SINCE, formatted);
   }
   
+  DateTime get date {
+      List<String> values = _headers[HttpHeaders.DATE];
+      if (values != null) {
+        try {
+          return HttpDate.parse(values[0]);
+        } on Exception catch (e) {
+          return null;
+        }
+      }
+      return null;
+    }
+
+  void set date(DateTime date) {
+    // Format "DateTime" header with date in Greenwich Mean Time (GMT).
+    String formatted = HttpDate.format(date.toUtc());
+    _set("date", formatted);
+  }
+  
   set contentType(ContentType type) {
     if (_contentType == null && _headers["content-type"] == null) {
       _contentType = type;
@@ -191,6 +209,10 @@ class MockHttpResponse implements HttpResponse {
   void write(Object obj) {
     var str = obj.toString();
     add(conv.UTF8.encode(str));
+  }
+  
+  Future<Socket> detachSocket({bool writeHeaders: true}) {
+    throw "MockHttpResponse.detachSocket: Unsupported Operation";
   }
 
   /*

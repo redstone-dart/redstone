@@ -7,11 +7,13 @@ import 'dart:convert' as conv;
 import 'dart:math';
 
 import 'package:shelf/shelf.dart' as shelf;
+import 'package:shelf/shelf_io.dart';
 import 'package:mime/mime.dart';
 import 'package:route_hierarchical/url_matcher.dart';
 import 'package:route_hierarchical/url_template.dart';
 import 'package:logging/logging.dart';
 import 'package:crypto/crypto.dart';
+import 'package:stack_trace/stack_trace.dart';
 
 import 'package:di/di.dart';
 import 'package:di/auto_injector.dart';
@@ -110,23 +112,11 @@ abstract class UnparsedRequest extends Request {
   
   Future parseBody();
   
+  HttpRequest get httpRequest;
+  
   set shelfRequest(shelf.Request req);
   
 }
-
-/**
- * A writer which can serialize a response to the client
- */
-abstract class Writer {
-  
-  Future<HttpResponse> writeResponse(shelf.Response response);
-  
-}
-
-/**
- * Request handler
- */
-abstract class RequestHandler implements UnparsedRequest, Writer {}
 
 /**
  * HttpRequest parser
@@ -192,30 +182,6 @@ class HttpRequestParser {
     });
     return _bodyParsed;
   }
-}
-
-/**
- * Utility methods to handle shelf objects
- */
-class ShelfTransformer {
-  
-  shelf.Request buildShelfRequest(HttpRequest req) {
-    var headers = {};
-    req.headers.forEach((k, v) {
-      // Multiple header values are joined with commas.
-      // See http://tools.ietf.org/html/draft-ietf-httpbis-p1-messaging-21#page-22
-      headers[k] = v.join(',');
-    });
-
-    return new shelf.Request(req.method, req.requestedUri,
-        protocolVersion: req.protocolVersion, headers: headers,
-        body: req);
-  }
-  
-  Future writeHttpResponse(shelf.Response response, HttpResponse httpResponse) {
-    return _writeHttpResponse(response, httpResponse);
-  }
-  
 }
 
 /**
@@ -392,7 +358,7 @@ void addPlugin(RedstonePlugin plugin) {
  */
 void addShelfMiddleware(shelf.Middleware middleware) {
   if (_initHandler == null) {
-    _initHandler = new shelf.Pipeline();
+    _initHandler = new shelf.Pipeline().addMiddleware(_mainMiddleware);
   }
   _initHandler = _initHandler.addMiddleware(middleware);
 }
@@ -420,17 +386,12 @@ Future<HttpServer> start({address: _DEFAULT_ADDRESS, int port: _DEFAULT_PORT}) {
     return HttpServer.bind(address, port).then((server) {
       server.listen((HttpRequest req) {
 
-          _logger.fine("Received request for: ${req.uri}");
-          _dispatchRequest(new _RequestImpl(req)).then((shelf.Response resp) {
-            return _writeHttpResponse(resp, req.response);
-          }, onError: (e) {
-            shelf.Response resp = new shelf.Response.internalServerError();
-            return _writeHttpResponse(resp, req.response);
-          }).catchError((e, s) {
-            _logger.severe("Failed to handle request for ${req.uri}", e, s);
-          });
-
+        _logger.fine("Received request for: ${req.uri}");
+        _dispatchRequest(new _RequestImpl(req)).catchError((e, s) {
+          _logger.severe("Failed to handle request for ${req.uri}", e, s);
         });
+
+      });
 
       _logger.info("Running on $address:$port");
       return server;
@@ -451,12 +412,7 @@ void serveRequests(Stream<HttpRequest> requests) {
   requests.listen((HttpRequest req) {
 
     _logger.fine("Received request for: ${req.uri}");
-    _dispatchRequest(new _RequestImpl(req)).then((shelf.Response resp) {
-      return _writeHttpResponse(resp, req.response);
-    }, onError: (e) {
-      shelf.Response resp = new shelf.Response.internalServerError();
-      return _writeHttpResponse(resp, req.response);
-    }).catchError((e, s) {
+    _dispatchRequest(new _RequestImpl(req)).catchError((e, s) {
       _logger.severe("Failed to handle request for ${req.uri}", e, s);
     });
 
@@ -494,8 +450,8 @@ void tearDown() {
  * This method is intended to be used in unit tests, where you
  * can create new requests with [MockRequest]
  */
-Future<HttpResponse> dispatch(RequestHandler request) => 
-    _dispatchRequest(request).then((resp) => request.writeResponse(resp));
+Future<HttpResponse> dispatch(UnparsedRequest request) => 
+    _dispatchRequest(request);
 
 
 /**
