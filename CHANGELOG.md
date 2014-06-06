@@ -1,3 +1,6 @@
+## v0.5.3+1
+- Widen the version constraint for `di`
+
 ## v0.5.3
 - Improved integration with Shelf
 - `shelf.Request.hijack()` method is now supported (although it does not work in unit tests)
