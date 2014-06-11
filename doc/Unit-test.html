@@ -82,12 +82,15 @@
       <div class="section-title page-header">
         <h1>Unit Test</h1>
       </div>
-      <p>Basically, to create a test, you just need to:
-* Call <code>setUp()</code> to load your handlers
-* Create a <code>MockRequest</code>
-* Call <code>dispatch()</code> to send your request
-* Inspect the returned response
-* Call <code>tearDown()</code> to unload your handlers </p>
+      <p>Basically, to create a test, you just need to:</p>
+
+<ul>
+<li>Call <code>setUp()</code> to load your handlers</li>
+<li>Create a <code>MockRequest</code></li>
+<li>Call <code>dispatch()</code> to send your request</li>
+<li>Inspect the returned response</li>
+<li>Call <code>tearDown()</code> to unload your handlers </li>
+</ul>
 
 <p>Example:</p>
 <div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="k">library</span> <span class="n">services</span><span class="p">;</span>
