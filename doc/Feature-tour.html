@@ -199,14 +199,14 @@
 <span class="n">service</span><span class="p">(</span><span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Inject</span><span class="p">()</span> <span class="n">ClassA</span> <span class="n">objA</span><span class="p">)</span> <span class="p">{</span>
  <span class="p">...</span>
 <span class="p">}</span>
-</code></pre></div><div class="highlight"><pre><code class="language-text" data-lang="text">@app.Interceptor(r&#39;/services/.+&#39;)
-interceptor(ClassA objA, ClassB objB) {
-  ...
-}
-</code></pre></div><div class="highlight"><pre><code class="language-text" data-lang="text">@app.ErrorHandler(404)
-notFound(ClassB objB) {
-  ...
-}
+</code></pre></div><div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Interceptor</span><span class="p">(</span><span class="s1">r&#39;/services/.+&#39;</span><span class="p">)</span>
+<span class="n">interceptor</span><span class="p">(</span><span class="n">ClassA</span> <span class="n">objA</span><span class="p">,</span> <span class="n">ClassB</span> <span class="n">objB</span><span class="p">)</span> <span class="p">{</span>
+  <span class="p">...</span>
+<span class="p">}</span>
+</code></pre></div><div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">ErrorHandler</span><span class="p">(</span><span class="m">404</span><span class="p">)</span>
+<span class="n">notFound</span><span class="p">(</span><span class="n">ClassB</span> <span class="n">objB</span><span class="p">)</span> <span class="p">{</span>
+  <span class="p">...</span>
+<span class="p">}</span>
 </code></pre></div><div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Group</span><span class="p">(</span><span class="s1">&#39;/group&#39;</span><span class="p">)</span>
 <span class="kd">class</span> <span class="nc">Group</span> <span class="p">{</span>
 

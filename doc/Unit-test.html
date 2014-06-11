@@ -139,7 +139,7 @@
 <ul>
 <li>POST request: /service, JSON data</li>
 </ul>
-<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="kd">var</span> <span class="n">req</span> <span class="o">=</span> <span class="k">new</span> <span class="n">MockRequest</span><span class="p">(</span><span class="s2">&quot;/service&quot;</span><span class="p">,</span> <span class="nl">bodyType:</span> <span class="n">app</span><span class="p">.</span><span class="n">JSON</span><span class="p">,</span> <span class="nl">body:</span> <span class="p">{</span>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="kd">var</span> <span class="n">req</span> <span class="o">=</span> <span class="k">new</span> <span class="n">MockRequest</span><span class="p">(</span><span class="s2">&quot;/service&quot;</span><span class="p">,</span> <span class="nl">method:</span> <span class="n">app</span><span class="p">.</span><span class="n">POST</span><span class="p">,</span> <span class="nl">bodyType:</span> <span class="n">app</span><span class="p">.</span><span class="n">JSON</span><span class="p">,</span> <span class="nl">body:</span> <span class="p">{</span>
   <span class="s2">&quot;key1&quot;</span><span class="o">:</span> <span class="s2">&quot;value1&quot;</span><span class="p">,</span>
   <span class="s2">&quot;key2&quot;</span><span class="o">:</span> <span class="s2">&quot;value2&quot;</span>
 <span class="p">});</span>
@@ -147,7 +147,7 @@
 <ul>
 <li>POST request: /service, FORM data</li>
 </ul>
-<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="kd">var</span> <span class="n">req</span> <span class="o">=</span> <span class="k">new</span> <span class="n">MockRequest</span><span class="p">(</span><span class="s2">&quot;/service&quot;</span><span class="p">,</span> <span class="nl">bodyType:</span> <span class="n">app</span><span class="p">.</span><span class="n">FORM</span><span class="p">,</span> <span class="nl">body:</span> <span class="p">{</span>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="kd">var</span> <span class="n">req</span> <span class="o">=</span> <span class="k">new</span> <span class="n">MockRequest</span><span class="p">(</span><span class="s2">&quot;/service&quot;</span><span class="p">,</span> <span class="nl">method:</span> <span class="n">app</span><span class="p">.</span><span class="n">POST</span><span class="p">,</span> <span class="nl">bodyType:</span> <span class="n">app</span><span class="p">.</span><span class="n">FORM</span><span class="p">,</span> <span class="nl">body:</span> <span class="p">{</span>
   <span class="s2">&quot;key1&quot;</span><span class="o">:</span> <span class="s2">&quot;value1&quot;</span><span class="p">,</span>
   <span class="s2">&quot;key2&quot;</span><span class="o">:</span> <span class="s2">&quot;value2&quot;</span>
 <span class="p">});</span>
@@ -164,7 +164,7 @@
                                       <span class="s2">&quot;test.txt&quot;</span><span class="p">,</span> 
                                       <span class="n">UTF8</span><span class="p">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">));</span>
 
-<span class="kd">var</span> <span class="n">req</span> <span class="o">=</span> <span class="k">new</span> <span class="n">MockRequest</span><span class="p">(</span><span class="s2">&quot;/service&quot;</span><span class="p">,</span> <span class="nl">bodyType:</span> <span class="n">app</span><span class="p">.</span><span class="n">FORM</span><span class="p">,</span> <span class="nl">body:</span> <span class="p">{</span>
+<span class="kd">var</span> <span class="n">req</span> <span class="o">=</span> <span class="k">new</span> <span class="n">MockRequest</span><span class="p">(</span><span class="s2">&quot;/service&quot;</span><span class="p">,</span> <span class="nl">method:</span> <span class="n">app</span><span class="p">.</span><span class="n">POST</span><span class="p">,</span> <span class="nl">bodyType:</span> <span class="n">app</span><span class="p">.</span><span class="n">FORM</span><span class="p">,</span> <span class="nl">body:</span> <span class="p">{</span>
   <span class="s2">&quot;key1&quot;</span><span class="o">:</span> <span class="s2">&quot;value1&quot;</span><span class="p">,</span>
   <span class="s2">&quot;file&quot;</span><span class="o">:</span> <span class="n">file</span>
 <span class="p">});</span>
