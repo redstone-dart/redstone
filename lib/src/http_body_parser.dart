@@ -10,14 +10,14 @@ class HttpBodyFileUpload {
   final ContentType contentType;
   final String filename;
   final List<int> content;
-  
+
   HttpBodyFileUpload(this.contentType, this.filename, this.content);
-  
+
 }
 
 /**
  * The body of a HTTP request.
- * 
+ *
  * [type] can be 'binary', 'text', 'form' and 'json'.
  * [body] can be a List, Map or String.
  */
@@ -26,7 +26,7 @@ class HttpBody {
   final dynamic body;
 
   HttpBody(this.type, this.body);
-  
+
 }
 
 Future<HttpBody> _parseRequestBody(Stream<List<int>> stream,
@@ -230,9 +230,7 @@ class _HttpMultipartFormData extends Stream {
                           cancelOnError: cancelOnError);
   }
 
-  String value(String name) {
-    return _mimeMultipart.headers[name];
-  }
+  String value(String name) =>_mimeMultipart.headers[name];
 
   // Decode a string with HTTP entities. Returns null if the string ends in the
   // middle of a http entity.

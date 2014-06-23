@@ -5,15 +5,15 @@ part of redstone_mocks;
 class MockHttpHeaders implements HttpHeaders {
   final Map<String, List<String>> _headers =
       new HashMap<String, List<String>>();
-  
+
   ContentType _contentType;
-  
+
   MockHttpHeaders([Map<String, List<String>> values]) {
     if (values != null) {
       _headers.addAll(values);
     }
   }
-  
+
   List<String> operator[](String name) => _headers[name.toLowerCase()];
 
   DateTime get ifModifiedSince {
@@ -33,7 +33,7 @@ class MockHttpHeaders implements HttpHeaders {
     String formatted = HttpDate.format(ifModifiedSince.toUtc());
     _set(HttpHeaders.IF_MODIFIED_SINCE, formatted);
   }
-  
+
   DateTime get date {
       List<String> values = _headers[HttpHeaders.DATE];
       if (values != null) {
@@ -51,19 +51,19 @@ class MockHttpHeaders implements HttpHeaders {
     String formatted = HttpDate.format(date.toUtc());
     _set("date", formatted);
   }
-  
+
   set contentType(ContentType type) {
     if (_contentType == null && _headers["content-type"] == null) {
       _contentType = type;
       set("content-type", type.value);
     }
   }
-  
+
   ContentType get contentType {
    if (_contentType != null) {
      return _contentType;
    }
-   
+
    var ct = value("content-type");
    if (ct != null) {
      return ContentType.parse(ct);
@@ -76,7 +76,7 @@ class MockHttpHeaders implements HttpHeaders {
     _headers.remove(name);
     _addAll(name, value);
   }
-  
+
   void add(String name, Object value) {
     name = name.toLowerCase();
     _addAll(name, value);
@@ -89,10 +89,10 @@ class MockHttpHeaders implements HttpHeaders {
     if (values.length > 1) {
       throw new HttpException("More than one value for header $name");
     }
-    return values[0];
+    return values.first;
   }
-  
-  void forEach(void f(String name, List<String> values)) => 
+
+  void forEach(void f(String name, List<String> values)) =>
       _headers.forEach(f);
 
   String toString() => '$runtimeType : $_headers';
@@ -148,7 +148,7 @@ class MockHttpHeaders implements HttpHeaders {
   dynamic noSuchMethod(Invocation invocation) {
     return super.noSuchMethod(invocation);
   }
-  
+
 }
 
 class MockHttpResponse implements HttpResponse {
@@ -186,13 +186,13 @@ class MockHttpResponse implements HttpResponse {
   void add(List<int> data) {
     _buffer.addAll(data);
   }
-  
+
   Future addStream(Stream<List<int>> stream) {
     var completer = new Completer();
     stream.listen((data) {
-      _buffer.addAll(data);  
+      _buffer.addAll(data);
     }, onDone: () => completer.complete());
-    
+
     return completer.future;
   }
 
@@ -210,7 +210,7 @@ class MockHttpResponse implements HttpResponse {
     var str = obj.toString();
     add(conv.UTF8.encode(str));
   }
-  
+
   Future<Socket> detachSocket({bool writeHeaders: true}) {
     throw "MockHttpResponse.detachSocket: Unsupported Operation";
   }
@@ -243,7 +243,7 @@ class MockHttpRequest extends Stream<List<int>> implements HttpRequest {
 
   final Uri requestedUri;
   final Uri uri;
-  
+
   final MockHttpResponse response = new MockHttpResponse();
   final HttpHeaders headers;
   final String method;
@@ -251,8 +251,8 @@ class MockHttpRequest extends Stream<List<int>> implements HttpRequest {
   final HttpSession session;
   final Stream<List<int>> body;
 
-  MockHttpRequest(this.requestedUri, this.uri, this.method, this.headers, 
-      this.body, {this.session, 
+  MockHttpRequest(this.requestedUri, this.uri, this.method, this.headers,
+      this.body, {this.session,
       this.followRedirects: true, DateTime ifModifiedSince}) {
     if(ifModifiedSince != null) {
       headers.ifModifiedSince = ifModifiedSince;
@@ -266,10 +266,10 @@ class MockHttpRequest extends Stream<List<int>> implements HttpRequest {
 
   @override
   int get contentLength => -1;
-  
+
   @override
   String get protocolVersion => "1.1";
-  
+
   /*
    * Implemented to remove editor warnings
    */

@@ -17,28 +17,28 @@ part of redstone_server;
  *
  */
 class Route {
-  
+
   final String urlTemplate;
-  
+
   final List<String> methods;
 
   final String responseType;
-  
+
   final bool allowMultipartRequest;
-  
+
   final bool matchSubPaths;
 
-  const Route(String this.urlTemplate, 
+  const Route(this.urlTemplate,
               {this.methods: const [GET],
                this.responseType,
                this.allowMultipartRequest: false,
                this.matchSubPaths: false});
-  
-  Route.conf(String this.urlTemplate, 
-                {this.methods: const [GET],
-                 this.responseType,
-                 this.allowMultipartRequest: false,
-                 this.matchSubPaths: false});
+
+  Route.conf(this.urlTemplate,
+             {this.methods: const [GET],
+              this.responseType,
+              this.allowMultipartRequest: false,
+              this.matchSubPaths: false});
 
 }
 
@@ -57,7 +57,7 @@ class Body {
 
   final String type;
 
-  const Body(String this.type);
+  const Body(this.type);
 
 }
 
@@ -70,52 +70,52 @@ class Body {
  *
  *     @app.Route('/userInfo')
  *     getUserInfo(@app.QueryParam('user') String user) {
- *      ... 
+ *      ...
  *     }
  *
  */
 class QueryParam {
-  
+
   final String name;
 
-  const QueryParam([String this.name]);
+  const QueryParam([this.name]);
 }
 
 /**
  * An annotation to define a target parameter.
- * 
+ *
  * [name] is the name of the request attribute
- * 
+ *
  * Example:
- * 
+ *
  *     @app.Route('/service')
  *     service(@app.Attr("conn") DbConn conn) {
  *      ...
  *     }
- * 
+ *
  */
 class Attr {
-  
+
   final String name;
-  
-  const Attr([String this.name]);
+
+  const Attr([this.name]);
 }
 
 /**
  * An annotation to define a target parameter.
- * 
+ *
  * Example:
- * 
+ *
  *     @app.Route('/service')
  *     service(@app.Inject() DbConn conn) {
  *      ...
  *     }
- * 
+ *
  */
 class Inject {
-  
+
   const Inject();
-  
+
 }
 
 /**
@@ -130,7 +130,7 @@ class Inject {
  *
  *     @app.Interceptor(r'/.*')
  *     configureResponse() {
- *       app.request.response.headers.add('Access-Control-Allow-Origin', '*'); 
+ *       app.request.response.headers.add('Access-Control-Allow-Origin', '*');
  *       app.chain.next();
  *     }
  *
@@ -141,17 +141,17 @@ class Interceptor {
   final int chainIdx;
   final bool parseRequestBody;
 
-  const Interceptor(String this.urlPattern, {int this.chainIdx: 0, bool this.parseRequestBody: false});
+  const Interceptor(this.urlPattern, {this.chainIdx: 0, this.parseRequestBody: false});
 
-  Interceptor.conf(String this.urlPattern, {int this.chainIdx: 0, bool this.parseRequestBody: false});
+  Interceptor.conf(this.urlPattern, {this.chainIdx: 0, this.parseRequestBody: false});
 
 }
 
 /**
  * An annotation to define error handlers.
  *
- * [statusCode] is the HTTP status to be handled. 
- * [urlPattern] is a regex that defines the requests 
+ * [statusCode] is the HTTP status to be handled.
+ * [urlPattern] is a regex that defines the requests
  * that will be handled.
  *
  * Example:
@@ -165,9 +165,9 @@ class ErrorHandler {
   final int statusCode;
   final String urlPattern;
 
-  const ErrorHandler(int this.statusCode, {String this.urlPattern});
-  
-  ErrorHandler.conf(int this.statusCode, {String this.urlPattern});
+  const ErrorHandler(this.statusCode, {this.urlPattern});
+
+  ErrorHandler.conf(this.statusCode, {this.urlPattern});
 
 }
 
@@ -200,55 +200,55 @@ class Group {
 
   final String urlPrefix;
 
-  const Group(String this.urlPrefix);
+  const Group(this.urlPrefix);
 
 }
 
 /**
- * An annotation to define a target which must be bound 
+ * An annotation to define a target which must be bound
  * to the URL of its group.
- * 
+ *
  * If [pathSuffix] is provided, only requests that match
- * the suffix will be handled. [methods] are the HTTP 
+ * the suffix will be handled. [methods] are the HTTP
  * methods accepted by this target, and defaults to GET.
- * The [responseType] is the content type of the response. 
- * If it's not provided, the framework will generate it based on 
- * the value returned by the method; If [allowMultipartRequest] 
- * is true, then the Route is allowed to receive multipart 
+ * The [responseType] is the content type of the response.
+ * If it's not provided, the framework will generate it based on
+ * the value returned by the method; If [allowMultipartRequest]
+ * is true, then the Route is allowed to receive multipart
  * requests (file upload).
- * 
+ *
  */
 class DefaultRoute {
-  
+
   final String pathSuffix;
-  
+
   final List<String> methods;
 
   final String responseType;
-    
+
   final bool allowMultipartRequest;
-    
+
   final bool matchSubPaths;
-  
-  const DefaultRoute({String this.pathSuffix, 
-                      List<String> this.methods: const [GET],
-                      String this.responseType, bool this.allowMultipartRequest: false,
-                      bool this.matchSubPaths: false});
+
+  const DefaultRoute({this.pathSuffix,
+                      this.methods: const [GET],
+                      this.responseType, this.allowMultipartRequest: false,
+                      this.matchSubPaths: false});
 }
 
 /**
  * An annotation to include handlers from other libraries
- * 
+ *
  */
 class Install {
-  
+
   final String urlPrefix;
   final int chainIdx;
-  
-  const Install({String this.urlPrefix, int this.chainIdx});
-  
-  Install.conf({String this.urlPrefix, int this.chainIdx});
-  
+
+  const Install({this.urlPrefix, this.chainIdx});
+
+  Install.conf({this.urlPrefix, this.chainIdx});
+
   Install.defaultConf() :
     urlPrefix = null,
     chainIdx = null;
@@ -259,7 +259,7 @@ class Install {
  * its handlers
  */
 class Ignore {
-  
+
   const Ignore();
-  
+
 }
