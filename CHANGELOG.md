@@ -1,3 +1,6 @@
+## v0.5.4
+- Fix: Response processors are not being invoked when a route returns a `Future` (Plugin API).
+
 ## v0.5.3+1
 - Widen the version constraint for `di`
 
