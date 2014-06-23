@@ -32,7 +32,7 @@ packages:
   di:
     description: di
     source: hosted
-    version: "1.0.0"
+    version: "0.0.40"
   grinder:
     description: grinder
     source: hosted
