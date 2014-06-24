@@ -30,12 +30,12 @@ final shelf.Middleware _mainMiddleware = (shelf.Handler handler) {
       if (resp is Future) {
         resp.then((r) {
           if (!completer.isCompleted) {
-            completer.complete(r);
+            _commitResponse(r, completer);
           }
         });
       } else {
         if (!completer.isCompleted) {
-          completer.complete(resp);
+          _commitResponse(resp, completer);
         }
       }
     }, onError: (e, s) {
@@ -44,7 +44,7 @@ final shelf.Middleware _mainMiddleware = (shelf.Handler handler) {
            stack: s, req: request)
              .then((_) {
                if (!completer.isCompleted) {
-                completer.complete(response);
+                _commitResponse(response, completer);
                }
              });
       }
@@ -52,6 +52,13 @@ final shelf.Middleware _mainMiddleware = (shelf.Handler handler) {
     return completer.future;
   };
 };
+
+void _commitResponse(shelf.Response resp, Completer completer) {
+  if (!resp.headers.containsKey(HttpHeaders.SERVER)) {
+    resp = resp.change(headers: const {HttpHeaders.SERVER: "dart:io with Redstone.dart/Shelf"});
+  }
+  completer.complete(resp);
+}
 
 final Set<Symbol> _blacklistSet = _buildBlacklistSet();
 
