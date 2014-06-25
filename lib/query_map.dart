@@ -24,7 +24,7 @@ class QueryMap extends DelegatingMap {
       var value = this[key];
       if (value is! QueryMap && value is Map) {
         value = new QueryMap(value);
-        this[key] = value as V;
+        this[key] = value;
       }
       return value;
     } else if(defaultValue != null) {

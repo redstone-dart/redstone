@@ -14,6 +14,8 @@ import 'package:http/http.dart' as http;
 import 'package:http/src/utils.dart';
 import 'package:http_parser/src/media_type.dart';
 
+import 'package:redstone/query_map.dart';
+
 part 'package:redstone/src/http_mock.dart';
 
 /**
@@ -28,14 +30,26 @@ part 'package:redstone/src/http_mock.dart';
  */
 class MockRequest extends HttpRequestParser implements UnparsedRequest {
 
-  final Map _attributes = {};
+  final Map _attributes = new QueryMap({});
 
   Future _parsedBody;
 
-  HttpHeaders _headers;
+  HttpHeaders _httpHeaders;
   HttpResponse _response;
   HttpRequest httpRequest;
-  shelf.Request shelfRequest;
+  
+  shelf.Request _shelfRequest;
+    
+  QueryMap _headers = null;
+  QueryMap _queryParams = null;
+  
+  shelf.Request get shelfRequest => _shelfRequest;
+  
+  set shelfRequest(shelf.Request shelfRequest) {
+    _shelfRequest = shelfRequest;
+    _headers = new QueryMap(shelfRequest.headers);
+    _queryParams = new QueryMap(shelfRequest.url.queryParameters);
+  }
 
   final HttpSession session;
 
@@ -62,12 +76,12 @@ class MockRequest extends HttpRequestParser implements UnparsedRequest {
       hValues[HttpHeaders.AUTHORIZATION] = ["Basic $auth"];
     }
 
-    _headers = new MockHttpHeaders(hValues);
+    _httpHeaders = new MockHttpHeaders(hValues);
 
     Uri requestedUri = new Uri(scheme: scheme, host: host, port: port,
         path: path, queryParameters: queryParams);
     Uri uri = new Uri(path: path);
-    httpRequest = new MockHttpRequest(requestedUri, uri, method, _headers, bodyStream, session: session);
+    httpRequest = new MockHttpRequest(requestedUri, uri, method, _httpHeaders, bodyStream, session: session);
     _response = httpRequest.response;
 
   }
@@ -124,13 +138,13 @@ class MockRequest extends HttpRequestParser implements UnparsedRequest {
 
   String get method => shelfRequest.method;
 
-  Map<String, String> get queryParams => shelfRequest.url.queryParameters;
+  QueryMap get queryParams => _queryParams;
 
-  Map<String, String> get headers => shelfRequest.headers;
+  QueryMap get headers => _headers;
 
   HttpResponse get response => _response;
 
-  Map get attributes => _attributes;
+  QueryMap get attributes => _attributes;
 
   void parseBodyType() => parseHttpRequestBodyType(headers);
 
