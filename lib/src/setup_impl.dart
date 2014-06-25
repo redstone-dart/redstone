@@ -582,8 +582,10 @@ void _configureInterceptor(Interceptor interceptor, ObjectMirror owner,
             metadata.reflectee.runtimeType == p.metadataType, orElse: () => null);
         if (customParam != null) {
           var paramName = MirrorSystem.getName(param.simpleName);
+          var type = param.type.hasReflectedType ? param.type.reflectedType : null;
           var defaultValue = param.hasDefaultValue ? param.defaultValue : null;
-          var value = customParam.parameterProvider(metadata.reflectee, paramName, request, _injector);
+          var value = customParam.parameterProvider(metadata.reflectee, 
+              type, handlerName, paramName, request, _injector);
           if (value == null) {
             value = defaultValue;
           }
@@ -653,8 +655,10 @@ void _configureErrorHandler(ErrorHandler errorHandler,
             metadata.reflectee.runtimeType == p.metadataType, orElse: () => null);
         if (customParam != null) {
           var paramName = MirrorSystem.getName(param.simpleName);
+          var type = param.type.hasReflectedType ? param.type.reflectedType : null;
           var defaultValue = param.hasDefaultValue ? param.defaultValue : null;
-          var value = customParam.parameterProvider(metadata.reflectee, paramName, request, _injector);
+          var value = customParam.parameterProvider(metadata.reflectee, 
+              type, handlerName, paramName, request, _injector);
           if (value == null) {
             value = defaultValue;
           }
