@@ -10,16 +10,16 @@ import 'package:collection/collection.dart' show DelegatingMap;
  * 
  * Usage:
  * 
- *      QueryMap<String, String> map = new QueryMap({"key": "value"});
+ *      QueryMap map = new QueryMap({"key": "value"});
  *      print(map.key); //prints 'value'
  */
 @proxy
-class QueryMap<V> extends DelegatingMap<String, V> {
+class QueryMap extends DelegatingMap {
   
   QueryMap(Map map) : super(map);
   
   ///Retrieve a value from this map
-  V get(String key, [V defaultValue]) {
+  Object get(String key, [Object defaultValue]) {
     if(containsKey(key)) {
       var value = this[key];
       if (value is! QueryMap && value is Map) {
