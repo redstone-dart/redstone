@@ -70,7 +70,7 @@ abstract class Request {
   String get method;
 
   ///The query parameters associated with the request
-  QueryMap<String, String> get queryParams;
+  QueryMap get queryParams;
 
   ///The body type, such as 'JSON', 'TEXT' or 'FORM'
   String get bodyType;
@@ -87,7 +87,7 @@ abstract class Request {
   dynamic get body;
 
   ///The headers of the request
-  QueryMap<String, String> get headers;
+  QueryMap get headers;
 
   ///The session for the given request (read-only).
   HttpSession get session;
@@ -98,7 +98,7 @@ abstract class Request {
    * Attributes are objects that can be shared between
    * interceptors and routes
    */
-  QueryMap<String, Object> get attributes;
+  QueryMap get attributes;
   
   ///The original Shelf request
   shelf.Request get shelfRequest;

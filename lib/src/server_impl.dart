@@ -20,8 +20,8 @@ class _RequestImpl extends HttpRequestParser implements UnparsedRequest {
   HttpRequest httpRequest;
   shelf.Request _shelfRequest;
   
-  QueryMap<String, String> _headers = null;
-  QueryMap<String, String> _queryParams = null;
+  QueryMap _headers = null;
+  QueryMap _queryParams = null;
   
   shelf.Request get shelfRequest => _shelfRequest;
   
@@ -39,13 +39,13 @@ class _RequestImpl extends HttpRequestParser implements UnparsedRequest {
   
   Uri get url => _shelfRequest.url;
 
-  Map<String, String> get headers => null;
+  Map<String, String> get headers => _headers;
 
   Map get attributes => _attributes;
   
   String get method => _shelfRequest.method;
 
-  Map<String, String> get queryParams => null;
+  Map<String, String> get queryParams => _queryParams;
 
   HttpSession get session => httpRequest.session;
   
