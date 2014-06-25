@@ -18,29 +18,40 @@ class _RequestState {
 class _RequestImpl extends HttpRequestParser implements UnparsedRequest {
 
   HttpRequest httpRequest;
-  shelf.Request shelfRequest;
+  shelf.Request _shelfRequest;
   
-  final Map _attributes = {};
+  QueryMap<String, String> _headers = null;
+  QueryMap<String, String> _queryParams = null;
+  
+  shelf.Request get shelfRequest => _shelfRequest;
+  
+  set shelfRequest(shelf.Request shelfRequest) {
+    _shelfRequest = shelfRequest;
+    _headers = new QueryMap(shelfRequest.headers);
+    _queryParams = new QueryMap(shelfRequest.url.queryParameters);
+  }
+  
+  final QueryMap _attributes = new QueryMap({});
   
   _RequestImpl(this.httpRequest);
   
-  Uri get requestedUri => shelfRequest.requestedUri;
+  Uri get requestedUri => _shelfRequest.requestedUri;
   
-  Uri get url => shelfRequest.url;
+  Uri get url => _shelfRequest.url;
 
-  Map<String, String> get headers => shelfRequest.headers;
+  Map<String, String> get headers => null;
 
   Map get attributes => _attributes;
   
-  String get method => shelfRequest.method;
+  String get method => _shelfRequest.method;
 
-  Map<String, String> get queryParams => shelfRequest.url.queryParameters;
+  Map<String, String> get queryParams => null;
 
   HttpSession get session => httpRequest.session;
   
   void parseBodyType() => parseHttpRequestBodyType(headers);
   
-  Future parseBody() => parseHttpRequestBody(shelfRequest.read());
+  Future parseBody() => parseHttpRequestBody(_shelfRequest.read());
   
 }
 

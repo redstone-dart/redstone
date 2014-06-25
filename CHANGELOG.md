@@ -1,6 +1,9 @@
 ## v0.5.4
-- Fix: Response processors are not being invoked when a route returns a `Future` (Plugin API).
-- Code cleanup (Thanks to [vicb](https://github.com/vicb) PR #20)
+* Fix: Response processors are not being invoked when a route returns a `Future` (Plugin API).
+* Code cleanup (Thanks to [vicb](https://github.com/vicb) PR #20)
+* Added the QueryMap class, a Map wrapper that allows the use of the dot notation to retreive its values (Thanks to [digitalfiz](https://github.com/digitalfiz) issue #18)
+** `app.request.queryParams`, `app.request.headers` and `app.request.attributes` now returns a QueryMap.
+** The request body can also be retrieved as a QueryMap.
 
 ## v0.5.3+1
 - Widen the version constraint for `di`

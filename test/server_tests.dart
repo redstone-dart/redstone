@@ -250,6 +250,27 @@ main() {
       });
     });
     
+    test("request content as TEXT", () {
+      var req = new MockRequest("/text/arg1", method: app.POST, bodyType: app.TEXT, body: "plain text");
+      return app.dispatch(req).then((resp) {
+        expect(JSON.decode(resp.mockContent), equals({
+          "arg": "arg1",
+          "text": "plain text"
+        }));
+      });
+    });
+    
+    test("request content as JSON using QueryMap", () {
+      var req = new MockRequest("/jsonQueryMap", method: app.POST, bodyType: app.JSON, body: {
+        "key": {
+          "innerKey": "value"
+        }
+      });
+      return app.dispatch(req).then((resp) {
+        expect(JSON.decode(resp.mockContent), equals({"key": "value"}));
+      });
+    });
+    
     test("request attributes", () {
       var req = new MockRequest("/attr/arg1");
       return app.dispatch(req).then((resp) {

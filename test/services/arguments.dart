@@ -1,6 +1,7 @@
 library arguments;
 
 import 'package:redstone/server.dart' as app;
+import 'package:redstone/query_map.dart';
 
 @app.Route("/args/:arg1/:arg2/:arg3")
 pathArgs(String arg1, int arg2, [double arg3, String arg4, String arg5 = "arg5"]) =>
@@ -33,12 +34,18 @@ pathAndQueryArgs(String arg, @app.QueryParam("arg") String qArg) =>
     
 @app.Route("/json/:arg", methods: const [app.POST])
 jsonBody(String arg, @app.Body(app.JSON) Map json) => {"arg": arg, "json": json};
+
+@app.Route("/text/:arg", methods: const [app.POST])
+textBody(String arg, @app.Body(app.TEXT) String text) => {"arg": arg, "text": text};
     
 @app.Route("/form/:arg", methods: const [app.POST])
 formBody(String arg, @app.Body(app.FORM) Map form) => {"arg": arg, "form": form};    
     
 @app.Route("/attr/:arg")
 attr(@app.Attr() String name, String arg, {@app.Attr() int value: 0}) => "$name $arg $value";
+
+@app.Route("/jsonQueryMap", methods: const [app.POST])
+jsonBodyQueryMap(@app.Body(app.JSON) QueryMap json) => new QueryMap({"key": json.key.innerKey});
 
 @app.Interceptor("/attr/.+")
 interceptorAttr() {

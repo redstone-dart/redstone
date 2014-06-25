@@ -18,6 +18,8 @@ import 'package:stack_trace/stack_trace.dart';
 import 'package:di/di.dart';
 import 'package:di/auto_injector.dart';
 
+import 'package:redstone/query_map.dart';
+
 part 'package:redstone/src/metadata.dart';
 part 'package:redstone/src/logger.dart';
 part 'package:redstone/src/exception.dart';
@@ -68,7 +70,7 @@ abstract class Request {
   String get method;
 
   ///The query parameters associated with the request
-  Map<String, String> get queryParams;
+  QueryMap<String, String> get queryParams;
 
   ///The body type, such as 'JSON', 'TEXT' or 'FORM'
   String get bodyType;
@@ -85,7 +87,7 @@ abstract class Request {
   dynamic get body;
 
   ///The headers of the request
-  Map<String, String> get headers;
+  QueryMap<String, String> get headers;
 
   ///The session for the given request (read-only).
   HttpSession get session;
@@ -96,7 +98,7 @@ abstract class Request {
    * Attributes are objects that can be shared between
    * interceptors and routes
    */
-  Map<String, Object> get attributes;
+  QueryMap<String, Object> get attributes;
   
   ///The original Shelf request
   shelf.Request get shelfRequest;

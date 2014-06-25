@@ -810,7 +810,7 @@ _ParamProcessors _buildParamProcesors(MethodMirror handler) {
 
   String bodyType = null;
 
-  List processors = new List.from(handler.parameters.map((ParameterMirror param) {
+  List processors = handler.parameters.map((ParameterMirror param) {
     var handlerName = MirrorSystem.getName(handler.qualifiedName);
     var paramSymbol = param.simpleName;
     var name = param.isNamed ? paramSymbol : null;
@@ -825,9 +825,15 @@ _ParamProcessors _buildParamProcesors(MethodMirror handler) {
           throw new SetupException(handlerName, "Invalid parameters: Only one parameter can be annotated with @Body");
         }
         bodyType = body.type;
+        var valueHandler;
+        if (param.type.reflectedType == QueryMap) {
+          valueHandler = (value) => new QueryMap(value);
+        } else {
+          valueHandler = (value) => value;
+        }
 
         return (Map urlParams, Request request) {
-          return new _TargetParam(request.body, name);
+          return new _TargetParam(valueHandler(request.body), name);
         };
 
       } else if (metadata.reflectee is QueryParam) {
@@ -911,7 +917,7 @@ _ParamProcessors _buildParamProcesors(MethodMirror handler) {
       }
       return new _TargetParam(value, name);
     };
-  }));
+  }).toList(growable: false);
   
   return new _ParamProcessors(bodyType, processors);
 }
