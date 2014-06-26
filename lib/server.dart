@@ -423,10 +423,23 @@ void serveRequests(Stream<HttpRequest> requests) {
 }
 
 /**
+ * Handle a [HttpRequest].
+ * 
+ * Be sure to call [setUp] before handling requests
+ * with this method.
+ */
+Future handleRequest(HttpRequest request) {
+  _logger.fine("Received request for: ${request.uri}");
+  return _dispatchRequest(new _RequestImpl(request)).catchError((e, s) {
+    _logger.severe("Failed to handle request for ${request.uri}", e, s);
+  });
+}
+
+/**
  * Scan and initialize routes, interceptors and error handlers
  * 
  * If [libraries] is provided, then the scan process will be limited
- * to these libraries. This method is intended to be used in unit tests.
+ * to those libraries.
  */
 void setUp([List<Symbol> libraries]) {
   try {

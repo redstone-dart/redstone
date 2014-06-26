@@ -4,6 +4,7 @@
 * Added the QueryMap class, a Map wrapper that allows the use of the dot notation to retreive its values (Thanks to [digitalfiz](https://github.com/digitalfiz) issue #18)
     * `app.request.queryParams`, `app.request.headers` and `app.request.attributes` now returns a QueryMap.
     * The request body can also be retrieved as a QueryMap.
+* Added the `handleRequest(HttpRequest)` method.
 
 ## v0.5.3+1
 - Widen the version constraint for `di`
