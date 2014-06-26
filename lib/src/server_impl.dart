@@ -104,7 +104,7 @@ void _process(UnparsedRequest req, _RequestState state,
               _ChainImpl chain, Completer completer) {
   runZoned(() {
     
-    handleRequest(req.httpRequest, chain._initHandler).then((_) {
+    shelf_io.handleRequest(req.httpRequest, chain._initHandler).then((_) {
       _logger.finer("Closed request for: ${request.url}");
       completer.complete(req.httpRequest.response);
     });

@@ -7,7 +7,7 @@ import 'dart:convert' as conv;
 import 'dart:math';
 
 import 'package:shelf/shelf.dart' as shelf;
-import 'package:shelf/shelf_io.dart';
+import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:mime/mime.dart';
 import 'package:route_hierarchical/url_matcher.dart';
 import 'package:route_hierarchical/url_template.dart';
