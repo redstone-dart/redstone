@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Redstone.dart - Server-side microframework for Dart</title>
+
+  <!-- Bootstrap -->
+  <link href="/redstone.dart/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/redstone.dart/css/syntax.css" rel="stylesheet">
+  
+  <link href="/redstone.dart/css/documentation.css" rel="stylesheet">
+  
+  <link href="/redstone.dart/css/footer.css" rel="stylesheet">
+
+  <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+</head>
+
+
+    <body>
+
+    <nav class="navbar navbar-default" role="navigation">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="/redstone.dart">Redstone.dart</a>
+    </div>
+
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+        <li  class="active" ><a href="/redstone.dart/doc">Documentation</a></li>
+        <li><a href="http://www.dartdocs.org/documentation/redstone/0.5.5+1/index.html#redstone">API Reference</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+
+    <div class="container">
+  <div class="row">
+    <div class="col-md-3 hidden-xs hidden-sm sidebar">
+      <ul>
+        <ul class="nav sidenav">
+          <li>
+            <b>Quick Start Guide</b>
+            <ul class="nav">
+              <li ><a href="/redstone.dart/doc">Introduction</a></li>
+              <li ><a href="/redstone.dart/doc/Installation.html">Installation</a></li>
+              <li ><a href="/redstone.dart/doc/Feature-tour.html">Feature tour</a></li>
+            </ul>
+          </li>
+          <li>
+            <b>Reference</b>
+            <ul class="nav">
+              <li ><a href="/redstone.dart/doc/Routes.html">Routes</a></li>
+              <li ><a href="/redstone.dart/doc/Interceptors.html">Interceptors</a></li>
+              <li ><a href="/redstone.dart/doc/Error-handlers.html">Error handlers</a></li>
+              <li ><a href="/redstone.dart/doc/Groups.html">Groups</a></li>
+              <li ><a href="/redstone.dart/doc/Dependency-Injection.html">Dependency injection</a></li>
+              <li ><a href="/redstone.dart/doc/Importing-libraries.html">Importing libraries</a></li>
+              <li class="active" ><a href="/redstone.dart/doc/Plugin-API.html">Plugins</a></li>
+              <li ><a href="/redstone.dart/doc/Shelf-Middlewares.html">Shelf Middlewares</a></li>
+              <li ><a href="/redstone.dart/doc/Unit-test.html">Unit test</a></li>
+              <li ><a href="/redstone.dart/doc/Server-Configuration.html">Server Configuration</a></li>
+              <li ><a href="/redstone.dart/doc/Deploy.html">Deploy</a></li>
+            </ul>
+          </li>
+          <li>
+            <b>Plugins</b>
+            <ul class="nav">
+              <li ><a href="/redstone.dart/doc/redstone_mapper.html">redstone_mapper</a></li>
+              <li ><a href="/redstone.dart/doc/redstone_mapper_mongo.html">redstone_mapper_mongo</a></li>
+              <li ><a href="/redstone.dart/doc/redstone_mapper_pg.html">redstone_mapper_pg</a></li>
+            </ul>
+          </li>
+        </ul>
+      </ul>
+    </div>
+    <div class="col-md-9 col-xs-12">
+      <div class="section-title page-header">
+        <h1>Plugin API</h1>
+      </div>
+      <p>Redstone plugins can dynamically create new routes, interceptors, error handlers, parameter providers and response processors.</p>
+
+<p><strong>Note: See <a href="https://github.com/luizmineo/redstone_mapper">redstone_mapper</a> for a more complete serialization plugin</strong></p>
+
+<p>For example, if your app often needs to convert from json data to Dart objects, like this:</p>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Route</span><span class="p">(</span><span class="s2">&quot;/user&quot;</span><span class="p">,</span> <span class="nl">methods:</span> <span class="kd">const</span><span class="p">[</span><span class="n">app</span><span class="p">.</span><span class="n">POST</span><span class="p">])</span>
+<span class="n">printUser</span><span class="p">(</span><span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Body</span><span class="p">()</span> <span class="n">Map</span> <span class="n">json</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">User</span> <span class="n">user</span> <span class="o">=</span> <span class="k">new</span> <span class="n">User</span><span class="p">();</span>
+  <span class="n">user</span><span class="p">.</span><span class="n">fromJson</span><span class="p">(</span><span class="n">json</span><span class="p">);</span>
+  <span class="p">...</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>You can build a plugin to do this job for you. Example:</p>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="kd">class</span> <span class="nc">FromJson</span> <span class="p">{</span>
+
+  <span class="kd">const</span> <span class="n">FromJson</span><span class="p">();</span>
+
+<span class="p">}</span>
+
+<span class="n">FromJsonPlugin</span><span class="p">(</span><span class="n">app</span><span class="p">.</span><span class="n">Manager</span> <span class="n">manager</span><span class="p">)</span> <span class="p">{</span>
+
+  <span class="n">manager</span><span class="p">.</span><span class="n">addParameterProvider</span><span class="p">(</span><span class="n">FromJson</span><span class="p">,</span> <span class="p">(</span><span class="n">metadata</span><span class="p">,</span> <span class="n">type</span><span class="p">,</span> <span class="n">handlerName</span><span class="p">,</span> <span class="n">paramName</span><span class="p">,</span> <span class="n">req</span><span class="p">,</span> <span class="n">injector</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">req</span><span class="p">.</span><span class="n">bodyType</span> <span class="o">!=</span> <span class="n">app</span><span class="p">.</span><span class="n">JSON</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">throw</span> <span class="k">new</span> <span class="n">app</span><span class="p">.</span><span class="n">RequestException</span><span class="p">(</span>
+          <span class="s2">&quot;FromJson plugin - </span><span class="si">$</span><span class="n">handlerName</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;content-type must be &#39;application/json&#39;&quot;</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="n">ClassMirror</span> <span class="n">clazz</span> <span class="o">=</span> <span class="n">reflectClass</span><span class="p">(</span><span class="n">type</span><span class="p">);</span>
+    <span class="n">InstanceMirror</span> <span class="n">obj</span> <span class="o">=</span> <span class="n">clazz</span><span class="p">.</span><span class="n">newInstance</span><span class="p">(</span><span class="kd">const</span> <span class="n">Symbol</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">),</span> <span class="kd">const</span> <span class="p">[]);</span>
+    <span class="n">obj</span><span class="p">.</span><span class="n">invoke</span><span class="p">(</span><span class="err">#</span><span class="n">fromJson</span><span class="p">,</span> <span class="p">[</span><span class="n">req</span><span class="p">.</span><span class="n">body</span><span class="p">]);</span>
+    <span class="k">return</span> <span class="n">obj</span><span class="p">.</span><span class="n">reflectee</span><span class="p">;</span>
+  <span class="p">});</span>
+
+<span class="p">}</span>
+</code></pre></div>
+<p>Now, if you install <code>FromJsonPlugin</code>, you can use the <code>@FromJson</code> annotation:</p>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Route</span><span class="p">(</span><span class="s2">&quot;/user&quot;</span><span class="p">,</span> <span class="nl">methods:</span> <span class="kd">const</span><span class="p">[</span><span class="n">app</span><span class="p">.</span><span class="n">POST</span><span class="p">])</span>
+<span class="n">printUser</span><span class="p">(</span><span class="err">@</span><span class="n">FromJson</span><span class="p">()</span> <span class="n">User</span> <span class="n">user</span><span class="p">)</span> <span class="p">{</span>
+  <span class="p">...</span>
+<span class="p">}</span>
+
+<span class="n">main</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">app</span><span class="p">.</span><span class="n">addPlugin</span><span class="p">(</span><span class="n">FromJsonPlugin</span><span class="p">);</span>
+  <span class="n">app</span><span class="p">.</span><span class="n">setupConsoleLog</span><span class="p">();</span>
+  <span class="n">app</span><span class="p">.</span><span class="n">start</span><span class="p">();</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Besides, you can also build a plugin to convert from dart objects to json data:</p>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="kd">class</span> <span class="nc">ToJson</span> <span class="p">{</span>
+
+  <span class="kd">const</span> <span class="n">ToJson</span><span class="p">();</span>
+
+<span class="p">}</span>
+
+<span class="n">ToJsonPlugin</span><span class="p">(</span><span class="n">app</span><span class="p">.</span><span class="n">Manager</span> <span class="n">manager</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">manager</span><span class="p">.</span><span class="n">addResponseProcessor</span><span class="p">(</span><span class="n">ToJson</span><span class="p">,</span> <span class="p">(</span><span class="n">metadata</span><span class="p">,</span> <span class="n">handlerName</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">injector</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">value</span> <span class="o">==</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="n">value</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">value</span><span class="p">.</span><span class="n">toJson</span><span class="p">();</span>
+  <span class="p">});</span>
+<span class="p">}</span>
+</code></pre></div><div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Route</span><span class="p">(</span><span class="s2">&quot;/user/find&quot;</span><span class="p">)</span>
+<span class="err">@</span><span class="n">ToJson</span><span class="p">()</span>
+<span class="n">findUser</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="k">new</span> <span class="n">Future</span><span class="p">(()</span> <span class="p">{</span>
+    <span class="p">...</span>
+    <span class="k">return</span> <span class="n">user</span><span class="p">;</span>
+  <span class="p">});</span>
+<span class="p">}</span>
+
+<span class="n">main</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">app</span><span class="p">.</span><span class="n">addPlugin</span><span class="p">(</span><span class="n">ToJsonPlugin</span><span class="p">);</span>
+  <span class="n">app</span><span class="p">.</span><span class="n">setupConsoleLog</span><span class="p">();</span>
+  <span class="n">app</span><span class="p">.</span><span class="n">start</span><span class="p">();</span>
+<span class="p">}</span>
+</code></pre></div>
+      <div class="section-footer">
+        <div class="row">
+          <div class="col-xs-6">
+            <div class="pull-right">
+              
+              <a href="/redstone.dart/doc/Importing-libraries.html" class="btn btn-primary" role="button"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
+              
+            </div>
+          </div>
+          <div class="col-xs-6">
+            <div class="pull-left">
+              
+              <a href="/redstone.dart/doc/Shelf-Middlewares.html" class="btn btn-primary" role="button">Next <span class="glyphicon glyphicon-arrow-right"></span></a>
+              
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="container-fluid footer">
+  <div class="row">
+    <div class="col-xs-12">
+      <div class="footer-panel">
+        <ul class="gh-links">
+          <li>
+            <iframe src="http://ghbtns.com/github-btn.html?user=luizmineo&repo=redstone.dart&type=watch&count=true" allowtransparency="true" frameborder="0" scrolling="0" width="110" height="20"></iframe>
+          </li>
+          <li>
+            <iframe src="http://ghbtns.com/github-btn.html?user=luizmineo&repo=redstone.dart&type=fork&count=true" allowtransparency="true" frameborder="0" scrolling="0" width="110" height="20"></iframe>
+          </li>
+          <li>
+            <iframe src="http://ghbtns.com/github-btn.html?user=luizmineo&repo=redstone.dart&type=follow" allowtransparency="true" frameborder="0" scrolling="0" width="150" height="20"></iframe>
+          </li>
+        </ul>
+        <p>Built and mantained by <a href="https://github.com/luizmineo" target="_blank">Luiz Mineo</a>. Code licensed under <a href="https://github.com/luizmineo/redstone.dart/blob/master/LICENSE" target="_blank">MIT</a>.</p>
+        <ul class="footer-links">
+          <li>Currently v0.5.5+1</li>
+          <li>-</li>
+          <li><a href="https://github.com/luizmineo/redstone.dart">Github</a></li>
+          <li>-</li>
+          <li><a href="/redstone.dart/doc">Documentation</a></li>
+          <li>-</li>
+          <li><a href="http://www.dartdocs.org/documentation/redstone/0.5.5+1/index.html#redstone">API Reference</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/redstone.dart/js/jquery-1.11.0.min.js"></script>
+<script src="/redstone.dart/js/bootstrap.min.js"></script>
+
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-50600290-1', 'luizmineo.github.io');
+  ga('send', 'pageview');
+
+</script>
+
+    </body>
+</html>
