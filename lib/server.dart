@@ -215,6 +215,23 @@ abstract class Chain {
 }
 
 /**
+ * An error response.
+ * 
+ * If a route returns or throws an [ErrorResponse], then
+ * the framework will serialize [error], and create a
+ * response with status [statusCode].
+ * 
+ */ 
+class ErrorResponse {
+  
+  final int statusCode;
+  final Object error;
+  
+  ErrorResponse(this.statusCode, this.error);
+  
+}
+
+/**
  * User credentials from request
  * 
  */

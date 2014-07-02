@@ -117,7 +117,8 @@ void _process(UnparsedRequest req, _RequestState state,
 }
 
 Future _handleError(String message, Object error, {StackTrace stack, Request req, 
-                  int statusCode, Level logLevel: Level.SEVERE}) {
+                  int statusCode, Level logLevel: Level.SEVERE, 
+                  bool printErrorPage: true}) {
   
   if (error is shelf.HijackException) {
     return new Future.error(error);
@@ -142,7 +143,8 @@ Future _handleError(String message, Object error, {StackTrace stack, Request req
     _RequestState state = Zone.current[#state];
     if (!state.errorHandlerInvoked) {
       state.errorHandlerInvoked = true;
-      return _notifyError(statusCode, req.url.path, error, stack);
+      return _notifyError(statusCode, req.url.path, 
+          error: error, stack: stack, printErrorPage: printErrorPage);
     }
 
   });
@@ -364,6 +366,11 @@ Future _writeResponse(respValue, String responseType, {int statusCode: 200,
 
   Completer completer = new Completer();
   
+  if (respValue != null && respValue is ErrorResponse) {
+    statusCode = respValue.statusCode;
+    respValue = respValue.error;
+  }
+  
   if (abortIfChainInterrupted && chain.interrupted) {
     
     completer.complete();
@@ -385,11 +392,20 @@ Future _writeResponse(respValue, String responseType, {int statusCode: 200,
 
   } else if (respValue is Future) {
 
-    (respValue as Future).then((fValue) =>
-      _writeResponse(fValue, responseType, 
+    respValue.then((fValue) {
+      return _writeResponse(fValue, responseType, 
           processors: processors,
-          abortIfChainInterrupted: abortIfChainInterrupted).then((_) =>
-              completer.complete())).catchError((e, s) => completer.completeError(e, s));
+          abortIfChainInterrupted: abortIfChainInterrupted);
+    }).then((_) {
+      completer.complete();
+    }).catchError((e) {
+      return _writeResponse(e, responseType, 
+                processors: processors,
+                abortIfChainInterrupted: abortIfChainInterrupted);
+    }, test: (e) => e is ErrorResponse)
+    .catchError((e, s) {
+      completer.completeError(e, s);
+    });
 
   } else if (processors != null && !processors.isEmpty) { 
     
@@ -464,13 +480,16 @@ _ErrorHandler _findErrorHandler(int statusCode, String path) {
   }, orElse: () => null);
 }
 
-Future _notifyError(int statusCode, String resource, [Object error, StackTrace stack]) {
+Future _notifyError(int statusCode, String resource, 
+                                   {Object error, 
+                                    StackTrace stack, 
+                                    bool printErrorPage: true}) {
 
   return new Future.sync(() {
     _ErrorHandler handler = _findErrorHandler(statusCode, request.url.path);
     if (handler != null) {
       return handler.errorHandler();
-    } else {
+    } else if (printErrorPage) {
       _writeErrorPage(statusCode, resource, error, stack);
     }
   });

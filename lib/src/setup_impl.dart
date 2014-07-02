@@ -759,19 +759,39 @@ void _configureTarget(Route route, ObjectMirror owner,
         }
       });
 
+      var errorResponse;
+      var respValue;
       _logger.finer("Invoking target $handlerName");
-      InstanceMirror resp = owner.invoke(handler.simpleName, posParams, namedParams);
+      InstanceMirror resp;
+      try {
+        resp = owner.invoke(handler.simpleName, posParams, namedParams);
+        
+        if (resp.type == _voidType) {
+          return null;
+        }
 
-      if (resp.type == _voidType) {
-        return null;
+        respValue = resp.reflectee;
+        if (respValue is ErrorResponse) {
+          errorResponse = respValue;
+        }
+      } on ErrorResponse catch(err) {
+        errorResponse = respValue = err;
       }
-
-      var respValue = resp.reflectee;
 
       _logger.finer("Writing response for target $handlerName");
       return _writeResponse(respValue, route.responseType, 
-                            abortIfChainInterrupted: true,
-                            processors: responseProcessors);
+        abortIfChainInterrupted: true,
+        processors: responseProcessors)
+          .then((_) {
+             if (errorResponse != null) {
+               chain.error = errorResponse.error;
+               return _handleError("ErrorResponse returned by $handlerName", 
+                   errorResponse.error, req: request, 
+                   statusCode: errorResponse.statusCode,
+                   logLevel: Level.FINER,
+                   printErrorPage: false);
+             }
+          });
 
     });    
 

@@ -369,6 +369,14 @@ main() {
         expect(resp.mockContent, equals("server_error sub_error_handler"));
       });
     });
+    
+    test("Error response", () {
+      var req = new MockRequest("/error_response");
+      return app.dispatch(req).then((resp) {
+        expect(resp.statusCode, equals(400));
+        expect(resp.mockContent, equals("handling: error_response"));
+      });
+    });
   });
   
   group("Chain:", () {

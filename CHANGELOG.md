@@ -1,7 +1,10 @@
+## v0.5.5
+* Added the `ErrorResponse` class. A route can return or throw an ErrorResponse, to respond a request with a status code different than 200. 
+
 ## v0.5.4
 * Fix: Response processors are not being invoked when a route returns a `Future` (Plugin API).
 * Code cleanup (Thanks to [vicb](https://github.com/vicb) PR #20)
-* Added the QueryMap class, a Map wrapper that allows the use of the dot notation to retreive its values (Thanks to [digitalfiz](https://github.com/digitalfiz) issue #18)
+* Added the `QueryMap` class, a Map wrapper that allows the use of the dot notation to retreive its values (Thanks to [digitalfiz](https://github.com/digitalfiz) issue #18)
     * `app.request.queryParams`, `app.request.headers` and `app.request.attributes` now returns a QueryMap.
     * The request body can also be retrieved as a QueryMap.
 * Added the `handleRequest(HttpRequest)` method.

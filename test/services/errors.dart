@@ -60,3 +60,15 @@ subHandler() => throw "server_error";
 @app.ErrorHandler(500, urlPattern: "/sub_handler?")
 subErrorHandler() => new shelf.Response.internalServerError(
     body: "${app.chain.error} sub_error_handler");
+
+@app.Route("/error_response")
+errorResponse() => throw new app.ErrorResponse(400, "error_response");
+
+@app.ErrorHandler(400, urlPattern: "/error_response")
+handleErrorResponse() {
+  return app.response.readAsString().then((resp) {
+    return new shelf.Response(app.response.statusCode, 
+                              body: "handling: $resp",
+                              headers: app.response.headers);
+  });
+}
