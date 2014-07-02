@@ -1,3 +1,6 @@
+## v0.5.5+1
+* Fixed issue with docgen.
+
 ## v0.5.5
 * Added the `ErrorResponse` class. A route can return or throw an ErrorResponse, to respond a request with a status code different than 200. 
 

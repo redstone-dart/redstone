@@ -165,7 +165,7 @@ class MockRequest extends HttpRequestParser implements UnparsedRequest {
  *     });
  *
  */
-class MockHttpSession extends DelegatingMap<String, String> implements HttpSession {
+class MockHttpSession extends DelegatingMap implements HttpSession {
 
   final String id;
 

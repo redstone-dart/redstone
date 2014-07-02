@@ -2,7 +2,7 @@ library redstone_query_map;
 
 import 'dart:mirrors';
 
-import 'package:collection/collection.dart' show DelegatingMap;
+import 'package:collection/collection.dart' show DelegatingMap, DelegatingList;
 
 /**
  * A Map that allows the use of the dot notation to access
@@ -25,6 +25,9 @@ class QueryMap extends DelegatingMap {
       if (value is! QueryMap && value is Map) {
         value = new QueryMap(value);
         this[key] = value;
+      } else if (value is! _ListWrapper && value is List) {
+        value = new _ListWrapper.wrap(value);
+        this[key] = value;
       }
       return value;
     } else if(defaultValue != null) {
@@ -42,5 +45,22 @@ class QueryMap extends DelegatingMap {
     } else {
       super.noSuchMethod(invocation);
     }
+  }
+}
+
+class _ListWrapper extends DelegatingList {
+  
+  _ListWrapper(List list) : super(list);
+  
+  factory _ListWrapper.wrap(List list) {
+    list = list.map((e) {
+      if (e is Map && e is! QueryMap) {
+        return new QueryMap(e);
+      } else if (e is List && e is! _ListWrapper) {
+        return new _ListWrapper.wrap(e);
+      }
+      return e;
+    }).toList();
+    return new _ListWrapper(list);
   }
 }
