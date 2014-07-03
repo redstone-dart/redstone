@@ -5,20 +5,26 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="http://redstonedart.org">
   <title>Redstone.dart - Server-side microframework for Dart</title>
 
   <!-- Bootstrap -->
-  <link href="/redstone.dart/css/bootstrap.min.css" rel="stylesheet">
-  <link href="/redstone.dart/css/syntax.css" rel="stylesheet">
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/css/syntax.css" rel="stylesheet">
   
-  <link href="/redstone.dart/css/index.css" rel="stylesheet">
+  <link href="/css/index.css" rel="stylesheet">
     
-  <link href="/redstone.dart/css/footer.css" rel="stylesheet">
+  <link href="/css/footer.css" rel="stylesheet">
 
   <!--[if lt IE 9]>
     <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
     <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
   <![endif]-->
+  <script>
+    if (window.location.href.indexOf('http://luizmineo.github.com') === 0) {
+      window.location.href = 'http://redstonedart.org/';
+    }
+  </script>
 </head>
 
 
@@ -33,12 +39,12 @@
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="/redstone.dart">Redstone.dart</a>
+      <a class="navbar-brand" href="/">Redstone.dart</a>
     </div>
 
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
       <ul class="nav navbar-nav">
-        <li ><a href="/redstone.dart/doc">Documentation</a></li>
+        <li ><a href="/doc">Documentation</a></li>
         <li><a href="http://www.dartdocs.org/documentation/redstone/0.5.6/index.html#redstone">API Reference</a></li>
       </ul>
     </div>
@@ -82,7 +88,7 @@
       <div class="panel panel-default feature-panel">
         <div class="panel-heading">Powerful</div>
         <div class="panel-body">
-          Includes support for <b>request interceptors</b>, <b>error handlers</b>, <b>dependency injection</b> and <a href="/redstone.dart/doc/Feature-tour.html"> many other features</a>.
+          Includes support for <b>request interceptors</b>, <b>error handlers</b>, <b>dependency injection</b> and <a href="/doc/Feature-tour.html"> many other features</a>.
           <div class="highlight"><pre><code class="dart"><a href="#" class="dart-popover" data-toggle="popover" title="@Interceptor" data-html="true" data-trigger="hover focus" data-content="Use the @Interceptor annotation to define a request interceptor.">@app.Interceptor</a><span class="p">(</span><span class="s1">r&#39;/admin/.*&#39;</span><span class="p">)</span>
 <span class="n">adminFilter</span><span class="p">()</span> <span class="p">{</span>
   <span class="k">if</span> <span class="p">(</span><span class="n">app</span><span class="p">.</span><span class="n">request</span><span class="p">.</span><span class="n">session</span><span class="p">[</span><span class="s2">&quot;username&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
@@ -145,7 +151,7 @@
           <li>-</li>
           <li><a href="https://github.com/luizmineo/redstone.dart">Github</a></li>
           <li>-</li>
-          <li><a href="/redstone.dart/doc">Documentation</a></li>
+          <li><a href="/doc">Documentation</a></li>
           <li>-</li>
           <li><a href="http://www.dartdocs.org/documentation/redstone/0.5.6/index.html#redstone">API Reference</a></li>
         </ul>
@@ -154,10 +160,10 @@
   </div>
 </div>
 
-<script src="/redstone.dart/js/jquery-1.11.0.min.js"></script>
-<script src="/redstone.dart/js/bootstrap.min.js"></script>
+<script src="/js/jquery-1.11.0.min.js"></script>
+<script src="/js/bootstrap.min.js"></script>
 
-<script src="/redstone.dart/js/index.js"></script>
+<script src="/js/index.js"></script>
 
 
 <script>
@@ -166,7 +172,7 @@
   m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
   })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
-  ga('create', 'UA-50600290-1', 'luizmineo.github.io');
+  ga('create', 'UA-50600290-1', 'auto');
   ga('send', 'pageview');
 
 </script>
