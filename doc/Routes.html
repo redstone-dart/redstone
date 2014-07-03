@@ -39,7 +39,7 @@
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
       <ul class="nav navbar-nav">
         <li  class="active" ><a href="/redstone.dart/doc">Documentation</a></li>
-        <li><a href="http://www.dartdocs.org/documentation/redstone/0.5.5+1/index.html#redstone">API Reference</a></li>
+        <li><a href="http://www.dartdocs.org/documentation/redstone/0.5.6/index.html#redstone">API Reference</a></li>
       </ul>
     </div>
   </div>
@@ -124,7 +124,7 @@
 <div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Route</span><span class="p">(</span><span class="s2">&quot;/user/:id&quot;</span><span class="p">)</span>
 <span class="n">getUser</span><span class="p">(</span><span class="kt">int</span> <span class="n">id</span><span class="p">)</span> <span class="p">{</span>
   <span class="k">if</span> <span class="p">(</span><span class="n">id</span> <span class="o">&lt;=</span> <span class="m">0</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">throw</span> <span class="k">new</span> <span class="n">ErrorResponse</span><span class="p">(</span><span class="m">400</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;error&quot;</span><span class="o">:</span> <span class="s2">&quot;invalid id&quot;</span><span class="p">});</span>
+    <span class="k">throw</span> <span class="k">new</span> <span class="n">app</span><span class="p">.</span><span class="n">ErrorResponse</span><span class="p">(</span><span class="m">400</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;error&quot;</span><span class="o">:</span> <span class="s2">&quot;invalid id&quot;</span><span class="p">});</span>
   <span class="p">}</span>
   <span class="p">...</span>
 <span class="p">}</span>
@@ -316,13 +316,13 @@
         </ul>
         <p>Built and mantained by <a href="https://github.com/luizmineo" target="_blank">Luiz Mineo</a>. Code licensed under <a href="https://github.com/luizmineo/redstone.dart/blob/master/LICENSE" target="_blank">MIT</a>.</p>
         <ul class="footer-links">
-          <li>Currently v0.5.5+1</li>
+          <li>Currently v0.5.6</li>
           <li>-</li>
           <li><a href="https://github.com/luizmineo/redstone.dart">Github</a></li>
           <li>-</li>
           <li><a href="/redstone.dart/doc">Documentation</a></li>
           <li>-</li>
-          <li><a href="http://www.dartdocs.org/documentation/redstone/0.5.5+1/index.html#redstone">API Reference</a></li>
+          <li><a href="http://www.dartdocs.org/documentation/redstone/0.5.6/index.html#redstone">API Reference</a></li>
         </ul>
       </div>
     </div>
