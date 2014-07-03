@@ -1,3 +1,6 @@
+## v0.5.6
+* Fixed logging issues.
+
 ## v0.5.5+1
 * Fixed issue with docgen.
 

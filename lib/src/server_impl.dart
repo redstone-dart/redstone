@@ -305,7 +305,8 @@ class _ChainImpl implements Chain {
                 _currentInterceptor.runInterceptor()).catchError((e, s) {
               if (!_interrupted) {
                 error = e;
-                return _handleError("Failed to execute ${_target.handlerName}", e, 
+                var name = _currentInterceptor.interceptorName;
+                return _handleError("Failed to execute interceptor $name", e, 
                     stack: s, req: request).then((_) => _invokeCallbacks());
               }
             });
@@ -313,7 +314,8 @@ class _ChainImpl implements Chain {
             new Future.sync(() => _currentInterceptor.runInterceptor()).catchError((e, s) {
               if (!_interrupted) {
                 error = e;
-                return _handleError("Failed to execute ${_target.handlerName}", e, 
+                var name = _currentInterceptor.interceptorName;
+                return _handleError("Failed to execute interceptor $name", e, 
                     stack: s, req: request).then((_) => _invokeCallbacks());
               }
             });
@@ -330,8 +332,10 @@ class _ChainImpl implements Chain {
           }).catchError((e, s) {
             if (!_interrupted) {
               error = e;
+              var level = e is RequestException ? Level.FINE : Level.SEVERE;
               return _handleError("Failed to execute ${_target.handlerName}", e, 
-                  stack: s, req: request).then((_) => _invokeCallbacks());
+                  stack: s, logLevel: level, 
+                  req: request).then((_) => _invokeCallbacks());
             }
           });
         });
