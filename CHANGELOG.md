@@ -1,3 +1,6 @@
+## v0.5.7
+* Improved plugin API: It's now possible to inspect installed routes, interceptors, error handlers and groups.
+
 ## v0.5.6
 * Fixed logging issues.
 

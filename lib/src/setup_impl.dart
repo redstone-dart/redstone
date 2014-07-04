@@ -22,44 +22,6 @@ final List<_ResponseHandler> _responseProcessors = [];
 shelf.Pipeline _initHandler = null;
 shelf.Handler _finalHandler = null;
 
-final shelf.Middleware _mainMiddleware = (shelf.Handler handler) {
-  return (shelf.Request shelfRequest) {
-    var completer = new Completer();
-    runZoned(() {
-      var resp = handler(shelfRequest);
-      if (resp is Future) {
-        resp.then((r) {
-          if (!completer.isCompleted) {
-            _commitResponse(r, completer);
-          }
-        });
-      } else {
-        if (!completer.isCompleted) {
-          _commitResponse(resp, completer);
-        }
-      }
-    }, onError: (e, s) {
-      if (!completer.isCompleted) {
-        _handleError("Failed to handle request.", e, 
-           stack: s, req: request)
-             .then((_) {
-               if (!completer.isCompleted) {
-                _commitResponse(response, completer);
-               }
-             });
-      }
-    });
-    return completer.future;
-  };
-};
-
-void _commitResponse(shelf.Response resp, Completer completer) {
-  if (!resp.headers.containsKey(HttpHeaders.SERVER)) {
-    resp = resp.change(headers: const {HttpHeaders.SERVER: "dart:io with Redstone.dart/Shelf"});
-  }
-  completer.complete(resp);
-}
-
 final Set<Symbol> _blacklistSet = _buildBlacklistSet();
 
 Injector _injector;
@@ -202,6 +164,9 @@ class _ParamHandler {
   
   _ParamHandler(this.metadataType, this.parameterProvider);
   
+  const _ParamHandler.defaultProvider() : 
+      metadataType = null,
+      parameterProvider = const _DefaultParamProvider();
 }
 
 class _ResponseHandler {
@@ -348,9 +313,8 @@ List<_Lib> _scanLibraries(Iterable<LibraryMirror> libraries) {
 
 void _scanHandlers([List<Symbol> libraries]) {
   
-  //install plugins
+  
   _ManagerImpl manager = new _ManagerImpl();
-  manager.installPlugins();
   
   //scan libraries
   var mirrorSystem = currentMirrorSystem();
@@ -402,10 +366,10 @@ void _scanHandlers([List<Symbol> libraries]) {
   _modules.add(baseModule);
   _injector = defaultInjector(modules: _modules);
   
-  routes.forEach((r) => _configureTarget(r.metadata, r.lib.def, r.method, 
-      urlPrefix: r.lib.conf.urlPrefix));
-  errors.forEach((e) => _configureErrorHandler(e.metadata, e.lib.def, e.method, 
-      urlPrefix: e.lib.conf.urlPrefix));
+  routes.forEach((r) => _configureTarget(manager.serverMetadata, r.metadata, 
+      r.lib.def, r.method, urlPrefix: r.lib.conf.urlPrefix));
+  errors.forEach((e) => _configureErrorHandler(manager.serverMetadata, 
+      e.metadata, e.lib.def, e.method, urlPrefix: e.lib.conf.urlPrefix));
   
   var currentLevel = 0;
   var levelHist = [];
@@ -422,7 +386,8 @@ void _scanHandlers([List<Symbol> libraries]) {
         levelHist.where((l) => l != null))
         ..add(i.metadata.chainIdx);
     
-    _configureInterceptor(i.metadata, i.lib.def, i.method, 
+    _configureInterceptor(manager.serverMetadata, i.metadata, 
+          i.lib.def, i.method, 
           urlPrefix: i.lib.conf.urlPrefix, chainIdxByLevel: chainIdxByLevel);
   });
   
@@ -438,9 +403,14 @@ void _scanHandlers([List<Symbol> libraries]) {
       levelHist = new List.from(levelHist.sublist(0, currentLevel));
     }
     
-    _configureGroup(g.metadata, g.clazz, _injector, 
+    _configureGroup(manager.serverMetadata, g.metadata, 
+          g.clazz, _injector, 
           levelHist, urlPrefix: g.lib.conf.urlPrefix);
   });
+  
+  
+  //install plugins
+  manager._installPlugins();
   
   _targets.addAll(_targetsCache.values.map((t) {
     if (t is _TargetWrapper) {
@@ -484,6 +454,7 @@ void _scanHandlers([List<Symbol> libraries]) {
       }
     });
   });
+  
 }
 
 void _clearHandlers() {
@@ -503,7 +474,8 @@ void _clearHandlers() {
 
 }
 
-void _configureGroup(Group group, ClassMirror clazz, Injector injector, 
+void _configureGroup(_ServerMetadataImpl serverMetadata,
+                     Group group, ClassMirror clazz, Injector injector, 
                      List<int> chainIdxByLevel, {String urlPrefix}) {
 
   var className = MirrorSystem.getName(clazz.qualifiedName);
@@ -521,6 +493,8 @@ void _configureGroup(Group group, ClassMirror clazz, Injector injector,
   if (urlPrefix != null) {
     prefix = _joinUrl(urlPrefix, prefix);
   }
+  
+  var groupMetadata = serverMetadata._addGroup(group, clazz);
 
   clazz.instanceMembers.values.forEach((MethodMirror method) {
 
@@ -537,12 +511,12 @@ void _configureGroup(Group group, ClassMirror clazz, Injector injector,
             allowMultipartRequest: info.allowMultipartRequest,
             matchSubPaths: info.matchSubPaths);
         
-        _configureTarget(route, instance, method);
+        _configureTarget(groupMetadata, route, instance, method);
       } else if (metadata.reflectee is Route) {
         
         Route route = metadata.reflectee as Route;
 
-        _configureTarget(route, instance, method, urlPrefix: prefix);
+        _configureTarget(groupMetadata, route, instance, method, urlPrefix: prefix);
       } else if (metadata.reflectee is Interceptor) {
 
         Interceptor interceptor = metadata.reflectee as Interceptor;
@@ -551,70 +525,77 @@ void _configureGroup(Group group, ClassMirror clazz, Injector injector,
             chainIdxByLevel.where((l) => l != null))
                 ..add(interceptor.chainIdx);
 
-        _configureInterceptor(interceptor, instance, method, 
+        _configureInterceptor(groupMetadata, interceptor, instance, method, 
             urlPrefix: prefix, chainIdxByLevel: chainIdxByLevel);
       } else if (metadata.reflectee is ErrorHandler) {
         
         ErrorHandler errorHandler = metadata.reflectee as ErrorHandler;
         
-        _configureErrorHandler(errorHandler, instance, method, urlPrefix: prefix);
+        _configureErrorHandler(groupMetadata, errorHandler, 
+                               instance, method, urlPrefix: prefix);
       }
     });
 
   });
 }
 
-void _configureInterceptor(Interceptor interceptor, ObjectMirror owner, 
+void _configureInterceptor(_ServerMetadataImpl serverMetadata,
+                           Interceptor interceptor, ObjectMirror owner, 
                            MethodMirror handler, 
                            {String urlPrefix, List<int> chainIdxByLevel}) {
 
   var handlerName = MirrorSystem.getName(handler.qualifiedName);
   
-  var posParams = [];
-  var namedParams = {};
-  handler.parameters.forEach((ParameterMirror param) {
-    bool hasProvider = false;
-    if (!param.metadata.isEmpty) {
-      var metadata = param.metadata[0];
-      List<_ParamHandler> params = _customParams[ERROR_HANDLER];
-      if (params != null) {
-        _ParamHandler customParam = params.firstWhere((_ParamHandler p) => 
-            metadata.reflectee.runtimeType == p.metadataType, orElse: () => null);
-        if (customParam != null) {
-          var paramName = MirrorSystem.getName(param.simpleName);
-          var type = param.type.hasReflectedType ? param.type.reflectedType : null;
-          var defaultValue = param.hasDefaultValue ? param.defaultValue : null;
-          var value = customParam.parameterProvider(metadata.reflectee, 
-              type, handlerName, paramName, request, _injector);
-          if (value == null) {
-            value = defaultValue;
-          }
-          if (param.isNamed) {
-            namedParams[param.simpleName] = value;
-          } else {
-            posParams.add(value);
-          }
-          
-          hasProvider = true;
-        }
-      }
-    }
-    if (!hasProvider) {
-      try {
-        if (param.isNamed) {
-          namedParams[param.simpleName] = _injector.get(param.type.reflectedType);
-        } else {
-          posParams.add(_injector.get(param.type.reflectedType));
-        }
-      } catch (_) {
-        var paramName = MirrorSystem.getName(param.simpleName);
-        throw new SetupException(handlerName, "Invalid parameter: Can't inject $paramName");
-      }
-    }
-  });
+  var posParams;
+  var namedParams;
 
   var caller = () {
-
+    if (posParams == null) {
+      posParams = [];
+      namedParams = {};
+      
+      handler.parameters.forEach((ParameterMirror param) {
+        bool hasProvider = false;
+        if (!param.metadata.isEmpty) {
+          var metadata = param.metadata[0];
+          List<_ParamHandler> params = _customParams[INTERCEPTOR];
+          if (params != null) {
+            _ParamHandler customParam = params.firstWhere((_ParamHandler p) => 
+                metadata.reflectee.runtimeType == p.metadataType, orElse: () => null);
+            if (customParam != null) {
+              var paramName = MirrorSystem.getName(param.simpleName);
+              var type = param.type.hasReflectedType ? param.type.reflectedType : null;
+              var defaultValue = param.hasDefaultValue ? param.defaultValue : null;
+              var value = customParam.parameterProvider(metadata.reflectee, 
+                  type, handlerName, paramName, request, _injector);
+              if (value == null) {
+                value = defaultValue;
+              }
+              if (param.isNamed) {
+                namedParams[param.simpleName] = value;
+              } else {
+                posParams.add(value);
+              }
+              
+              hasProvider = true;
+            }
+          }
+        }
+        if (!hasProvider) {
+          try {
+            if (param.isNamed) {
+              namedParams[param.simpleName] = _injector.get(param.type.reflectedType);
+            } else {
+              posParams.add(_injector.get(param.type.reflectedType));
+            }
+          } catch (_) {
+            var paramName = MirrorSystem.getName(param.simpleName);
+            throw new SetupException(handlerName, "Invalid parameter: Can't inject $paramName");
+          }
+        }
+      });
+    }
+    
     _logger.finer("Invoking interceptor: $handlerName");
     owner.invoke(handler.simpleName, posParams, namedParams);
 
@@ -633,61 +614,69 @@ void _configureInterceptor(Interceptor interceptor, ObjectMirror owner,
   _interceptors.add(new _Interceptor(new RegExp(url), name,
                                      chainIdxByLevel, interceptor.parseRequestBody, 
                                      caller));
+  
+  serverMetadata._addInterceptor(interceptor, handler);
 
   _logger.info("Configured interceptor for $url : $handlerName");
 }
 
-void _configureErrorHandler(ErrorHandler errorHandler, 
+void _configureErrorHandler(_ServerMetadataImpl serverMetadata,
+                            ErrorHandler errorHandler, 
                             ObjectMirror owner, MethodMirror handler, 
                             {String urlPrefix}) {
 
   var handlerName = MirrorSystem.getName(handler.qualifiedName);
   
-  var posParams = [];
-  var namedParams = {};
-  handler.parameters.forEach((ParameterMirror param) {
-    bool hasProvider = false;
-    if (!param.metadata.isEmpty) {
-      var metadata = param.metadata[0];
-      List<_ParamHandler> params = _customParams[ERROR_HANDLER];
-      if (params != null) {
-        _ParamHandler customParam = params.firstWhere((_ParamHandler p) => 
-            metadata.reflectee.runtimeType == p.metadataType, orElse: () => null);
-        if (customParam != null) {
-          var paramName = MirrorSystem.getName(param.simpleName);
-          var type = param.type.hasReflectedType ? param.type.reflectedType : null;
-          var defaultValue = param.hasDefaultValue ? param.defaultValue : null;
-          var value = customParam.parameterProvider(metadata.reflectee, 
-              type, handlerName, paramName, request, _injector);
-          if (value == null) {
-            value = defaultValue;
-          }
-          if (param.isNamed) {
-            namedParams[param.simpleName] = value;
-          } else {
-            posParams.add(value);
-          }
-          
-          hasProvider = true;
-        }
-      }
-    }
-    
-    if (!hasProvider) {
-      try {
-        if (param.isNamed) {
-          namedParams[param.simpleName] = _injector.get(param.type.reflectedType);
-        } else {
-          posParams.add(_injector.get(param.type.reflectedType));
-        }
-      } catch (_) {
-        var paramName = MirrorSystem.getName(param.simpleName);
-        throw new SetupException(handlerName, "Invalid parameter: Can't inject $paramName");
-      }
-    }
-  });
+  var posParams;
+  var namedParams;
 
   var caller = () {
+    if (posParams == null) {
+      posParams = [];
+      namedParams = {};
+      
+      handler.parameters.forEach((ParameterMirror param) {
+        bool hasProvider = false;
+        if (!param.metadata.isEmpty) {
+          var metadata = param.metadata[0];
+          List<_ParamHandler> params = _customParams[ERROR_HANDLER];
+          if (params != null) {
+            _ParamHandler customParam = params.firstWhere((_ParamHandler p) => 
+                metadata.reflectee.runtimeType == p.metadataType, orElse: () => null);
+            if (customParam != null) {
+              var paramName = MirrorSystem.getName(param.simpleName);
+              var type = param.type.hasReflectedType ? param.type.reflectedType : null;
+              var defaultValue = param.hasDefaultValue ? param.defaultValue : null;
+              var value = customParam.parameterProvider(metadata.reflectee, 
+                  type, handlerName, paramName, request, _injector);
+              if (value == null) {
+                value = defaultValue;
+              }
+              if (param.isNamed) {
+                namedParams[param.simpleName] = value;
+              } else {
+                posParams.add(value);
+              }
+              
+              hasProvider = true;
+            }
+          }
+        }
+        
+        if (!hasProvider) {
+          try {
+            if (param.isNamed) {
+              namedParams[param.simpleName] = _injector.get(param.type.reflectedType);
+            } else {
+              posParams.add(_injector.get(param.type.reflectedType));
+            }
+          } catch (_) {
+            var paramName = MirrorSystem.getName(param.simpleName);
+            throw new SetupException(handlerName, "Invalid parameter: Can't inject $paramName");
+          }
+        }
+      });
+    }
 
     _logger.finer("Invoking error handler: $handlerName");
     var value = owner.invoke(handler.simpleName, posParams, namedParams);
@@ -719,28 +708,35 @@ void _configureErrorHandler(ErrorHandler errorHandler,
       new RegExp(url) : null;
   handlers.add(new _ErrorHandler(errorHandler.statusCode, 
       pattern, name, caller));
+  
+  serverMetadata._addErrorHandler(errorHandler, handler);
 
   var urlInfo = url != null ? " - $url" : "";
   _logger.info("Configured error handler for status ${errorHandler.statusCode} $urlInfo : $handlerName");
 }
 
-void _configureTarget(Route route, ObjectMirror owner, 
+void _configureTarget(_ServerMetadataImpl serverMetadata, 
+                      Route route, ObjectMirror owner, 
                       MethodMirror handler, {String urlPrefix}) {
 
   var paramProcessors = _buildParamProcesors(handler);
   var handlerName = MirrorSystem.getName(handler.qualifiedName);
   
-  var responseProcessors = [];
-  handler.metadata.forEach((m) {
-    var proc = _responseProcessors.firstWhere((p) => 
-        m.reflectee.runtimeType == p.metadataType, orElse: () => null);
-    if (proc != null) {
-      responseProcessors.add(
-          new _ResponseHandlerInstance(m.reflectee, handlerName, proc.processor));
-    }
-  });
+  var responseProcessors = null;
 
   var caller = (UrlMatch match, Request request) {
+    
+    if (responseProcessors == null) {
+      responseProcessors = [];
+      handler.metadata.forEach((m) {
+        var proc = _responseProcessors.firstWhere((p) => 
+            m.reflectee.runtimeType == p.metadataType, orElse: () => null);
+        if (proc != null) {
+          responseProcessors.add(
+              new _ResponseHandlerInstance(m.reflectee, handlerName, proc.processor));
+        }
+      });
+    }
     
     _logger.finer("Preparing to execute target: $handlerName");
 
@@ -822,6 +818,8 @@ void _configureTarget(Route route, ObjectMirror owner,
   } else {
     _targetsCache[key] = target;
   }
+  
+  serverMetadata._addRoute(route, handler);
 
   _logger.info("Configured target for ${url} ${route.methods}: $handlerName");
 }
@@ -836,11 +834,11 @@ _ParamProcessors _buildParamProcesors(MethodMirror handler) {
     var name = param.isNamed ? paramSymbol : null;
 
     if (!param.metadata.isEmpty) {
-      var metadata = param.metadata[0];
+      var metadata = param.metadata[0].reflectee;
 
-      if (metadata.reflectee is Body) {
+      if (metadata is Body) {
 
-        var body = metadata.reflectee as Body;
+        var body = metadata as Body;
         if (bodyType != null) {
           throw new SetupException(handlerName, "Invalid parameters: Only one parameter can be annotated with @Body");
         }
@@ -856,11 +854,11 @@ _ParamProcessors _buildParamProcesors(MethodMirror handler) {
           return new _TargetParam(valueHandler(request.body), name);
         };
 
-      } else if (metadata.reflectee is QueryParam) {
+      } else if (metadata is QueryParam) {
         var paramName = MirrorSystem.getName(paramSymbol);
         var convertFunc = _buildConvertFunction(param.type);
         var defaultValue = param.hasDefaultValue ? param.defaultValue.reflectee : null;
-        var queryParamName = (metadata.reflectee as QueryParam).name;
+        var queryParamName = (metadata as QueryParam).name;
         if (queryParamName == null) {
           queryParamName = paramName;
         }
@@ -874,10 +872,10 @@ _ParamProcessors _buildParamProcesors(MethodMirror handler) {
           }
           return new _TargetParam(value, name);
         };
-      } else if (metadata.reflectee is Attr) {
+      } else if (metadata is Attr) {
         var paramName = MirrorSystem.getName(paramSymbol);
         var defaultValue = param.hasDefaultValue ? param.defaultValue.reflectee : null;
-        var attrName = (metadata.reflectee as Attr).name;
+        var attrName = (metadata as Attr).name;
         if (attrName == null) {
           attrName = paramName;
         }
@@ -889,7 +887,7 @@ _ParamProcessors _buildParamProcesors(MethodMirror handler) {
           }
           return new _TargetParam(value, name);
         };
-      } else if (metadata.reflectee is Inject) {
+      } else if (metadata is Inject) {
         var paramName = MirrorSystem.getName(paramSymbol);
         var value;
         try {
@@ -902,25 +900,33 @@ _ParamProcessors _buildParamProcesors(MethodMirror handler) {
             targetParam;
         
       } else {
-        List<_ParamHandler> params = _customParams[ROUTE];
-        if (params != null) {
-          _ParamHandler customParam = params.firstWhere((_ParamHandler p) => 
-              metadata.reflectee.runtimeType == p.metadataType, orElse: () => null);
-          if (customParam != null) {
-            var paramName = MirrorSystem.getName(paramSymbol);
-            var defaultValue = param.hasDefaultValue ? 
-                param.defaultValue.reflectee : null;
-            var type = param.type.hasReflectedType ? param.type.reflectedType : null;
-            return (Map urlParams, Request request) {
-              var value = customParam.parameterProvider(metadata.reflectee, 
-                  type, handlerName, paramName, request, _injector);
-              if (value == null) {
-                value = defaultValue;
-              }
-              return new _TargetParam(value, name);
-            };
+        
+        var paramName = MirrorSystem.getName(paramSymbol);
+        var defaultValue = param.hasDefaultValue ? 
+            param.defaultValue.reflectee : null;
+        var type = param.type.hasReflectedType ? param.type.reflectedType : null;
+        
+        var customParam;
+          
+        return (Map urlParams, Request request) {
+          if (customParam == null) {
+            var params = _customParams[ROUTE];
+            if (params != null) {
+              customParam = params.firstWhere((_ParamHandler p) => 
+                metadata.runtimeType == p.metadataType, 
+                orElse: () => const _ParamHandler.defaultProvider());
+            } else {
+              customParam = const _ParamHandler.defaultProvider();
+            }
           }
-        }
+          
+          var value = customParam.parameterProvider(metadata, 
+              type, handlerName, paramName, request, _injector);
+          if (value == null) {
+            value = defaultValue;
+          }
+          return new _TargetParam(value, name);
+        };
       }
     }
 
@@ -937,6 +943,7 @@ _ParamProcessors _buildParamProcesors(MethodMirror handler) {
       }
       return new _TargetParam(value, name);
     };
+    
   }).toList(growable: false);
   
   return new _ParamProcessors(bodyType, processors);

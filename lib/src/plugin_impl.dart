@@ -2,7 +2,9 @@ part of redstone_server;
 
 class _ManagerImpl implements Manager {
   
-  void installPlugins() {
+  final _ServerMetadataImpl serverMetadata = new _ServerMetadataImpl();
+  
+  void _installPlugins() {
     _plugins.forEach((p) => p(this));
   }
     
@@ -21,13 +23,29 @@ class _ManagerImpl implements Manager {
   
     };
     
+    var urlTemplate = new UrlTemplate(conf.urlTemplate);
+    var target;
+    
     if (bodyType == null) {
-      _targets.add(new _Target(new UrlTemplate(conf.urlTemplate), name, 
-                                caller, conf));
+      target = new _Target(urlTemplate, name, caller, conf);
     } else {
-      _targets.add(new _Target(new UrlTemplate(conf.urlTemplate), name, 
-                                caller, conf, bodyType));
+      target = new _Target(urlTemplate, name, caller, conf, bodyType);
     }
+    
+    String key = urlTemplate.toString();
+    _Target currentTarget = _targetsCache[key];
+    if (currentTarget != null) {
+      if (currentTarget is! _TargetWrapper) {
+        currentTarget = new _TargetWrapper(currentTarget);
+      }
+      (currentTarget as _TargetWrapper).addTarget(target);
+      _targetsCache[key] = currentTarget;
+    } else {
+      _targetsCache[key] = target;
+    }
+    
+    var mirror = (reflect(route) as ClosureMirror).function;
+    serverMetadata._addRoute(conf, mirror);
     
     _logger.info("Configured target for ${conf.urlTemplate} : $name");
   }
@@ -42,6 +60,9 @@ class _ManagerImpl implements Manager {
     _interceptors.add(new _Interceptor(new RegExp(conf.urlPattern), name,
                                        [conf.chainIdx], conf.parseRequestBody, 
                                        caller));
+    
+    var mirror = (reflect(interceptor) as ClosureMirror).function;
+    serverMetadata._addInterceptor(conf, mirror);
     
     _logger.info("Configured interceptor for ${conf.urlPattern} : $name");
   }
@@ -71,6 +92,9 @@ class _ManagerImpl implements Manager {
         new RegExp(conf.urlPattern) : null;
     handlers.add(new _ErrorHandler(conf.statusCode, 
         pattern, name, caller));
+    
+    var mirror = (reflect(errorHandler) as ClosureMirror).function;
+    serverMetadata._addErrorHandler(conf, mirror);
 
     var url = conf.urlPattern != null ? " - " + conf.urlPattern : "";
     _logger.info("Configured error handler for status ${conf.statusCode} $url : $name");
@@ -93,4 +117,90 @@ class _ManagerImpl implements Manager {
     _ResponseHandler proc = new _ResponseHandler(metadataType, processor);
     _responseProcessors.add(proc);
   }
+}
+
+class _ServerMetadataImpl implements ServerMetadata {
+  
+  final List<ErrorHandlerMetadata> errorHandlers = [];
+
+  final List<GroupMetadata> groups = [];
+
+  final List<InterceptorMetadata> interceptors = [];
+
+  final List<RouteMetadata> routes = [];
+  
+  void _addRoute(Route route, MethodMirror mirror) {
+    var metadata = mirror.metadata.map((m) => m.reflectee).toList(growable: false);
+    routes.add(new _RouteMetadataImpl(route, mirror, metadata));
+  }
+  
+  void _addInterceptor(Interceptor interceptor, MethodMirror mirror) {
+    var metadata = mirror.metadata.map((m) => m.reflectee).toList(growable: false);
+    interceptors.add(new _InterceptorMetadataImpl(interceptor, mirror, metadata));
+  }
+  
+  void _addErrorHandler(ErrorHandler errorHandler, MethodMirror mirror) {
+    var metadata = mirror.metadata.map((m) => m.reflectee).toList(growable: false);
+    errorHandlers.add(new _ErrorHandlerMetadataImpl(errorHandler, mirror, metadata));
+  }
+  
+  _GroupMetadataImpl _addGroup(Group group, ClassMirror mirror) {
+    var metadata = mirror.metadata.map((m) => m.reflectee).toList(growable: false);
+    var groupMetadata = new _GroupMetadataImpl(group, mirror, metadata);
+    groups.add(groupMetadata);
+    return groupMetadata;
+  }
+}
+
+class _HandlerMetadataImpl<T, M> implements HandlerMetadata {
+  
+  final T conf;
+  final M mirror;
+  final List metadata;
+  
+  _HandlerMetadataImpl(this.conf, this.mirror, this.metadata);
+  
+}
+
+class _RouteMetadataImpl extends _HandlerMetadataImpl<Route, MethodMirror> 
+                         implements RouteMetadata {
+  
+  _RouteMetadataImpl(Route route, MethodMirror method, List metadata) :
+      super(route, method, metadata);
+  
+}
+
+class _InterceptorMetadataImpl extends _HandlerMetadataImpl<Interceptor, MethodMirror>
+                               implements InterceptorMetadata {
+  
+  _InterceptorMetadataImpl(Interceptor interceptor, MethodMirror method, List metadata) :
+      super(interceptor, method, metadata);
+  
+}
+
+class _ErrorHandlerMetadataImpl extends _HandlerMetadataImpl<ErrorHandler, MethodMirror>
+                               implements ErrorHandlerMetadata {
+  
+  _ErrorHandlerMetadataImpl(ErrorHandler errorHandler, MethodMirror method, List metadata) :
+      super(errorHandler, method, metadata);
+  
+}
+
+class _GroupMetadataImpl extends _HandlerMetadataImpl<Group, ClassMirror> 
+                         with _ServerMetadataImpl
+                         implements GroupMetadata {
+  
+  _GroupMetadataImpl(Group group, ClassMirror method, List metadata) :
+        super(group, method, metadata);
+  
+}
+
+class _DefaultParamProvider {
+
+  const _DefaultParamProvider();
+  
+  Object call(_, _1, _2, _3, _4, _5) {
+    return null;
+  }
+
 }

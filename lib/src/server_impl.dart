@@ -55,6 +55,44 @@ class _RequestImpl extends HttpRequestParser implements UnparsedRequest {
   
 }
 
+final shelf.Middleware _redstoneMiddleware = (shelf.Handler handler) {
+  return (shelf.Request shelfRequest) {
+    var completer = new Completer();
+    runZoned(() {
+      var resp = handler(shelfRequest);
+      if (resp is Future) {
+        resp.then((r) {
+          if (!completer.isCompleted) {
+            _commitResponse(r, completer);
+          }
+        });
+      } else {
+        if (!completer.isCompleted) {
+          _commitResponse(resp, completer);
+        }
+      }
+    }, onError: (e, s) {
+      if (!completer.isCompleted) {
+        _handleError("Failed to handle request.", e, 
+           stack: s, req: request)
+             .then((_) {
+               if (!completer.isCompleted) {
+                _commitResponse(response, completer);
+               }
+             });
+      }
+    });
+    return completer.future;
+  };
+};
+
+void _commitResponse(shelf.Response resp, Completer completer) {
+  if (!resp.headers.containsKey(HttpHeaders.SERVER)) {
+    resp = resp.change(headers: const {HttpHeaders.SERVER: "dart:io with Redstone.dart/Shelf"});
+  }
+  completer.complete(resp);
+}
+
 List<_Interceptor> _getInterceptors(Uri uri) {
   String path = uri.path;
   return new List.from(_interceptors.where((i) {
@@ -246,7 +284,7 @@ class _ChainImpl implements Chain {
       _initHandler = initHandler.addHandler(h);
     } else {
       _initHandler = new shelf.Pipeline()
-            .addMiddleware(_mainMiddleware)
+            .addMiddleware(_redstoneMiddleware)
             .addHandler(h);
     }
     

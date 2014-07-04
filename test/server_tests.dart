@@ -2,6 +2,7 @@ library server_tests;
 
 import 'dart:convert';
 import 'dart:io';
+import 'dart:async';
 
 import 'package:unittest/unittest.dart';
 
@@ -19,6 +20,7 @@ import 'services/interceptors.dart';
 import 'services/dependency_injection.dart';
 import 'services/install_lib.dart';
 import 'services/plugins.dart';
+import 'services/inspect.dart';
 
 main() {
   
@@ -572,6 +574,75 @@ main() {
         expect(resp.mockContent, equals("error_handler"));
       });
     });
+    
+  });
+  
+  group("Plugins:", () {
+    
+    tearDown(app.tearDown);
+    
+    test("Metadata access", () {
+      
+      var completer = new Completer();
+      
+      var setRoutes;
+      var setInterceptors;
+      var setErrorHandlers;
+      
+      void extractMetadata(serverMetadata) {
+        setRoutes = new Set();
+        setInterceptors = new Set();
+        setErrorHandlers = new Set();
+        
+        serverMetadata.routes.forEach((r) {
+          setRoutes.add(r.conf.urlTemplate);
+        });
+        serverMetadata.interceptors.forEach((i) {
+          setInterceptors.add(i.conf.urlPattern);
+        });
+        serverMetadata.errorHandlers.forEach((e) {
+          setErrorHandlers.add(e.conf.statusCode);
+        });
+      }
+      
+      var expectedRoutes = new Set()
+                            ..add("/route1")
+                            ..add("/route2");
+      var expectedInterceptors = new Set()
+                            ..add("/interceptor");
+      var expectedErrorHandlers = new Set()
+                            ..add(333); 
+      
+      app.addPlugin((manager) {
+   
+        try {
+          extractMetadata(manager.serverMetadata);
+          
+          expect(setRoutes, equals(expectedRoutes));
+          expect(setInterceptors, equals(expectedInterceptors));
+          expect(setErrorHandlers, equals(expectedErrorHandlers));
+          
+          expect(manager.serverMetadata.groups.length, equals(1));
+          
+          var groupMetadata = manager.serverMetadata.groups[0];
+          extractMetadata(groupMetadata);
+          
+          expect(setRoutes, equals(expectedRoutes));
+          expect(setInterceptors, equals(expectedInterceptors));
+          expect(setErrorHandlers, equals(expectedErrorHandlers));
+          
+          completer.complete();
+        
+        } catch(e) {
+          completer.completeError(e);
+        }
+      }); 
+      
+      app.setUp([#inspect]);
+     
+      return completer.future;
+    });
+    
   });
   
   group("Shelf:", () {

@@ -377,7 +377,7 @@ void addPlugin(RedstonePlugin plugin) {
  */
 void addShelfMiddleware(shelf.Middleware middleware) {
   if (_initHandler == null) {
-    _initHandler = new shelf.Pipeline().addMiddleware(_mainMiddleware);
+    _initHandler = new shelf.Pipeline().addMiddleware(_redstoneMiddleware);
   }
   _initHandler = _initHandler.addMiddleware(middleware);
 }
@@ -487,12 +487,18 @@ Future<HttpResponse> dispatch(UnparsedRequest request) =>
 
 
 /**
- * Allows to programmatically create routes, interceptors, error handlers
- * and parameter providers.
+ * Allows to programmatically create routes, interceptors, error handlers,
+ * parameter providers and response processors.
  * 
  * To access a [Manager] instance, you need to create and register a [RedstonePlugin].
  */
 abstract class Manager {
+  
+  /**
+   * The server metadata, which contains all routes, interceptors,
+   * error handlers and groups that composes this application.
+   */ 
+  ServerMetadata get serverMetadata;
   
   /**
    * Create a new route.
@@ -512,7 +518,7 @@ abstract class Manager {
   /**
    * Create a new parameter provider.
    * 
-   * [metadataType] is the annotation type that triggers this provider. 
+   * [metadataType] is the annotation type that will trigger the provider. 
    * [parameterProvider] is the function which will be invoked to create
    * the parameter's value. [handlerTypes] are the handler types that can use
    * this provider, and defaults to ROUTE.
@@ -523,13 +529,75 @@ abstract class Manager {
   /**
    * Create a new response processor.
    * 
-   * [metadataType] is the annotation type that triggers this processor.
+   * [metadataType] is the annotation type that will trigger the processor.
    * [processor] is the function which will be invoked to transform the returned
    * value. 
    */
   void addResponseProcessor(Type metadataType, ResponseProcessor processor);
   
 }
+
+///Handler metadata
+abstract class HandlerMetadata<T, M> {
+  
+  T get conf;
+  
+  M get mirror;
+  
+  List get metadata;
+  
+}
+
+/**
+ * Allow access to all installed routes, interceptors,
+ * error handlers and groups that composes an application.
+ */ 
+abstract class ServerMetadata {
+  
+  /**
+   * Returns the installed routes.
+   * 
+   * This list contains routes which are bound to top level
+   * functions. For routes that belongs to a group, see [groups];
+   */ 
+  List<RouteMetadata> get routes;
+  
+  /**
+   * Returns the installed interceptors.
+   * 
+   * This list contains interceptors which are bound to top level
+   * functions. For interceptors that belongs to a group, see [groups];
+   */
+  List<InterceptorMetadata> get interceptors;
+  
+  /**
+   * Returns the installed error handlers.
+   * 
+   * This list contains error handlers which are bound to top level
+   * functions. For error handlers that belongs to a group, see [groups];
+   */
+  List<ErrorHandlerMetadata> get errorHandlers;
+  
+  ///Returns all installed groups.
+  List<GroupMetadata> get groups;
+  
+}
+
+///Route metadata
+abstract class RouteMetadata implements 
+    HandlerMetadata<Route, MethodMirror> { }
+
+///Interceptor metadata
+abstract class InterceptorMetadata implements 
+    HandlerMetadata<Interceptor, MethodMirror> { }
+
+///Error handler metadata
+abstract class ErrorHandlerMetadata implements
+    HandlerMetadata<ErrorHandler, MethodMirror> { }
+
+///Group metadata
+abstract class GroupMetadata implements ServerMetadata, 
+                                        HandlerMetadata<Group, ClassMirror> { }
 
 /**
  * A plugin is a function which can dynamically add new features
