@@ -5,7 +5,10 @@ class _ManagerImpl implements Manager {
   final _ServerMetadataImpl serverMetadata = new _ServerMetadataImpl();
   
   void _installPlugins() {
-    _plugins.forEach((p) => p(this));
+    _plugins.forEach((p) {
+      serverMetadata._commit();
+      p(this);
+    });
   }
     
   void addRoute(Route conf, String name, RouteHandler route, {String bodyType}) {
@@ -121,34 +124,48 @@ class _ManagerImpl implements Manager {
 
 class _ServerMetadataImpl implements ServerMetadata {
   
-  final List<ErrorHandlerMetadata> errorHandlers = [];
-
-  final List<GroupMetadata> groups = [];
-
-  final List<InterceptorMetadata> interceptors = [];
-
-  final List<RouteMetadata> routes = [];
+  final _errorHandlers = [];
+  final _groups = [];
+  final _interceptors = [];
+  final _routes = [];
+  
+  var _errorHandlersView = const [];
+  var _groupsView = const [];
+  var _interceptorsView = const [];
+  var _routesView = const [];
+  
+  List<RouteMetadata> get routes => _routesView;
+  List<InterceptorMetadata> get interceptors => _interceptorsView;
+  List<ErrorHandlerMetadata> get errorHandlers => _errorHandlersView;
+  List<GroupMetadata> get groups => _groupsView;
   
   void _addRoute(Route route, MethodMirror mirror) {
     var metadata = mirror.metadata.map((m) => m.reflectee).toList(growable: false);
-    routes.add(new _RouteMetadataImpl(route, mirror, metadata));
+    _routes.add(new _RouteMetadataImpl(route, mirror, metadata));
   }
   
   void _addInterceptor(Interceptor interceptor, MethodMirror mirror) {
     var metadata = mirror.metadata.map((m) => m.reflectee).toList(growable: false);
-    interceptors.add(new _InterceptorMetadataImpl(interceptor, mirror, metadata));
+    _interceptors.add(new _InterceptorMetadataImpl(interceptor, mirror, metadata));
   }
   
   void _addErrorHandler(ErrorHandler errorHandler, MethodMirror mirror) {
     var metadata = mirror.metadata.map((m) => m.reflectee).toList(growable: false);
-    errorHandlers.add(new _ErrorHandlerMetadataImpl(errorHandler, mirror, metadata));
+    _errorHandlers.add(new _ErrorHandlerMetadataImpl(errorHandler, mirror, metadata));
   }
   
   _GroupMetadataImpl _addGroup(Group group, ClassMirror mirror) {
     var metadata = mirror.metadata.map((m) => m.reflectee).toList(growable: false);
     var groupMetadata = new _GroupMetadataImpl(group, mirror, metadata);
-    groups.add(groupMetadata);
+    _groups.add(groupMetadata);
     return groupMetadata;
+  }
+  
+  void _commit() {
+    _errorHandlersView = new List.from(_errorHandlers, growable: false);
+    _interceptorsView = new List.from(_interceptors, growable: false);
+    _routesView = new List.from(_routes, growable: false);
+    _groupsView = new List.from(_groups, growable: false);
   }
 }
 

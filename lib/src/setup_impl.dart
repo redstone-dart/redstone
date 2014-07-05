@@ -537,6 +537,8 @@ void _configureGroup(_ServerMetadataImpl serverMetadata,
     });
 
   });
+  
+  groupMetadata._commit();
 }
 
 void _configureInterceptor(_ServerMetadataImpl serverMetadata,
