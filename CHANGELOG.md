@@ -1,5 +1,5 @@
 ## v0.5.7+1
-* Fix docgen issue (see [dartdocs log](http://www.dartdocs.org/buildlogs/b-324b8609c46a0a8b9060d0b59539a-startupscript.log))
+* Fixed docgen issue (see [dartdocs log](http://www.dartdocs.org/buildlogs/b-324b8609c46a0a8b9060d0b59539a-startupscript.log))
 
 ## v0.5.7
 * Improved plugin API:
