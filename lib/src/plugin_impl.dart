@@ -179,7 +179,7 @@ class _ServerMetadataImpl implements ServerMetadata {
   }
 }
 
-class _HandlerMetadataImpl<T, M> implements HandlerMetadata {
+class _HandlerMetadataImpl<T, M> implements HandlerMetadata<T, M> {
   
   final T conf;
   final M mirror;

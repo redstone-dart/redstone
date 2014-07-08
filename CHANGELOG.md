@@ -1,3 +1,6 @@
+## v0.5.7+1
+* Fix docgen issue (see [dartdocs log](http://www.dartdocs.org/buildlogs/b-73ff2c70446c9be018890fb48640a-startupscript.log))
+
 ## v0.5.7
 * Improved plugin API:
     * It's now possible to inspect installed routes, interceptors, error handlers and groups.
