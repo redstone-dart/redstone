@@ -1,5 +1,7 @@
 ## v0.5.7
-* Improved plugin API: It's now possible to inspect installed routes, interceptors, error handlers and groups.
+* Improved plugin API:
+    * It's now possible to inspect installed routes, interceptors, error handlers and groups.
+    * Added the `Manager.addRouteWrapper()` method, which allows plugins to modify routes that are annotated with an specific annotation.
 
 ## v0.5.6
 * Fixed logging issues.

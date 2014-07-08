@@ -404,7 +404,7 @@ class _ChainImpl implements Chain {
 }
 
 Future _writeResponse(respValue, String responseType, {int statusCode: 200, 
-  bool abortIfChainInterrupted: false, List<_ResponseHandlerInstance> processors}) {
+  bool abortIfChainInterrupted: false, List<_ResponseHandler> processors}) {
 
   Completer completer = new Completer();
   

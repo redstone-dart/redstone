@@ -16,8 +16,10 @@ final Map<int, List<_ErrorHandler>> _errorHandlers = {};
 final List<RedstonePlugin> _plugins = [];
 final List<Module> _modules = [];
 
-final Map<String, List<_ParamHandler>> _customParams = {};
-final List<_ResponseHandler> _responseProcessors = [];
+final Map<String, Map<Type, ParamProvider>> _paramProviders = {};
+final Map<Type, ResponseProcessor> _responseProcessors = {};
+final Map<Type, RouteWrapper> _routeWrappers = {};
+final Set<Type> _groupAnnotations = new Set();
 
 shelf.Pipeline _initHandler = null;
 shelf.Handler _finalHandler = null;
@@ -157,36 +159,15 @@ class _TargetParam {
 
 }
 
-class _ParamHandler {
-  
-  final Type metadataType;
-  final ParamProvider parameterProvider;
-  
-  _ParamHandler(this.metadataType, this.parameterProvider);
-  
-  const _ParamHandler.defaultProvider() : 
-      metadataType = null,
-      parameterProvider = const _DefaultParamProvider();
-}
-
 class _ResponseHandler {
-  
-  final Type metadataType;
-  final ResponseProcessor processor;
-    
-  _ResponseHandler(this.metadataType, this.processor);
-    
-}
-
-class _ResponseHandlerInstance {
   
   final dynamic metadata;
   final String handlerName;
   final ResponseProcessor processor;
     
-  _ResponseHandlerInstance(this.metadata, 
-                           this.handlerName, 
-                           this.processor);
+  _ResponseHandler(this.metadata, 
+                   this.handlerName, 
+                   this.processor);
     
 }
 
@@ -466,8 +447,10 @@ void _clearHandlers() {
   
   _modules.clear();
   _plugins.clear();
-  _customParams.clear();
+  _paramProviders.clear();
   _responseProcessors.clear();
+  _routeWrappers.clear();
+  _groupAnnotations.clear();
   
   _initHandler = null;
   _finalHandler = null;
@@ -511,12 +494,22 @@ void _configureGroup(_ServerMetadataImpl serverMetadata,
             allowMultipartRequest: info.allowMultipartRequest,
             matchSubPaths: info.matchSubPaths);
         
-        _configureTarget(groupMetadata, route, instance, method);
+        var clazzMetadata = clazz.metadata
+                                 .map((m) => m.reflectee)
+                                 .toList();
+        
+        _configureTarget(groupMetadata, route, instance, method, 
+                         groupMetadata: clazzMetadata);
       } else if (metadata.reflectee is Route) {
         
         Route route = metadata.reflectee as Route;
 
-        _configureTarget(groupMetadata, route, instance, method, urlPrefix: prefix);
+        var clazzMetadata = clazz.metadata
+                                 .map((m) => m.reflectee)
+                                 .toList();
+        
+        _configureTarget(groupMetadata, route, instance, method, urlPrefix: prefix, 
+                         groupMetadata: clazzMetadata);
       } else if (metadata.reflectee is Interceptor) {
 
         Interceptor interceptor = metadata.reflectee as Interceptor;
@@ -559,16 +552,15 @@ void _configureInterceptor(_ServerMetadataImpl serverMetadata,
       handler.parameters.forEach((ParameterMirror param) {
         bool hasProvider = false;
         if (!param.metadata.isEmpty) {
-          var metadata = param.metadata[0];
-          List<_ParamHandler> params = _customParams[INTERCEPTOR];
-          if (params != null) {
-            _ParamHandler customParam = params.firstWhere((_ParamHandler p) => 
-                metadata.reflectee.runtimeType == p.metadataType, orElse: () => null);
-            if (customParam != null) {
+          var metadata = param.metadata[0].reflectee;
+          var paramProviders = _paramProviders[INTERCEPTOR];
+          if (paramProviders != null) {
+            var provider = paramProviders[metadata.runtimeType];
+            if (provider != null) {
               var paramName = MirrorSystem.getName(param.simpleName);
               var type = param.type.hasReflectedType ? param.type.reflectedType : null;
               var defaultValue = param.hasDefaultValue ? param.defaultValue : null;
-              var value = customParam.parameterProvider(metadata.reflectee, 
+              var value = provider(metadata.reflectee, 
                   type, handlerName, paramName, request, _injector);
               if (value == null) {
                 value = defaultValue;
@@ -640,16 +632,15 @@ void _configureErrorHandler(_ServerMetadataImpl serverMetadata,
       handler.parameters.forEach((ParameterMirror param) {
         bool hasProvider = false;
         if (!param.metadata.isEmpty) {
-          var metadata = param.metadata[0];
-          List<_ParamHandler> params = _customParams[ERROR_HANDLER];
-          if (params != null) {
-            _ParamHandler customParam = params.firstWhere((_ParamHandler p) => 
-                metadata.reflectee.runtimeType == p.metadataType, orElse: () => null);
-            if (customParam != null) {
+          var metadata = param.metadata[0].reflectee;
+          var paramProviders = _paramProviders[ERROR_HANDLER];
+          if (paramProviders != null) {
+            var provider = paramProviders[metadata.runtimeType];
+            if (provider != null) {
               var paramName = MirrorSystem.getName(param.simpleName);
               var type = param.type.hasReflectedType ? param.type.reflectedType : null;
               var defaultValue = param.hasDefaultValue ? param.defaultValue : null;
-              var value = customParam.parameterProvider(metadata.reflectee, 
+              var value = provider(metadata.reflectee, 
                   type, handlerName, paramName, request, _injector);
               if (value == null) {
                 value = defaultValue;
@@ -719,28 +710,60 @@ void _configureErrorHandler(_ServerMetadataImpl serverMetadata,
 
 void _configureTarget(_ServerMetadataImpl serverMetadata, 
                       Route route, ObjectMirror owner, 
-                      MethodMirror handler, {String urlPrefix}) {
+                      MethodMirror handler, 
+                      {String urlPrefix, List groupMetadata: const []}) {
 
   var paramProcessors = _buildParamProcesors(handler);
   var handlerName = MirrorSystem.getName(handler.qualifiedName);
   
   var responseProcessors = null;
+  var wrapper = null;
 
   var caller = (UrlMatch match, Request request) {
     
-    if (responseProcessors == null) {
+    if (wrapper == null) {
       responseProcessors = [];
-      handler.metadata.forEach((m) {
-        var proc = _responseProcessors.firstWhere((p) => 
-            m.reflectee.runtimeType == p.metadataType, orElse: () => null);
+      wrapper = (_, _1, _2, posParams, namedParams) {
+          var resp = owner.invoke(handler.simpleName, posParams, namedParams);
+          if (resp.type == _voidType) {
+            return null;
+          }
+
+          return resp.reflectee;
+      };
+      
+      var types = new Set();
+      var metadataList = handler.metadata
+                                .map((m) => m.reflectee)
+                                .toList();
+      metadataList.forEach((m) {
+        types.add(m.runtimeType);
+      });
+      
+      groupMetadata
+        .where((m) => _groupAnnotations.contains(m.runtimeType))
+        .forEach((m) {
+          if (!types.contains(m.runtimeType)) {
+            metadataList.add(m);
+          }
+        });
+      
+      metadataList.forEach((m) {
+        var proc = _responseProcessors[m.runtimeType];
         if (proc != null) {
           responseProcessors.add(
-              new _ResponseHandlerInstance(m.reflectee, handlerName, proc.processor));
+              new _ResponseHandler(m, handlerName, proc));
+        }
+        var w = _routeWrappers[m.runtimeType];
+        if (w != null) {
+          var prevWrapper = wrapper;
+          wrapper = (pathSegments, injector, request, posParams, namedParams) {
+            return w(m, pathSegments, injector, request, 
+                     (_, _1, _2) => prevWrapper(_, _1, _2, posParams, namedParams));
+          };
         }
       });
     }
-    
-    _logger.finer("Preparing to execute target: $handlerName");
 
     return new Future(() {
 
@@ -760,15 +783,9 @@ void _configureTarget(_ServerMetadataImpl serverMetadata,
       var errorResponse;
       var respValue;
       _logger.finer("Invoking target $handlerName");
-      InstanceMirror resp;
       try {
-        resp = owner.invoke(handler.simpleName, posParams, namedParams);
+        respValue = wrapper(pathParams, _injector, request, posParams, namedParams);
         
-        if (resp.type == _voidType) {
-          return null;
-        }
-
-        respValue = resp.reflectee;
         if (respValue is ErrorResponse) {
           errorResponse = respValue;
         }
@@ -908,21 +925,22 @@ _ParamProcessors _buildParamProcesors(MethodMirror handler) {
             param.defaultValue.reflectee : null;
         var type = param.type.hasReflectedType ? param.type.reflectedType : null;
         
-        var customParam;
+        var paramProvider;
           
         return (Map urlParams, Request request) {
-          if (customParam == null) {
-            var params = _customParams[ROUTE];
-            if (params != null) {
-              customParam = params.firstWhere((_ParamHandler p) => 
-                metadata.runtimeType == p.metadataType, 
-                orElse: () => const _ParamHandler.defaultProvider());
+          if (paramProvider == null) {
+            var paramProviders = _paramProviders[ROUTE];
+            if (paramProviders != null) {
+              paramProvider = paramProviders[metadata.runtimeType];
+              if (paramProvider == null) {
+                paramProvider = const _DefaultParamProvider();
+              }
             } else {
-              customParam = const _ParamHandler.defaultProvider();
+              paramProvider = const _DefaultParamProvider();
             }
           }
           
-          var value = customParam.parameterProvider(metadata, 
+          var value = paramProvider(metadata, 
               type, handlerName, paramName, request, _injector);
           if (value == null) {
             value = defaultValue;

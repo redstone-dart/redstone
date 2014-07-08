@@ -110,3 +110,35 @@ TestPlugin(app.Manager manager) {
   });
   
 }
+
+//plugin - add route wrappers
+
+class Wrap {
+  
+  const Wrap();
+  
+}
+
+WrapperPlugin(app.Manager manager) {
+  
+  manager.addRouteWrapper(Wrap, (wrap, pathSegments, injector, request, route) {
+    
+    var resp = route(pathSegments, injector, request);
+    return "response: $resp";
+    
+  }, includeGroups: true);
+  
+}
+
+@app.Route("/test_wrapper")
+@Wrap()
+testWrapper() => "target executed";
+
+@app.Group("/test_group_wrapper")
+@Wrap()
+class TestGroupWrapper {
+  
+  @app.Route("/test_wrapper")
+  testWrapper() => "target executed";
+  
+}

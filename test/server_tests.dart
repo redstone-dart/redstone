@@ -527,6 +527,7 @@ main() {
       app.addPlugin(FromJsonPlugin);
       app.addPlugin(ToJsonPlugin);
       app.addPlugin(TestPlugin);
+      app.addPlugin(WrapperPlugin);
       app.setUp([#plugins]);
     });
     tearDown(app.tearDown);
@@ -572,6 +573,17 @@ main() {
         expect(resp.mockContent, equals("interceptor value"));
       }).then((_) => app.dispatch(req2)).then((resp) {
         expect(resp.mockContent, equals("error_handler"));
+      });
+    });
+    
+    test("Route wrapper", () {
+      var req = new MockRequest("/test_wrapper");
+      var req2 = new MockRequest("/test_group_wrapper/test_wrapper");
+      
+      return app.dispatch(req).then((resp) {
+        expect(resp.mockContent, equals("response: target executed"));
+      }).then((_) => app.dispatch(req2)).then((resp) {
+        expect(resp.mockContent, equals("response: target executed"));
       });
     });
     

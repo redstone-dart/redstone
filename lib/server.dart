@@ -531,13 +531,36 @@ abstract class Manager {
    * 
    * [metadataType] is the annotation type that will trigger the processor.
    * [processor] is the function which will be invoked to transform the returned
-   * value. 
+   * value. If [includeGroups] is true and the annotation is used on a group, then
+   * all group's routes will use the processor.
    */
-  void addResponseProcessor(Type metadataType, ResponseProcessor processor);
+  void addResponseProcessor(Type metadataType, ResponseProcessor processor, 
+                            {bool includeGroups: false});
+  
+  /**
+   * Create a new route wrapper.
+   * 
+   * Wrap all routes that are annotated with [metadataType].
+   * If [includeGroups] is true and the annotation is used on a group,
+   * then all group's routes will be wrapped as well.
+   * 
+   * Usage:
+   * 
+   *      //wrap all routes annotated with @MyAnnotation()
+   *      manager.addRouteWrapper(MyAnnotation, (myAnnotation, pathSegments, injector, request, route) {
+   *        
+   *        //here you can prevent the route from executing, or inspect and modify
+   *        //the returned value
+   * 
+   *        return route(pathSegments, injector, request);
+   * 
+   *      });
+   */
+  void addRouteWrapper(Type metadataType, RouteWrapper wrapper, 
+                       {bool includeGroups: false});
   
 }
 
-///Handler metadata
 abstract class HandlerMetadata<T, M> {
   
   T get conf;
@@ -583,19 +606,20 @@ abstract class ServerMetadata {
   
 }
 
-///Route metadata
 abstract class RouteMetadata implements 
-    HandlerMetadata<Route, MethodMirror> { }
+    HandlerMetadata<Route, MethodMirror> { 
+  
+  ///The url pattern of this route
+  String get urlRegex;
+  
+}
 
-///Interceptor metadata
 abstract class InterceptorMetadata implements 
     HandlerMetadata<Interceptor, MethodMirror> { }
 
-///Error handler metadata
 abstract class ErrorHandlerMetadata implements
     HandlerMetadata<ErrorHandler, MethodMirror> { }
 
-///Group metadata
 abstract class GroupMetadata implements ServerMetadata, 
                                         HandlerMetadata<Group, ClassMirror> { }
 
@@ -610,6 +634,14 @@ typedef void RedstonePlugin(Manager manager);
  */
 typedef dynamic RouteHandler(Map<String, String> pathSegments, 
                              Injector injector, Request request);
+
+/**
+ * A route wrapper created by a plugin.
+ */ 
+typedef dynamic RouteWrapper(dynamic metadata,
+                             Map<String, String> pathSegments, 
+                             Injector injector, Request request,
+                             RouteHandler route);
 
 /**
  * An interceptor or error handler, programmatically created by a plugin.

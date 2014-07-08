@@ -105,20 +105,30 @@ class _ManagerImpl implements Manager {
   
   void addParameterProvider(Type metadataType, ParamProvider parameterProvider, 
                             {List<String> handlerTypes: const [ROUTE]}) {
-    _ParamHandler param = new _ParamHandler(metadataType, parameterProvider);
     handlerTypes.forEach((String type) {
-      List<_ParamHandler> params = _customParams[type];
-      if (params == null) {
-        params = [];
-        _customParams[type] = params;
+      var paramProviders = _paramProviders[type];
+      if (paramProviders == null) {
+        paramProviders = {};
+        _paramProviders[type] = paramProviders;
       }
-      params.add(param);
+      paramProviders[metadataType] = parameterProvider;
     });
   }
   
-  void addResponseProcessor(Type metadataType, ResponseProcessor processor) {
-    _ResponseHandler proc = new _ResponseHandler(metadataType, processor);
-    _responseProcessors.add(proc);
+  void addResponseProcessor(Type metadataType, ResponseProcessor processor,
+                            {bool includeGroups: false}) {
+    _responseProcessors[metadataType] = processor;
+    if (includeGroups) {
+      _groupAnnotations.add(metadataType);
+    }
+  }
+  
+  void addRouteWrapper(Type metadataType, RouteWrapper wrapper, 
+                       {bool includeGroups: false}) {
+    _routeWrappers[metadataType] = wrapper;
+    if (includeGroups) {
+      _groupAnnotations.add(metadataType);
+    }
   }
 }
 
@@ -179,12 +189,41 @@ class _HandlerMetadataImpl<T, M> implements HandlerMetadata {
   
 }
 
+final _specialChars = new RegExp(r'[\\()$^.+[\]{}|]');
+
 class _RouteMetadataImpl extends _HandlerMetadataImpl<Route, MethodMirror> 
                          implements RouteMetadata {
   
-  _RouteMetadataImpl(Route route, MethodMirror method, List metadata) :
+  String _urlRegex;
+  
+  _RouteMetadataImpl(Route route, MethodMirror method, 
+                     List metadata) :
       super(route, method, metadata);
   
+  String get urlRegex {
+    if (_urlRegex == null) {
+      
+      var template = conf.urlTemplate.
+          replaceAllMapped(_specialChars, (m) => r'\' + m.group(0));
+
+      var exp = new RegExp(r':(\w+)');
+      StringBuffer sb = new StringBuffer('^');
+      int start = 0;
+      exp.allMatches(template).forEach((Match m) {
+        var txt = template.substring(start, m.start);
+        sb.write(txt);
+        sb.write(r'([^/?]+)');
+        start = m.end;
+      });
+      if (start != template.length) {
+        var txt = template.substring(start, template.length);
+        sb.write(txt);
+      }
+      _urlRegex = sb.toString();
+    }
+  
+    return _urlRegex;  
+  }
 }
 
 class _InterceptorMetadataImpl extends _HandlerMetadataImpl<Interceptor, MethodMirror>
