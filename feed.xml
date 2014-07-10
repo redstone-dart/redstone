@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Redstone.dart</title>
+    <description>Redstone.dart website</description>    
+    <link>http://redstonedart.org</link>
+    <atom:link href="http://redstonedart.org/feed.xml" rel="self" type="application/rss+xml" />
+    
+      <item>
+        <title>Redstone.dart Blog and Mailing List</title>
+        <description>&lt;p&gt;Hey everyone! Welcome to the new Redstone.dart blog :)&lt;/p&gt;
+
+&lt;p&gt;Recently, I&amp;#39;ve received a lot of feedback and questions about Redstone through many different channels, such as github, google plus, hangouts, e-mail and so on. 
+It&amp;#39;s really cool to see other developers excited about this project, but I&amp;#39;ve just realized that we need a proper place to discuss about it.&lt;/p&gt;
+
+&lt;p&gt;So, to fix this issue, I&amp;#39;ve created a mailing list for us:&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://groups.google.com/d/forum/redstonedart&quot;&gt;http://groups.google.com/d/forum/redstonedart&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;If you have questions, or want to give some feedback about the project, don&amp;#39;t hesitate to join the group and send us a message. Although, if you find a bug, or want to contribute some code, please file an issue at our &lt;a href=&quot;https://github.com/luizmineo/redstone.dart&quot;&gt;GitHub&lt;/a&gt; page.&lt;/p&gt;
+</description>
+        <pubDate>Thu, 10 Jul 2014 00:00:00 -0300</pubDate>
+        <link>http://redstonedart.org/2014/07/10/redstonedart-blog-mailing-list/</link>
+        <guid isPermaLink="true">http://redstonedart.org/2014/07/10/redstonedart-blog-mailing-list/</guid>
+      </item>
+    
+  </channel>
+</rss>
