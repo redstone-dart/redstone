@@ -1,3 +1,6 @@
+## v0.5.7+2
+- Improved error handling. See issue #24.
+
 ## v0.5.7+1
 * Fixed docgen issue (see [dartdocs log](http://www.dartdocs.org/buildlogs/b-324b8609c46a0a8b9060d0b59539a-startupscript.log))
 

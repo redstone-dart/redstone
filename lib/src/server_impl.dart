@@ -151,6 +151,12 @@ void _process(UnparsedRequest req, _RequestState state,
     #request: req,
     #chain: chain,
     #state: state
+  }, onError: (e, s) {
+    _handleError("Uncaught error. Please, report this at https://github.com/luizmineo/redstone.dart", e, stack: s);
+    //avoid resource leak
+    try {
+      req.httpRequest.response.close();
+    } catch(e) {}
   });
 }
 
