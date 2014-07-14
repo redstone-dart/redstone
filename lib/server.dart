@@ -50,10 +50,10 @@ const int _DEFAULT_PORT = 8080;
  * The request's information and content.
  */
 abstract class Request {
-  
+
   /// The original [Uri] for the request.
   Uri get requestedUri;
-  
+
   /// The remainder of the [requestedUri] path and query designating the virtual
   /// "location" of the request's target within the handler.
   ///
@@ -74,7 +74,7 @@ abstract class Request {
 
   ///The body type, such as 'JSON', 'TEXT' or 'FORM'
   String get bodyType;
-  
+
   ///Indicate if this request is multipart
   bool get isMultipart;
 
@@ -83,7 +83,7 @@ abstract class Request {
    *
    * [body] can be a [Map], [List] or [String]. See [HttpBody]
    * for more information.
-   */ 
+   */
   dynamic get body;
 
   ///The headers of the request
@@ -91,15 +91,15 @@ abstract class Request {
 
   ///The session for the given request (read-only).
   HttpSession get session;
-  
+
   /**
    * Map of request attributes.
-   * 
+   *
    * Attributes are objects that can be shared between
    * interceptors and routes
    */
   QueryMap get attributes;
-  
+
   ///The original Shelf request
   shelf.Request get shelfRequest;
 
@@ -109,32 +109,32 @@ abstract class Request {
  * A request whose body was not fully read yet
  */
 abstract class UnparsedRequest extends Request {
-  
+
   void parseBodyType();
-  
+
   Future parseBody();
-  
+
   HttpRequest get httpRequest;
-  
+
   set shelfRequest(shelf.Request req);
-  
+
 }
 
 /**
  * HttpRequest parser
  */
 class HttpRequestParser {
-  
+
   String _bodyType;
   bool _isMultipart = false;
   ContentType _contentType;
   HttpBody _requestBody;
   Future _bodyParsed = null;
-  
+
   String get bodyType => _bodyType;
   bool get isMultipart => _isMultipart;
   get body => _requestBody != null ? _requestBody.body : null;
-  
+
   void parseHttpRequestBodyType(Map<String, String> headers) {
     var ct = headers["content-type"];
     if (ct == null) {
@@ -171,12 +171,12 @@ class HttpRequestParser {
         break;
     }
   }
-  
+
   Future parseHttpRequestBody(Stream<List<int>> body) {
     if (_bodyParsed != null) {
       return _bodyParsed;
     }
-    
+
     _bodyParsed = _parseRequestBody(body, _contentType).
         then((HttpBody reqBody) {
           _requestBody = reqBody;
@@ -193,10 +193,10 @@ class HttpRequestParser {
  * and it can be directly manipulated only by interceptors.
  */
 abstract class Chain {
-  
+
   ///The error object thrown by the target
   dynamic error;
-  
+
   /**
    * Call the next element of this chain (an interceptor or a target)
    *
@@ -206,9 +206,9 @@ abstract class Chain {
   void next([callback()]);
 
   ///Interrupt this chain. If [statusCode] or [responseValue] is provided,
-  ///a new Response will be created. 
+  ///a new Response will be created.
   void interrupt({int statusCode, Object responseValue, String responseType});
-  
+
   ///Returns true if this chain was interrupted
   bool get interrupted;
 
@@ -216,30 +216,30 @@ abstract class Chain {
 
 /**
  * An error response.
- * 
+ *
  * If a route returns or throws an [ErrorResponse], then
  * the framework will serialize [error], and create a
  * response with status [statusCode].
- * 
- */ 
+ *
+ */
 class ErrorResponse {
-  
+
   final int statusCode;
   final Object error;
-  
+
   ErrorResponse(this.statusCode, this.error);
-  
+
 }
 
 /**
  * User credentials from request
- * 
+ *
  */
 class Credentials {
-  
+
   String username;
   String password;
-  
+
   Credentials(this.username, this.password);
 
 }
@@ -301,7 +301,7 @@ void redirect(String url) {
 
 /**
  * Parse authorization header from request.
- * 
+ *
  */
 Credentials parseAuthorizationHeader() {
   if (request.headers[HttpHeaders.AUTHORIZATION] != null) {
@@ -323,7 +323,7 @@ Credentials parseAuthorizationHeader() {
 /**
  * Http Basic access authentication
  *
- * Returns true if the current request contains the authorization header for [username] and [password]. 
+ * Returns true if the current request contains the authorization header for [username] and [password].
  * If authentication fails and [realm] is provided, then a new response with 401 status code and
  * a 'www-authenticate' header will be created.
  */
@@ -342,17 +342,17 @@ bool authenticateBasic(String username, String password, {String realm}){
     if (realm != null) {
       Map headers = new Map.from(response.headers);
       headers[HttpHeaders.WWW_AUTHENTICATE] = 'Basic realm="$realm"';
-      response = new shelf.Response(HttpStatus.UNAUTHORIZED, 
+      response = new shelf.Response(HttpStatus.UNAUTHORIZED,
           body: response.read(), headers: headers);
     }
   }
-  
+
   return r;
 }
 
 /**
  * Register a module for dependency injection.
- * 
+ *
  * All modules must be registered before invoking the [start] or
  * [setUp] methods.
  */
@@ -362,7 +362,7 @@ void addModule(Module module) {
 
 /**
  * Register a plugin.
- * 
+ *
  * All plugins must be registered before invoking the [start] or
  * [setUp] methods.
  */
@@ -372,8 +372,8 @@ void addPlugin(RedstonePlugin plugin) {
 
 /**
  * Register a Shelf Middleware.
- * 
- * Middlewares are invoked before any interceptor or route. 
+ *
+ * Middlewares are invoked before any interceptor or route.
  */
 void addShelfMiddleware(shelf.Middleware middleware) {
   if (_initHandler == null) {
@@ -384,7 +384,7 @@ void addShelfMiddleware(shelf.Middleware middleware) {
 
 /**
  * Register a Shelf Handler.
- * 
+ *
  * The [handler] will be invoked when all interceptors are
  * completed, and no route is found for the requested URL.
  */
@@ -396,20 +396,31 @@ void setShelfHandler(shelf.Handler handler) {
  * Start the server.
  *
  * The [address] can be a [String] or an [InternetAddress].
+ *
+ * When [secureOptions] is specified the server will use a secure https connection.
+ * [secureOptions] is a map of named arguments forwarded to [HttpServer.bindSecure].
  */
-Future<HttpServer> start({address: _DEFAULT_ADDRESS, int port: _DEFAULT_PORT}) {
+Future<HttpServer> start({address: _DEFAULT_ADDRESS, int port: _DEFAULT_PORT,
+                          Map<Symbol, dynamic> secureOptions}) {
   return new Future(() {
-    
+
     setUp();
 
-    return HttpServer.bind(address, port).then((server) {
-      server.listen((HttpRequest req) {
+    Future<HttpServer> serverFuture;
 
+    if (secureOptions == null) {
+      serverFuture = HttpServer.bind(address, port);
+    } else {
+      _logger.severe("Using a secure connection with options: $secureOptions");
+      serverFuture = Function.apply(HttpServer.bindSecure, [address, port], secureOptions);
+    }
+
+    return serverFuture.then((server) {
+      server.listen((HttpRequest req) {
         _logger.fine("Received request for: ${req.uri}");
         _dispatchRequest(new _RequestImpl(req)).catchError((e, s) {
           _logger.severe("Failed to handle request for ${req.uri}", e, s);
         });
-
       });
 
       _logger.info("Running on $address:$port");
@@ -420,14 +431,14 @@ Future<HttpServer> start({address: _DEFAULT_ADDRESS, int port: _DEFAULT_PORT}) {
 
 /**
  * Serve a [Stream] of [HttpRequest]s.
- * 
+ *
  * [HttpServer] implements [Stream<HttpRequest>], so it can be passed directly
  * to [serveRequests].
  */
 void serveRequests(Stream<HttpRequest> requests) {
-  
+
   setUp();
-  
+
   requests.listen((HttpRequest req) {
 
     _logger.fine("Received request for: ${req.uri}");
@@ -436,12 +447,12 @@ void serveRequests(Stream<HttpRequest> requests) {
     });
 
   });
-  
+
 }
 
 /**
  * Handle a [HttpRequest].
- * 
+ *
  * Be sure to call [setUp] before handling requests
  * with this method.
  */
@@ -454,7 +465,7 @@ Future handleRequest(HttpRequest request) {
 
 /**
  * Scan and initialize routes, interceptors and error handlers
- * 
+ *
  * If [libraries] is provided, then the scan process will be limited
  * to those libraries.
  */
@@ -469,7 +480,7 @@ void setUp([List<Symbol> libraries]) {
 
 /**
  * Remove all modules, plugins, routes, interceptors and error handlers.
- * 
+ *
  * This method is intended to be used in unit tests.
  */
 void tearDown() {
@@ -478,149 +489,149 @@ void tearDown() {
 
 /**
  * Dispatch a request.
- * 
+ *
  * This method is intended to be used in unit tests, where you
  * can create new requests with [MockRequest]
  */
-Future<HttpResponse> dispatch(UnparsedRequest request) => 
+Future<HttpResponse> dispatch(UnparsedRequest request) =>
     _dispatchRequest(request);
 
 
 /**
  * Allows to programmatically create routes, interceptors, error handlers,
  * parameter providers and response processors.
- * 
+ *
  * To access a [Manager] instance, you need to create and register a [RedstonePlugin].
  */
 abstract class Manager {
-  
+
   /**
    * The server metadata, which contains all routes, interceptors,
    * error handlers and groups that composes this application.
-   */ 
+   */
   ServerMetadata get serverMetadata;
-  
+
   /**
    * Create a new route.
    */
   void addRoute(Route conf, String name, RouteHandler route, {String bodyType});
-  
+
   /**
    * Create a new interceptor.
    */
   void addInterceptor(Interceptor conf, String name, Handler interceptor);
-  
+
   /**
    * Create a new error handler.
    */
   void addErrorHandler(ErrorHandler conf, String name, Handler errorHandler);
-  
+
   /**
    * Create a new parameter provider.
-   * 
-   * [metadataType] is the annotation type that will trigger the provider. 
+   *
+   * [metadataType] is the annotation type that will trigger the provider.
    * [parameterProvider] is the function which will be invoked to create
    * the parameter's value. [handlerTypes] are the handler types that can use
    * this provider, and defaults to ROUTE.
    */
-  void addParameterProvider(Type metadataType, ParamProvider parameterProvider, 
+  void addParameterProvider(Type metadataType, ParamProvider parameterProvider,
                             {List<String> handlerTypes: const [ROUTE]});
-  
+
   /**
    * Create a new response processor.
-   * 
+   *
    * [metadataType] is the annotation type that will trigger the processor.
    * [processor] is the function which will be invoked to transform the returned
    * value. If [includeGroups] is true and the annotation is used on a group, then
    * all group's routes will use the processor.
    */
-  void addResponseProcessor(Type metadataType, ResponseProcessor processor, 
+  void addResponseProcessor(Type metadataType, ResponseProcessor processor,
                             {bool includeGroups: false});
-  
+
   /**
    * Create a new route wrapper.
-   * 
+   *
    * Wrap all routes that are annotated with [metadataType].
    * If [includeGroups] is true and the annotation is used on a group,
    * then all group's routes will be wrapped as well.
-   * 
+   *
    * Usage:
-   * 
+   *
    *      //wrap all routes annotated with @MyAnnotation()
    *      manager.addRouteWrapper(MyAnnotation, (myAnnotation, pathSegments, injector, request, route) {
-   *        
+   *
    *        //here you can prevent the route from executing, or inspect and modify
    *        //the returned value
-   * 
+   *
    *        return route(pathSegments, injector, request);
-   * 
+   *
    *      });
    */
-  void addRouteWrapper(Type metadataType, RouteWrapper wrapper, 
+  void addRouteWrapper(Type metadataType, RouteWrapper wrapper,
                        {bool includeGroups: false});
-  
+
 }
 
 abstract class HandlerMetadata<T, M> {
-  
+
   T get conf;
-  
+
   M get mirror;
-  
+
   List get metadata;
-  
+
 }
 
 /**
  * Allow access to all installed routes, interceptors,
  * error handlers and groups that composes an application.
- */ 
+ */
 abstract class ServerMetadata {
-  
+
   /**
    * Returns the installed routes.
-   * 
+   *
    * This list contains routes which are bound to top level
    * functions. For routes that belongs to a group, see [groups];
-   */ 
+   */
   List<RouteMetadata> get routes;
-  
+
   /**
    * Returns the installed interceptors.
-   * 
+   *
    * This list contains interceptors which are bound to top level
    * functions. For interceptors that belongs to a group, see [groups];
    */
   List<InterceptorMetadata> get interceptors;
-  
+
   /**
    * Returns the installed error handlers.
-   * 
+   *
    * This list contains error handlers which are bound to top level
    * functions. For error handlers that belongs to a group, see [groups];
    */
   List<ErrorHandlerMetadata> get errorHandlers;
-  
+
   ///Returns all installed groups.
   List<GroupMetadata> get groups;
-  
+
 }
 
-abstract class RouteMetadata implements 
-    HandlerMetadata<Route, MethodMirror> { 
-  
+abstract class RouteMetadata implements
+    HandlerMetadata<Route, MethodMirror> {
+
   ///The url pattern of this route
   String get urlRegex;
-  
+
 }
 
-abstract class InterceptorMetadata implements 
+abstract class InterceptorMetadata implements
     HandlerMetadata<Interceptor, MethodMirror> { }
 
 abstract class ErrorHandlerMetadata implements
     HandlerMetadata<ErrorHandler, MethodMirror> { }
 
-abstract class GroupMetadata implements ServerMetadata, 
+abstract class GroupMetadata implements ServerMetadata,
                                         HandlerMetadata<Group, ClassMirror> { }
 
 /**
@@ -632,14 +643,14 @@ typedef void RedstonePlugin(Manager manager);
 /**
  * A route programmatically created by a plugin.
  */
-typedef dynamic RouteHandler(Map<String, String> pathSegments, 
+typedef dynamic RouteHandler(Map<String, String> pathSegments,
                              Injector injector, Request request);
 
 /**
  * A route wrapper created by a plugin.
- */ 
+ */
 typedef dynamic RouteWrapper(dynamic metadata,
-                             Map<String, String> pathSegments, 
+                             Map<String, String> pathSegments,
                              Injector injector, Request request,
                              RouteHandler route);
 
@@ -651,17 +662,17 @@ typedef dynamic Handler(Injector injector);
 /**
  * A parameter provider is a function that can create parameters
  * for routes, interceptors and error handlers.
- * 
+ *
  * It can be used, for example, to automatically validate
  * and parse the request's body and arguments.
  */
-typedef Object ParamProvider(dynamic metadata, Type paramType, 
-                             String handlerName, String paramName, 
+typedef Object ParamProvider(dynamic metadata, Type paramType,
+                             String handlerName, String paramName,
                              Request request, Injector injector);
 
 /**
  * A response processor is a function, that can transform values
  * returned by routes.
  */
-typedef Object ResponseProcessor(dynamic metadata, String handlerName, 
+typedef Object ResponseProcessor(dynamic metadata, String handlerName,
                                  Object response, Injector injector);
