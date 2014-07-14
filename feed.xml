@@ -7,7 +7,7 @@
     <atom:link href="http://redstonedart.org/feed.xml" rel="self" type="application/rss+xml" />
     
       <item>
-        <author>Luiz Mineo</author>
+        <author>luiz.mineo@gmail.com (Luiz Mineo)</author>
         <title>Managing Database Connections</title>
         <description>&lt;p&gt;Accessing a database is problably the most common task of any web application. Nevertheless, a poor database connection management is also one of the most common source of problems you can find in a server, like slowness, freezes and crashs. In this post, I&amp;#39;ll show some techiniques you can use to properly manage database connections using Redstone.dart.&lt;/p&gt;
 
@@ -218,7 +218,7 @@
       </item>
     
       <item>
-        <author>Luiz Mineo</author>
+        <author>luiz.mineo@gmail.com (Luiz Mineo)</author>
         <title>Redstone.dart Blog and Mailing List</title>
         <description>&lt;p&gt;Hey everyone! Welcome to the new Redstone.dart blog :)&lt;/p&gt;
 
