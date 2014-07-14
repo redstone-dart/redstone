@@ -14,9 +14,9 @@ import 'package:http/http.dart' as http;
 import 'package:http/src/utils.dart';
 import 'package:http_parser/src/media_type.dart';
 
-import 'package:redstone/query_map.dart';
+import 'query_map.dart';
 
-part 'package:redstone/src/http_mock.dart';
+part 'src/http_mock.dart';
 
 /**
  * A class to simulate requests in unit tests.
@@ -37,14 +37,14 @@ class MockRequest extends HttpRequestParser implements UnparsedRequest {
   HttpHeaders _httpHeaders;
   HttpResponse _response;
   HttpRequest httpRequest;
-  
+
   shelf.Request _shelfRequest;
-    
+
   QueryMap _headers = null;
   QueryMap _queryParams = null;
-  
+
   shelf.Request get shelfRequest => _shelfRequest;
-  
+
   set shelfRequest(shelf.Request shelfRequest) {
     _shelfRequest = shelfRequest;
     _headers = new QueryMap(shelfRequest.headers);

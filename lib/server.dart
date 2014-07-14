@@ -18,16 +18,16 @@ import 'package:stack_trace/stack_trace.dart';
 import 'package:di/di.dart';
 import 'package:di/auto_injector.dart';
 
-import 'package:redstone/query_map.dart';
+import 'query_map.dart';
 
-part 'package:redstone/src/metadata.dart';
-part 'package:redstone/src/logger.dart';
-part 'package:redstone/src/exception.dart';
-part 'package:redstone/src/setup_impl.dart';
-part 'package:redstone/src/plugin_impl.dart';
-part 'package:redstone/src/server_impl.dart';
-part 'package:redstone/src/blacklist.dart';
-part 'package:redstone/src/http_body_parser.dart';
+part 'src/metadata.dart';
+part 'src/logger.dart';
+part 'src/exception.dart';
+part 'src/setup_impl.dart';
+part 'src/plugin_impl.dart';
+part 'src/server_impl.dart';
+part 'src/blacklist.dart';
+part 'src/http_body_parser.dart';
 
 const String GET = "GET";
 const String POST = "POST";
