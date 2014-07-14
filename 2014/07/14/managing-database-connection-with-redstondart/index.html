@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="http://redstonedart.org">
+  <link rel="alternate" type="application/rss+xml" title="RSS"
+      href="http://redstonedart.org/feed.xml">
+  <title>Redstone.dart - Server-side microframework for Dart</title>
+
+  <!-- Bootstrap -->
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/css/syntax.css" rel="stylesheet">
+  
+  <link href="/css/blog.css" rel="stylesheet">
+  
+  <link href="/css/footer.css" rel="stylesheet">
+
+  <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+  <script>
+    if (window.location.href.indexOf('http://luizmineo.github.io') === 0) {
+      window.location.href = 'http://redstonedart.org/2014/07/14/managing-database-connection-with-redstondart/';
+    }
+  </script>
+</head>
+
+
+    <body>
+
+    <nav class="navbar navbar-default" role="navigation">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="/">Redstone.dart</a>
+    </div>
+
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+        <li  class="active" ><a href="/blog">Blog</a></li>
+        <li ><a href="/doc">Documentation</a></li>
+        <li><a href="http://www.dartdocs.org/documentation/redstone/0.5.7+2/index.html#redstone">API Reference</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+
+    <div class="container">
+    <div class="page-header">
+      <h1>Managing Database Connections</h1>
+    </div>
+    <div class="row">
+      <div class="col-xs-12">
+        <p><b>14 July 2014</b> <small class="post-author">by Luiz Mineo</small></p>
+        <p>Accessing a database is problably the most common task of any web application. Nevertheless, a poor database connection management is also one of the most common source of problems you can find in a server, like slowness, freezes and crashs. In this post, I&#39;ll show some techiniques you can use to properly manage database connections using Redstone.dart.</p>
+
+<p>Let&#39;s start with a simple example:</p>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="k">import</span> <span class="s1">&#39;package:redstone/server.dart&#39;</span> <span class="k">as</span> <span class="n">app</span><span class="p">;</span>
+<span class="k">import</span> <span class="s1">&#39;package:mongo_dart/mongo_dart.dart&#39;</span><span class="p">;</span>
+
+<span class="kd">final</span> <span class="n">DB_URI</span> <span class="o">=</span> <span class="s2">&quot;mongodb://localhost/dbname&quot;</span><span class="p">;</span>
+
+<span class="c1">///Returns all users recorded in the database</span>
+<span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Route</span><span class="p">(</span><span class="s1">&#39;/services/users/list&#39;</span><span class="p">)</span>
+<span class="n">listUsers</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="n">conn</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Db</span><span class="p">(</span><span class="n">DB_URI</span><span class="p">);</span>
+
+  <span class="k">return</span> <span class="n">conn</span><span class="p">.</span><span class="n">open</span><span class="p">().</span><span class="n">then</span><span class="p">((</span><span class="n">_</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="k">return</span> <span class="n">conn</span><span class="p">.</span><span class="n">collection</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">).</span><span class="n">find</span><span class="p">().</span><span class="n">toList</span><span class="p">();</span>
+
+  <span class="p">}).</span><span class="n">whenComplete</span><span class="p">(()</span> <span class="p">{</span>
+    <span class="n">conn</span><span class="p">.</span><span class="n">close</span><span class="p">();</span>
+  <span class="p">});</span>
+
+<span class="p">}</span>
+
+<span class="n">main</span><span class="p">()</span> <span class="p">{</span>
+
+  <span class="n">app</span><span class="p">.</span><span class="n">setupConsoleLog</span><span class="p">();</span>
+  <span class="n">app</span><span class="p">.</span><span class="n">start</span><span class="p">();</span>
+
+<span class="p">}</span>
+</code></pre></div>
+<p>The script above defines the <code>listUsers()</code> route, which connects to a MongoDB database, and returns all documents in the <code>users</code> collection. It shows how you can use the <code>Future.whenComplete()</code> method to guarantee that the connection will always be closed, even if the operation throws an error.</p>
+
+<p>However, if you plan to add new routes to your server (like <code>addUser()</code>, for example), you&#39;ll note that this is not the ideal solution, since you need to copy and paste the code that handles the database connection for every route.</p>
+
+<p>So, let&#39;s see how we can improve our script:</p>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="k">import</span> <span class="s1">&#39;package:redstone/server.dart&#39;</span> <span class="k">as</span> <span class="n">app</span><span class="p">;</span>
+<span class="k">import</span> <span class="s1">&#39;package:mongo_dart/mongo_dart.dart&#39;</span><span class="p">;</span>
+
+<span class="kd">final</span> <span class="n">DB_URI</span> <span class="o">=</span> <span class="s2">&quot;mongodb://localhost/dbname&quot;</span><span class="p">;</span>
+
+<span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Interceptor</span><span class="p">(</span><span class="s1">&#39;/.*&#39;</span><span class="p">)</span>
+<span class="n">dbManager</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="n">conn</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Db</span><span class="p">(</span><span class="n">DB_URI</span><span class="p">);</span>
+
+  <span class="n">conn</span><span class="p">.</span><span class="n">open</span><span class="p">().</span><span class="n">then</span><span class="p">((</span><span class="n">_</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="c1">//set the connection as a request attribute.</span>
+    <span class="c1">//the attributes map allows the use of the dot notation. </span>
+    <span class="n">app</span><span class="p">.</span><span class="n">request</span><span class="p">.</span><span class="n">attributes</span><span class="p">.</span><span class="n">conn</span> <span class="o">=</span> <span class="n">conn</span><span class="p">;</span> <span class="c1">//same as app.request.attributes[&quot;conn&quot;] = conn;</span>
+
+    <span class="c1">//call the next handler of the chain, close</span>
+    <span class="c1">//the connection when it&#39;s done</span>
+    <span class="n">app</span><span class="p">.</span><span class="n">chain</span><span class="p">.</span><span class="n">next</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="n">conn</span><span class="p">.</span><span class="n">close</span><span class="p">());</span>
+
+  <span class="p">});</span>
+
+<span class="p">}</span>
+
+<span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Route</span><span class="p">(</span><span class="s1">&#39;/services/users/list&#39;</span><span class="p">)</span>
+<span class="n">listUsers</span><span class="p">(</span><span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Attr</span><span class="p">()</span> <span class="n">Db</span> <span class="n">conn</span><span class="p">)</span> <span class="o">=&gt;</span>
+    <span class="n">conn</span><span class="p">.</span><span class="n">collection</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">).</span><span class="n">find</span><span class="p">().</span><span class="n">toList</span><span class="p">();</span>
+</code></pre></div>
+<p>Using an interceptor is the most common way to define a common behavior to a set of routes. If your are used to JEE applications, you can see an interceptor as a Filter, but with an asynchronous API. </p>
+
+<p>The <code>dbManager()</code> interceptor creates a new connection, save it in the <code>request.attributes</code> map, and uses the <code>chain</code> object to call the next handler of the current request (which can be a route or another interceptor). When the next handler finishes its execution, the interceptor closes the connection. </p>
+
+<p>To access a database connection in a route, you can annotate a paratemer with <code>@Attr</code>. Also, if you don&#39;t want to create an extra parameter for every route, you can define a getter that retrieves the connection of the current request:</p>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="n">Db</span> <span class="kd">get</span> <span class="n">conn</span> <span class="o">=&gt;</span> <span class="n">app</span><span class="p">.</span><span class="n">request</span><span class="p">.</span><span class="n">attributes</span><span class="p">.</span><span class="n">conn</span><span class="p">;</span>
+
+<span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Route</span><span class="p">(</span><span class="s1">&#39;/services/users/list&#39;</span><span class="p">)</span>
+<span class="n">listUsers</span><span class="p">()</span> <span class="o">=&gt;</span>
+    <span class="n">conn</span><span class="p">.</span><span class="n">collection</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">).</span><span class="n">find</span><span class="p">().</span><span class="n">toList</span><span class="p">();</span>
+</code></pre></div>
+<p>We can now easily add new routes to our server, but there is one more problem to solve: The server is creating a new connection for every request, which can lead to a serious performance problem. </p>
+
+<p>Some database drivers provides a built-in connection pool, which allows the application to reuse connections, so when a request is received, the server will require a connection that is already open, instead of creating a new one.</p>
+
+<p>Unfortunately, the MongoDB driver for Dart doesn&#39;t provide a connection pool yet, but we can use the <a href="http://pub.dartlang.org/packages/connection_pool">connection_pool</a> package to build one:  </p>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="k">import</span> <span class="s1">&#39;package:redstone/server.dart&#39;</span> <span class="k">as</span> <span class="n">app</span><span class="p">;</span>
+<span class="k">import</span> <span class="s1">&#39;package:mongo_dart/mongo_dart.dart&#39;</span><span class="p">;</span>
+<span class="k">import</span> <span class="s1">&#39;package:connection_pool/connection_pool.dart&#39;</span><span class="p">;</span>
+<span class="k">import</span> <span class="s1">&#39;package:di/di.dart&#39;</span><span class="p">;</span>
+
+<span class="kd">final</span> <span class="n">DB_URI</span> <span class="o">=</span> <span class="s2">&quot;mongodb://localhost/dbname&quot;</span><span class="p">;</span>
+<span class="kd">final</span> <span class="n">POOL_SIZE</span> <span class="o">=</span> <span class="m">3</span><span class="p">;</span>
+
+<span class="c1">//MongoDb connection pool</span>
+<span class="kd">class</span> <span class="nc">MongoDbPool</span> <span class="kd">extends</span> <span class="n">ConnectionPool</span><span class="o">&lt;</span><span class="n">Db</span><span class="o">&gt;</span> <span class="p">{</span>
+  <span class="kt">String</span> <span class="n">uri</span><span class="p">;</span>
+
+  <span class="n">MongoDbPool</span><span class="p">(</span><span class="kt">String</span> <span class="k">this</span><span class="p">.</span><span class="n">uri</span><span class="p">,</span> <span class="kt">int</span> <span class="n">poolSize</span><span class="p">)</span> <span class="o">:</span> <span class="k">super</span><span class="p">(</span><span class="n">poolSize</span><span class="p">);</span>
+
+  <span class="err">@</span><span class="n">override</span>
+  <span class="n">Future</span><span class="o">&lt;</span><span class="n">Db</span><span class="o">&gt;</span> <span class="n">openNewConnection</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="n">conn</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Db</span><span class="p">(</span><span class="n">uri</span><span class="p">);</span>
+    <span class="k">return</span> <span class="n">conn</span><span class="p">.</span><span class="n">open</span><span class="p">().</span><span class="n">then</span><span class="p">((</span><span class="n">_</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="n">conn</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="err">@</span><span class="n">override</span>
+  <span class="kt">void</span> <span class="n">closeConnection</span><span class="p">(</span><span class="n">Db</span> <span class="n">conn</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">conn</span><span class="p">.</span><span class="n">close</span><span class="p">();</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Interceptor</span><span class="p">(</span><span class="s1">r&#39;/.*&#39;</span><span class="p">)</span>
+<span class="n">dbManager</span><span class="p">(</span><span class="n">MongoDbPool</span> <span class="n">pool</span><span class="p">)</span> <span class="p">{</span>
+
+  <span class="c1">//get a connection from the pool</span>
+  <span class="n">pool</span><span class="p">.</span><span class="n">getConnection</span><span class="p">().</span><span class="n">then</span><span class="p">((</span><span class="n">managedConnection</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="c1">//set the connection as a request attribute</span>
+    <span class="n">app</span><span class="p">.</span><span class="n">request</span><span class="p">.</span><span class="n">attributes</span><span class="p">.</span><span class="n">conn</span> <span class="o">=</span> <span class="n">managedConnection</span><span class="p">.</span><span class="n">conn</span><span class="p">;</span>
+
+    <span class="c1">//call the next handler of the chain. Release</span>
+    <span class="c1">//the connection when it&#39;s done</span>
+    <span class="n">app</span><span class="p">.</span><span class="n">chain</span><span class="p">.</span><span class="n">next</span><span class="p">(()</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="n">app</span><span class="p">.</span><span class="n">chain</span><span class="p">.</span><span class="n">error</span> <span class="k">is</span> <span class="n">ConnectionException</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">pool</span><span class="p">.</span><span class="n">releaseConnection</span><span class="p">(</span><span class="n">managedConnection</span><span class="p">,</span> <span class="nl">markAsInvalid:</span> <span class="kc">true</span><span class="p">);</span>
+      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="n">pool</span><span class="p">.</span><span class="n">releaseConnection</span><span class="p">(</span><span class="n">managedConnection</span><span class="p">);</span>
+      <span class="p">}</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">}</span>
+
+<span class="n">Db</span> <span class="kd">get</span> <span class="n">conn</span> <span class="o">=&gt;</span> <span class="n">app</span><span class="p">.</span><span class="n">request</span><span class="p">.</span><span class="n">attributes</span><span class="p">.</span><span class="n">conn</span><span class="p">;</span>
+
+<span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Route</span><span class="p">(</span><span class="s1">&#39;/services/users/list&#39;</span><span class="p">)</span>
+<span class="n">listUsers</span><span class="p">()</span> <span class="o">=&gt;</span>
+    <span class="n">conn</span><span class="p">.</span><span class="n">collection</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">).</span><span class="n">find</span><span class="p">().</span><span class="n">toList</span><span class="p">();</span>
+
+<span class="n">main</span><span class="p">()</span> <span class="p">{</span>
+
+  <span class="n">app</span><span class="p">.</span><span class="n">addModule</span><span class="p">(</span>
+      <span class="k">new</span> <span class="n">Module</span><span class="p">()</span>
+      <span class="p">..</span><span class="n">bind</span><span class="p">(</span><span class="n">MongoDbPool</span><span class="p">,</span> <span class="nl">toValue:</span> <span class="k">new</span> <span class="n">MongoDbPool</span><span class="p">(</span><span class="n">DB_URI</span><span class="p">,</span> <span class="n">POOL_SIZE</span><span class="p">)));</span>
+
+  <span class="n">app</span><span class="p">.</span><span class="n">setupConsoleLog</span><span class="p">();</span>
+  <span class="n">app</span><span class="p">.</span><span class="n">start</span><span class="p">();</span>
+
+<span class="p">}</span>
+</code></pre></div>
+<p>The script above uses the dependency injection API (see the <a href="http://pub.dartlang.org/packages/di">di</a> package) to register an instance of our pool, so the <code>dbManager()</code> interceptor can require it as a parameter.</p>
+
+<p>Moreover, if you don&#39;t want to create a connection pool and a database interceptor for every application, you can take a look at the <a href="http://pub.dartlang.org/packages/redstone_mapper">redstone_mapper</a> plugin. When used with a database extension (see <a href="http://pub.dartlang.org/packages/redstone_mapper_pg">redstone_mapper_pg</a> and <a href="http://pub.dartlang.org/packages/redstone_mapper_mongo">redstone_mapper_mongo</a>) the plugin does this job for you. Example:</p>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="k">import</span> <span class="s1">&#39;package:redstone/server.dart&#39;</span> <span class="k">as</span> <span class="n">app</span><span class="p">;</span>
+<span class="k">import</span> <span class="s1">&#39;package:redstone_mapper/plugin.dart&#39;</span><span class="p">;</span>
+<span class="k">import</span> <span class="s1">&#39;package:redstone_mapper_mongo/manager.dart&#39;</span><span class="p">;</span>
+
+<span class="kd">final</span> <span class="n">DB_URI</span> <span class="o">=</span> <span class="s2">&quot;mongodb://localhost/dbname&quot;</span><span class="p">;</span>
+<span class="kd">final</span> <span class="n">POOL_SIZE</span> <span class="o">=</span> <span class="m">3</span><span class="p">;</span>
+
+<span class="n">main</span><span class="p">()</span> <span class="p">{</span>
+
+  <span class="kd">var</span> <span class="n">dbManager</span> <span class="o">=</span> <span class="k">new</span> <span class="n">MongoDbManager</span><span class="p">(</span><span class="n">DB_URI</span><span class="p">,</span> <span class="nl">poolSize:</span> <span class="n">POOL_SIZE</span><span class="p">);</span>
+
+  <span class="n">app</span><span class="p">.</span><span class="n">addPlugin</span><span class="p">(</span><span class="n">getMapperPlugin</span><span class="p">(</span><span class="n">dbManager</span><span class="p">));</span>
+  <span class="n">app</span><span class="p">.</span><span class="n">setupConsoleLog</span><span class="p">();</span>
+  <span class="n">app</span><span class="p">.</span><span class="n">start</span><span class="p">();</span>
+
+<span class="p">}</span>
+
+<span class="n">MongoDb</span> <span class="kd">get</span> <span class="n">dbConn</span> <span class="o">=&gt;</span> <span class="n">app</span><span class="p">.</span><span class="n">request</span><span class="p">.</span><span class="n">attributes</span><span class="p">.</span><span class="n">dbConn</span><span class="p">;</span>
+
+<span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Route</span><span class="p">(</span><span class="s1">&#39;/services/users/list&#39;</span><span class="p">)</span>
+<span class="n">listUsers</span><span class="p">()</span> <span class="o">=&gt;</span>
+    <span class="n">dbConn</span><span class="p">.</span><span class="n">collection</span><span class="p">(</span><span class="s2">&quot;users&quot;</span><span class="p">).</span><span class="n">find</span><span class="p">().</span><span class="n">toList</span><span class="p">();</span>
+</code></pre></div>
+<p>Just one more tip: Our application can guarantee that the database connections are properly handled, even if an exception occurs. But when that happens, our users will receive an default html page, with the exception reason and its stack trace.</p>
+
+<p>You can change that behaivor with an error handler:</p>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="k">import</span> <span class="s1">&#39;package:redstone/server.dart&#39;</span> <span class="k">as</span> <span class="n">app</span><span class="p">;</span>
+
+<span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">ErrorHandler</span><span class="p">(</span><span class="m">500</span><span class="p">)</span>
+<span class="n">onInternalError</span><span class="p">()</span> <span class="o">=&gt;</span> <span class="n">app</span><span class="p">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">&quot;/internal_error.html&quot;</span><span class="p">);</span>
+</code></pre></div>
+<p>You can also define an error handler for static content, and other for services:</p>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="k">import</span> <span class="s1">&#39;package:redstone/server.dart&#39;</span> <span class="k">as</span> <span class="n">app</span><span class="p">;</span>
+<span class="k">import</span> <span class="s1">&#39;package:shelf/shelf.dart as shelf&#39;</span><span class="p">;</span>
+
+<span class="c1">//redirect to the default error page</span>
+<span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">ErrorHandler</span><span class="p">(</span><span class="m">500</span><span class="p">)</span>
+<span class="n">onInternalError</span><span class="p">()</span> <span class="o">=&gt;</span> <span class="n">app</span><span class="p">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">&quot;/internal_error.html&quot;</span><span class="p">);</span>
+
+<span class="c1">//for services, return a json</span>
+<span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">ErrorHandler</span><span class="p">(</span><span class="m">500</span><span class="p">,</span> <span class="nl">urlPattern:</span> <span class="s1">&#39;/services/.*&#39;</span><span class="p">)</span>
+<span class="n">onServiceInternalError</span><span class="p">()</span> <span class="o">=&gt;</span> <span class="k">new</span> <span class="n">shelf</span><span class="p">.</span><span class="n">Response</span><span class="p">.</span><span class="n">internalServerError</span><span class="p">({</span><span class="s2">&quot;ERROR&quot;</span><span class="o">:</span> <span class="s2">&quot;INTERNAL_ERROR&quot;</span><span class="p">});</span>
+</code></pre></div>
+<p>It&#39;s also possible to inspect the exception, so you can build a specific error message for each error:</p>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="k">import</span> <span class="s1">&#39;package:redstone/server.dart&#39;</span> <span class="k">as</span> <span class="n">app</span><span class="p">;</span>
+<span class="k">import</span> <span class="s1">&#39;package:mongo_dart/mongo_dart.dart&#39;</span><span class="p">;</span>
+
+<span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">ErrorHandler</span><span class="p">(</span><span class="m">500</span><span class="p">)</span>
+<span class="n">onInternalError</span><span class="p">()</span> <span class="p">{</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="n">app</span><span class="p">.</span><span class="n">chain</span><span class="p">.</span><span class="n">error</span> <span class="k">is</span> <span class="n">ConnectionException</span><span class="p">)</span> <span class="p">{</span>
+    <span class="p">...</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="p">...</span>
+  <span class="p">}</span>
+
+<span class="p">}</span>
+</code></pre></div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-12 comments-area">
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+            /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+            var disqus_shortname = 'redstonedart'; // required: replace example with your forum shortname
+
+            /* * * DON'T EDIT BELOW THIS LINE * * */
+            (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+            })();
+        </script>
+        <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+        <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+    
+      </div>
+    </div>
+</div>
+
+    <div class="container-fluid footer">
+  <div class="row">
+    <div class="col-xs-12">
+      <div class="footer-panel">
+        <ul class="gh-links">
+          <li>
+            <iframe src="http://ghbtns.com/github-btn.html?user=luizmineo&repo=redstone.dart&type=watch&count=true" allowtransparency="true" frameborder="0" scrolling="0" width="110" height="20"></iframe>
+          </li>
+          <li>
+            <iframe src="http://ghbtns.com/github-btn.html?user=luizmineo&repo=redstone.dart&type=fork&count=true" allowtransparency="true" frameborder="0" scrolling="0" width="110" height="20"></iframe>
+          </li>
+          <li>
+            <iframe src="http://ghbtns.com/github-btn.html?user=luizmineo&repo=redstone.dart&type=follow" allowtransparency="true" frameborder="0" scrolling="0" width="150" height="20"></iframe>
+          </li>
+        </ul>
+        <p>Built and mantained by <a href="https://github.com/luizmineo" target="_blank">Luiz Mineo</a>. Code licensed under <a href="https://github.com/luizmineo/redstone.dart/blob/master/LICENSE" target="_blank">MIT</a>.</p>
+        <ul class="footer-links">
+          <li>Currently v0.5.7+2</li>
+          <li>-</li>
+          <li><a href="/blog">Blog</a></li>
+          <li>-</li>
+          <li><a href="https://github.com/luizmineo/redstone.dart">Github</a></li>
+          <li>-</li>
+          <li><a href="http://groups.google.com/d/forum/redstonedart">Mailing List</a></li>
+          <li>-</li>
+          <li><a href="/doc">Documentation</a></li>
+          <li>-</li>
+          <li><a href="http://www.dartdocs.org/documentation/redstone/0.5.7+2/index.html#redstone">API Reference</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/jquery-1.11.0.min.js"></script>
+<script src="/js/bootstrap.min.js"></script>
+
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-50600290-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+    </body>
+</html>
