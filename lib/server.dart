@@ -411,7 +411,7 @@ Future<HttpServer> start({address: _DEFAULT_ADDRESS, int port: _DEFAULT_PORT,
     if (secureOptions == null) {
       serverFuture = HttpServer.bind(address, port);
     } else {
-      _logger.severe("Using a secure connection with options: $secureOptions");
+      _logger.info("Using a secure connection with options: $secureOptions");
       serverFuture = Function.apply(HttpServer.bindSecure, [address, port], secureOptions);
     }
 

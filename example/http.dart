@@ -1,7 +1,7 @@
-library test_lib;
+library http_test;
 
-import 'package:redstone/server.dart' as app;
-import 'package:shelf/shelf.dart' as shelf;
+import "package:redstone/server.dart" as app;
+import "package:shelf/shelf.dart" as shelf;
 
 @app.Route("/")
 helloWorld() => "Hello, World!";
@@ -9,7 +9,7 @@ helloWorld() => "Hello, World!";
 @app.Route("/user/:username")
 getUsername(String username) => ">> $username";
 
-@app.Interceptor(r'/user/.+')
+@app.Interceptor(r"/user/.+")
 doge() {
   app.chain.next(() {
     return app.response.readAsString().then((user) {
@@ -20,18 +20,15 @@ doge() {
 
 @app.Group("/group")
 class Group {
-
   @app.Route("/json", methods: const[app.POST])
   echoJson(@app.Body(app.JSON) Map json) => json;
 
   @app.Route("/form", methods: const[app.POST])
   echoFormAsJson(@app.Body(app.FORM) Map form) => form;
-
 }
 
 main() {
-
   app.setupConsoleLog();
+  // Start a server on default host / port
   app.start();
-  
 }
