@@ -6,53 +6,53 @@ typedef Future _HandleError();
 typedef dynamic _ConvertFunction(String value, dynamic defaultValue);
 
 class _RequestState {
-  
+
   UrlMatch urlMatch;
   bool chainInitialized = false;
   bool errorHandlerInvoked = false;
   bool requestAborted = false;
   shelf.Response response;
-  
+
 }
 
 class _RequestImpl extends HttpRequestParser implements UnparsedRequest {
 
   HttpRequest httpRequest;
   shelf.Request _shelfRequest;
-  
+
   QueryMap _headers = null;
   QueryMap _queryParams = null;
-  
+
   shelf.Request get shelfRequest => _shelfRequest;
-  
+
   set shelfRequest(shelf.Request shelfRequest) {
     _shelfRequest = shelfRequest;
     _headers = new QueryMap(shelfRequest.headers);
     _queryParams = new QueryMap(shelfRequest.url.queryParameters);
   }
-  
+
   final QueryMap _attributes = new QueryMap({});
-  
+
   _RequestImpl(this.httpRequest);
-  
+
   Uri get requestedUri => _shelfRequest.requestedUri;
-  
+
   Uri get url => _shelfRequest.url;
 
   Map<String, String> get headers => _headers;
 
   Map get attributes => _attributes;
-  
+
   String get method => _shelfRequest.method;
 
   Map<String, String> get queryParams => _queryParams;
 
   HttpSession get session => httpRequest.session;
-  
+
   void parseBodyType() => parseHttpRequestBodyType(headers);
-  
+
   Future parseBody() => parseHttpRequestBody(_shelfRequest.read());
-  
+
 }
 
 final shelf.Middleware _redstoneMiddleware = (shelf.Handler handler) {
@@ -73,7 +73,7 @@ final shelf.Middleware _redstoneMiddleware = (shelf.Handler handler) {
       }
     }, onError: (e, s) {
       if (!completer.isCompleted) {
-        _handleError("Failed to handle request.", e, 
+        _handleError("Failed to handle request.", e,
            stack: s, req: request)
              .then((_) {
                if (!completer.isCompleted) {
@@ -116,13 +116,13 @@ _Target _getTarget(Uri uri, _RequestState state) {
 }
 
 Future<HttpResponse> _dispatchRequest(UnparsedRequest req) {
-  
+
   var completer = new Completer();
   var state = new _RequestState();
-  
+
   Chain chain;
   try {
-    
+
     List<_Interceptor> interceptors = _getInterceptors(req.httpRequest.uri);
     _Target target = _getTarget(req.httpRequest.uri, state);
 
@@ -132,16 +132,16 @@ Future<HttpResponse> _dispatchRequest(UnparsedRequest req) {
         completer.completeError(e, s));
     return completer.future;
   }
-    
+
   _process(req, state, chain, completer);
-    
+
   return completer.future;
 }
 
-void _process(UnparsedRequest req, _RequestState state, 
+void _process(UnparsedRequest req, _RequestState state,
               _ChainImpl chain, Completer completer) {
   runZoned(() {
-    
+
     shelf_io.handleRequest(req.httpRequest, chain._initHandler).then((_) {
       _logger.finer("Closed request for: ${request.url}");
       completer.complete(req.httpRequest.response);
@@ -160,22 +160,22 @@ void _process(UnparsedRequest req, _RequestState state,
   });
 }
 
-Future _handleError(String message, Object error, {StackTrace stack, Request req, 
-                  int statusCode, Level logLevel: Level.SEVERE, 
+Future _handleError(String message, Object error, {StackTrace stack, Request req,
+                  int statusCode, Level logLevel: Level.SEVERE,
                   bool printErrorPage: true}) {
-  
+
   if (error is shelf.HijackException) {
     return new Future.error(error);
   }
-  
+
   _logger.log(logLevel, message, error, stack);
-  
+
   if (req == null) {
     return new Future.value();
   }
-  
+
   return new Future.sync(() {
-      
+
     if (statusCode == null) {
       if (error is RequestException) {
         statusCode = error.statusCode;
@@ -187,7 +187,7 @@ Future _handleError(String message, Object error, {StackTrace stack, Request req
     _RequestState state = Zone.current[#state];
     if (!state.errorHandlerInvoked) {
       state.errorHandlerInvoked = true;
-      return _notifyError(statusCode, req.url.path, 
+      return _notifyError(statusCode, req.url.path,
           error: error, stack: stack, printErrorPage: printErrorPage);
     }
 
@@ -195,45 +195,45 @@ Future _handleError(String message, Object error, {StackTrace stack, Request req
 }
 
 Future _verifyRequest(_Target target, UnparsedRequest req) {
-  
+
   return new Future.sync(() {
-    
+
     if (target == null) {
       return null;
     }
-    
+
     //verify method
     if (!target.route.methods.contains(req.method)) {
-      throw new RequestException(target.handlerName, 
-        "${req.method} method not allowed for this target", 
+      throw new RequestException(target.handlerName,
+        "${req.method} method not allowed for this target",
         HttpStatus.METHOD_NOT_ALLOWED);
     }
-    
+
     //verify multipart
     if (req.isMultipart && !target.route.allowMultipartRequest) {
-      throw new RequestException(target.handlerName, 
+      throw new RequestException(target.handlerName,
         "multipart requests are not allowed for this target");
     }
-    
+
     //verify body type
     if (!target.bodyTypes.contains("*") && !target.bodyTypes.contains(req.bodyType)) {
-      throw new RequestException(target.handlerName, 
+      throw new RequestException(target.handlerName,
         "${req.bodyType} data not supported for this target");
     }
-    
+
   });
-  
+
 }
 
 Future _runTarget(_Target target, UnparsedRequest req, shelf.Handler handler) {
 
   return _verifyRequest(target, req).then((_) {
-    
+
     Future f = null;
     if (target != null) {
       f = req.parseBody().then((_) => target.handleRequest(req, Zone.current[#state].urlMatch));
     }
-    
+
     if (f == null) {
       if (handler != null) {
         var r = handler(req.shelfRequest);
@@ -260,10 +260,10 @@ class _ChainImpl implements Chain {
 
   shelf.Handler _initHandler;
   shelf.Handler _finalHandler;
-  
+
   List<_Interceptor> _interceptors;
   _Target _target;
-  
+
   _Interceptor _currentInterceptor;
   UnparsedRequest _request;
 
@@ -272,30 +272,29 @@ class _ChainImpl implements Chain {
   bool _interrupted = false;
 
   final Completer _completer = new Completer();
-  
+
   List _callbacks = [];
 
   _ChainImpl(this._interceptors, this._target, this._request,
              shelf.Pipeline initHandler, this._finalHandler) {
-    
-    var h = (shelf.Request req) {
-      _request.shelfRequest = req;
-      _request.attributes.addAll(req.context);
-      Zone.current[#state].chainInitialized = true;
-      next();
-      return _completer.future;
-    };
-    
+
     if (initHandler != null) {
-      _initHandler = initHandler.addHandler(h);
+      _initHandler = initHandler.addHandler(_handler);
     } else {
       _initHandler = new shelf.Pipeline()
             .addMiddleware(_redstoneMiddleware)
-            .addHandler(h);
+            .addHandler(_handler);
     }
-    
   }
-  
+
+  Future _handler(shelf.Request req) {
+    _request.shelfRequest = req;
+    _request.attributes.addAll(req.context);
+    Zone.current[#state].chainInitialized = true;
+    next();
+    return _completer.future;
+  }
+
   Future _invokeCallbacks() {
     var callbacks = _callbacks.reversed;
     _callbacks = [];
@@ -316,32 +315,32 @@ class _ChainImpl implements Chain {
       return new Future.value();
     }).then((_) => _completer.complete(response));
   }
-  
+
   dynamic error;
 
   void next([callback()]) {
     new Future.sync(() {
       if (_interrupted) {
         var name = _currentInterceptor != null ? _currentInterceptor.interceptorName : null;
-        throw new ChainException(request.url.path, 
+        throw new ChainException(request.url.path,
                                  "invalid state: chain already interrupted",
                                  interceptorName: name);
       }
       if (_interceptors.isEmpty && _targetInvoked) {
         throw new ChainException(request.url.path, "chain.next() must be called from an interceptor.");
       }
-      
+
       if (!_bodyTypeParsed) {
         response = new shelf.Response.ok(null);
         _request.parseBodyType();
         _bodyTypeParsed = true;
       }
-      
+
       if (callback != null) {
         _callbacks.add(callback);
       }
 
-      if (!_interceptors.isEmpty) {
+      if (_interceptors.isNotEmpty) {
         _currentInterceptor = _interceptors.removeAt(0);
         new Future(() {
           if (_currentInterceptor.parseRequestBody) {
@@ -350,7 +349,7 @@ class _ChainImpl implements Chain {
               if (!_interrupted) {
                 error = e;
                 var name = _currentInterceptor.interceptorName;
-                return _handleError("Failed to execute interceptor $name", e, 
+                return _handleError("Failed to execute interceptor $name", e,
                     stack: s, req: request).then((_) => _invokeCallbacks());
               }
             });
@@ -359,7 +358,7 @@ class _ChainImpl implements Chain {
               if (!_interrupted) {
                 error = e;
                 var name = _currentInterceptor.interceptorName;
-                return _handleError("Failed to execute interceptor $name", e, 
+                return _handleError("Failed to execute interceptor $name", e,
                     stack: s, req: request).then((_) => _invokeCallbacks());
               }
             });
@@ -377,21 +376,21 @@ class _ChainImpl implements Chain {
             if (!_interrupted) {
               error = e;
               var level = e is RequestException ? Level.FINE : Level.SEVERE;
-              return _handleError("Failed to execute ${_target.handlerName}", e, 
-                  stack: s, logLevel: level, 
+              return _handleError("Failed to execute ${_target.handlerName}", e,
+                  stack: s, logLevel: level,
                   req: request).then((_) => _invokeCallbacks());
             }
           });
         });
       }
-      
+
     });
   }
 
   void interrupt({int statusCode, Object responseValue, String responseType}) {
     if (_interrupted) {
       var name = _currentInterceptor != null ? _currentInterceptor.interceptorName : null;
-      throw new ChainException(request.url.path, 
+      throw new ChainException(request.url.path,
                                "invalid state: chain already interrupted",
                                interceptorName: name);
     }
@@ -404,50 +403,50 @@ class _ChainImpl implements Chain {
     }
     f.then((_) => _invokeCallbacks());
   }
-  
+
   bool get interrupted => _interrupted;
 
 }
 
-Future _writeResponse(respValue, String responseType, {int statusCode: 200, 
+Future _writeResponse(respValue, String responseType, {int statusCode: 200,
   bool abortIfChainInterrupted: false, List<_ResponseHandler> processors}) {
 
   Completer completer = new Completer();
-  
+
   if (respValue != null && respValue is ErrorResponse) {
     statusCode = respValue.statusCode;
     respValue = respValue.error;
   }
-  
+
   if (abortIfChainInterrupted && chain.interrupted) {
-    
+
     completer.complete();
-    
+
   } else if (respValue == null) {
-    
-    if (processors != null && !processors.isEmpty) {
+
+    if (processors != null && processors.isNotEmpty) {
       respValue = processors.fold(respValue, (v, p) =>
           p.processor(p.metadata, p.handlerName, v, _injector));
-      _writeResponse(respValue, responseType, 
+      _writeResponse(respValue, responseType,
           abortIfChainInterrupted: abortIfChainInterrupted).then((_) =>
               completer.complete());
     } else {
 
       response = new shelf.Response(statusCode);
       completer.complete();
-    
+
     }
 
   } else if (respValue is Future) {
 
     respValue.then((fValue) {
-      return _writeResponse(fValue, responseType, 
+      return _writeResponse(fValue, responseType,
           processors: processors,
           abortIfChainInterrupted: abortIfChainInterrupted);
     }).then((_) {
       completer.complete();
     }).catchError((e) {
-      return _writeResponse(e, responseType, 
+      return _writeResponse(e, responseType,
                 processors: processors,
                 abortIfChainInterrupted: abortIfChainInterrupted);
     }, test: (e) => e is ErrorResponse)
@@ -455,14 +454,14 @@ Future _writeResponse(respValue, String responseType, {int statusCode: 200,
       completer.completeError(e, s);
     });
 
-  } else if (processors != null && !processors.isEmpty) { 
-    
+  } else if (processors != null && !processors.isEmpty) {
+
     respValue = processors.fold(respValue, (v, p) =>
         p.processor(p.metadata, p.handlerName, v, _injector));
-    _writeResponse(respValue, responseType, 
+    _writeResponse(respValue, responseType,
         abortIfChainInterrupted: abortIfChainInterrupted).then((_) =>
             completer.complete());
-    
+
   } else if (respValue is Map || respValue is List) {
 
     respValue = conv.JSON.encode(respValue);
@@ -472,11 +471,11 @@ Future _writeResponse(respValue, String responseType, {int statusCode: 200,
     response = new shelf.Response(statusCode, body: respValue, headers: {
       "content-type": responseType
     }, encoding: conv.UTF8);
-    
+
     completer.complete();
 
-  } else if (respValue is File) { 
-   
+  } else if (respValue is File) {
+
     File f = respValue as File;
     if (responseType == null) {
       String contentType = lookupMimeType(f.path);
@@ -485,14 +484,14 @@ Future _writeResponse(respValue, String responseType, {int statusCode: 200,
     response = new shelf.Response(statusCode, body: f.openRead(), headers: {
       "content-type": responseType
     });
-    
+
     completer.complete();
 
-  } else if (respValue is shelf.Response) { 
+  } else if (respValue is shelf.Response) {
     response = respValue;
-    
+
     completer.complete();
-    
+
   } else {
 
     if (responseType == null) {
@@ -501,11 +500,11 @@ Future _writeResponse(respValue, String responseType, {int statusCode: 200,
     response = new shelf.Response(statusCode, body: respValue.toString(), headers: {
       "content-type": responseType
     });
-    
+
     completer.complete();
 
   }
-  
+
   return completer.future;
 
 }
@@ -515,22 +514,19 @@ _ErrorHandler _findErrorHandler(int statusCode, String path) {
   if (handlers == null) {
     return null;
   }
-  
+
   return handlers.firstWhere((e) {
     if (e.urlPattern == null) {
       return true;
     }
     var match = e.urlPattern.firstMatch(path);
-    if (match != null) {
-      return match[0] == path;
-    }
-    return false;
+    return match != null ? match[0] == path : false;
   }, orElse: () => null);
 }
 
-Future _notifyError(int statusCode, String resource, 
-                                   {Object error, 
-                                    StackTrace stack, 
+Future _notifyError(int statusCode, String resource,
+                                   {Object error,
+                                    StackTrace stack,
                                     bool printErrorPage: true}) {
 
   return new Future.sync(() {
@@ -546,13 +542,13 @@ Future _notifyError(int statusCode, String resource,
 void _writeErrorPage(int statusCode, String resource, [Object error, StackTrace stack]) {
 
   String description = _getStatusDescription(statusCode);
-  
+
   String formattedStack = null;
   if (stack != null) {
     formattedStack = Trace.format(stack);
   }
 
-  String errorTemplate = 
+  String errorTemplate =
 '''<!DOCTYPE>
 <html>
 <head>
