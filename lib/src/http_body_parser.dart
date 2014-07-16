@@ -3,9 +3,7 @@ part of redstone_server;
 ///ported from the http_server package
 ///http://pub.dartlang.org/packages/http_server
 
-/**
- * A form item that contains a file.
- */
+/// A form item that contains a file.
 class HttpBodyFileUpload {
   final ContentType contentType;
   final String filename;
@@ -26,7 +24,6 @@ class HttpBody {
   final dynamic body;
 
   HttpBody(this.type, this.body);
-
 }
 
 Future<HttpBody> _parseRequestBody(Stream<List<int>> stream,
@@ -36,7 +33,7 @@ Future<HttpBody> _parseRequestBody(Stream<List<int>> stream,
   Future<HttpBody> asBinary() {
     return stream
         .fold(new BytesBuilder(), (builder, data) => builder..add(data))
-        .then((builder) => new HttpBody("binary", builder.takeBytes()));
+        .then((builder) => new HttpBody(BINARY, builder.takeBytes()));
   }
 
   Future<HttpBody> asText(conv.Encoding defaultEncoding) {
@@ -47,7 +44,7 @@ Future<HttpBody> _parseRequestBody(Stream<List<int>> stream,
     return stream
         .transform(encoding.decoder)
         .fold(new StringBuffer(), (buffer, data) => buffer..write(data))
-        .then((buffer) => new HttpBody("text", buffer.toString()));
+        .then((buffer) => new HttpBody(TEXT, buffer.toString()));
   }
 
   Future<HttpBody> asFormData() {
@@ -85,7 +82,7 @@ Future<HttpBody> _parseRequestBody(Stream<List<int>> stream,
           for (var part in parts) {
             map[part[0]] = part[1];  // Override existing entries.
           }
-          return new HttpBody('form', map);
+          return new HttpBody(FORM, map);
         });
   }
 
@@ -101,18 +98,14 @@ Future<HttpBody> _parseRequestBody(Stream<List<int>> stream,
       switch (contentType.subType) {
         case "json":
           return asText(conv.UTF8)
-              .then((body) => new HttpBody("json", conv.JSON.decode(body.body)));
+              .then((body) => new HttpBody(JSON, conv.JSON.decode(body.body)));
 
         case "x-www-form-urlencoded":
           return asText(conv.ASCII)
               .then((body) {
                 var map = Uri.splitQueryString(body.body,
                     encoding: defaultEncoding);
-                var result = {};
-                for (var key in map.keys) {
-                  result[key] = map[key];
-                }
-                return new HttpBody("form", result);
+                return new HttpBody(FORM, new Map.from(map));
               });
 
         default:

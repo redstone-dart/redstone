@@ -2,7 +2,7 @@ part of redstone_server;
 
 //do not scan the following libraries
 var _blacklist = const [
-  
+
   #dart.core,
   #dart.async,
   #dart.collection,
@@ -19,9 +19,7 @@ var _blacklist = const [
   #dart.web_audio,
   #dart.web_gl,
   #dart.web_sql
-  
+
 ];
 
-Set<Symbol> _buildBlacklistSet() {
-  return new Set<Symbol>()..addAll(_blacklist);
-}
+Set<Symbol> _buildBlacklistSet() => new Set<Symbol>.from(_blacklist);

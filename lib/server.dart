@@ -46,9 +46,8 @@ const String ERROR_HANDLER = "ERROR_HANDLER";
 const String _DEFAULT_ADDRESS = "0.0.0.0";
 const int _DEFAULT_PORT = 8080;
 
-/**
- * The request's information and content.
- */
+
+/// The request's information and content.
 abstract class Request {
 
   /// The original [Uri] for the request.
@@ -57,7 +56,7 @@ abstract class Request {
   /// The remainder of the [requestedUri] path and query designating the virtual
   /// "location" of the request's target within the handler.
   ///
-  /// [url] may be an empty, if [requestedUri]targets the handler
+  /// [url] may be an empty, if [requestedUri] targets the handler
   /// root and does not have a trailing slash.
   ///
   /// [url] is never null. If it is not empty, it will start with `/`.
@@ -105,9 +104,7 @@ abstract class Request {
 
 }
 
-/**
- * A request whose body was not fully read yet
- */
+/// A request whose body was not fully read yet
 abstract class UnparsedRequest extends Request {
 
   void parseBodyType();
@@ -116,7 +113,7 @@ abstract class UnparsedRequest extends Request {
 
   HttpRequest get httpRequest;
 
-  set shelfRequest(shelf.Request req);
+  void set shelfRequest(shelf.Request req);
 
 }
 
@@ -173,15 +170,13 @@ class HttpRequestParser {
   }
 
   Future parseHttpRequestBody(Stream<List<int>> body) {
-    if (_bodyParsed != null) {
-      return _bodyParsed;
-    }
-
-    _bodyParsed = _parseRequestBody(body, _contentType).
-        then((HttpBody reqBody) {
+    if (_bodyParsed == null) {
+      _bodyParsed = _parseRequestBody(body, _contentType).then((HttpBody reqBody) {
           _requestBody = reqBody;
           return reqBody.body;
-    });
+      });
+    }
+
     return _bodyParsed;
   }
 }
@@ -220,7 +215,6 @@ abstract class Chain {
  * If a route returns or throws an [ErrorResponse], then
  * the framework will serialize [error], and create a
  * response with status [statusCode].
- *
  */
 class ErrorResponse {
 
@@ -231,10 +225,7 @@ class ErrorResponse {
 
 }
 
-/**
- * User credentials from request
- *
- */
+/// User credentials from request
 class Credentials {
 
   String username;
@@ -252,15 +243,11 @@ class Credentials {
  */
 Request get request => Zone.current[#request];
 
-/**
- * The [Response] object, used for sending back the response to the client.
- */
+/// The [Response] object, used for sending back the response to the client.
 shelf.Response get response => Zone.current[#state].response;
 
-/**
- * The [Response] object, used for sending back the response to the client.
- */
-set response(shelf.Response value) => Zone.current[#state].response = value;
+/// The [Response] object, used for sending back the response to the client.
+void set response(shelf.Response value) => Zone.current[#state].response = value;
 
 /**
  * The request's chain.
@@ -299,10 +286,7 @@ void redirect(String url) {
   chain.interrupt();
 }
 
-/**
- * Parse authorization header from request.
- *
- */
+/// Parse authorization header from request.
 Credentials parseAuthorizationHeader() {
   if (request.headers[HttpHeaders.AUTHORIZATION] != null) {
     String authorization = request.headers[HttpHeaders.AUTHORIZATION];
@@ -617,8 +601,7 @@ abstract class ServerMetadata {
 
 }
 
-abstract class RouteMetadata implements
-    HandlerMetadata<Route, MethodMirror> {
+abstract class RouteMetadata implements HandlerMetadata<Route, MethodMirror> {
 
   ///The url pattern of this route
   String get urlRegex;
@@ -640,23 +623,17 @@ abstract class GroupMetadata implements ServerMetadata,
  */
 typedef void RedstonePlugin(Manager manager);
 
-/**
- * A route programmatically created by a plugin.
- */
+/// A route programmatically created by a plugin.
 typedef dynamic RouteHandler(Map<String, String> pathSegments,
                              Injector injector, Request request);
 
-/**
- * A route wrapper created by a plugin.
- */
+/// A route wrapper created by a plugin.
 typedef dynamic RouteWrapper(dynamic metadata,
                              Map<String, String> pathSegments,
                              Injector injector, Request request,
                              RouteHandler route);
 
-/**
- * An interceptor or error handler, programmatically created by a plugin.
- */
+/// An interceptor or error handler, programmatically created by a plugin.
 typedef dynamic Handler(Injector injector);
 
 /**
