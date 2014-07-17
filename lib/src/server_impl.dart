@@ -237,12 +237,12 @@ Future _runTarget(_Target target, UnparsedRequest req, shelf.Handler handler) {
     if (f == null) {
       if (handler != null) {
         var r = handler(req.shelfRequest);
-        if (r is Future) {
-          f = r.then((resp) => response = resp);
-        } else {
-          response = r;
-          f = new Future.value();
-        }
+        f = new Future.value(r).then((resp) {
+          response = resp;
+          if (response.statusCode < 200 || response.statusCode >= 300) {
+            return _notifyError(response.statusCode, req.url.path);
+          }
+        });
       } else {
         _logger.fine("resource not found: ${req.url}");
 
