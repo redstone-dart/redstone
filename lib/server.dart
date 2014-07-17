@@ -247,7 +247,9 @@ Request get request => Zone.current[#request];
 shelf.Response get response => Zone.current[#state].response;
 
 /// The [Response] object, used for sending back the response to the client.
-void set response(shelf.Response value) => Zone.current[#state].response = value;
+void set response(shelf.Response value) {
+  Zone.current[#state].response = value;
+}
 
 /**
  * The request's chain.
