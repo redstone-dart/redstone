@@ -1,3 +1,6 @@
+## v0.5.8+1
+* Fixed docgen issue (see [dartdocs log](http://www.dartdocs.org/buildlogs/b-4066095f44173ae2e2ca3bb6a2f72-startupscript.log))
+
 ## v0.5.8
 * Added support for https (Thanks to [vicb](https://github.com/vicb) PR #26, see [documentation](https://github.com/luizmineo/redstone.dart/wiki/Server-Configuration#secure-connections-https))
 * Code cleanup (Thanks to [vicb](https://github.com/vicb) PR #29)
