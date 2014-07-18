@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="http://redstonedart.org">
+  <link rel="alternate" type="application/rss+xml" title="RSS"
+      href="http://redstonedart.org/feed.xml">
+  <title>Redstone.dart - Server-side microframework for Dart</title>
+
+  <!-- Bootstrap -->
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/css/syntax.css" rel="stylesheet">
+  
+  <link href="/css/blog.css" rel="stylesheet">
+  
+  <link href="/css/footer.css" rel="stylesheet">
+
+  <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+  <script>
+    if (window.location.href.indexOf('http://luizmineo.github.io') === 0) {
+      window.location.href = 'http://redstonedart.org/2014/07/18/authentication-and-authorization/';
+    }
+  </script>
+</head>
+
+
+    <body>
+
+    <nav class="navbar navbar-default" role="navigation">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="/">Redstone.dart</a>
+    </div>
+
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+        <li  class="active" ><a href="/blog">Blog</a></li>
+        <li ><a href="/doc">Documentation</a></li>
+        <li><a href="http://www.dartdocs.org/documentation/redstone/0.5.8/index.html#redstone">API Reference</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+
+    <div class="container">
+    <div class="page-header">
+      <h1>Authentication and Authorization</h1>
+    </div>
+    <div class="row">
+      <div class="col-xs-12">
+        <p><b>18 July 2014</b> <small class="post-author">by Luiz Mineo</small></p>
+        <p>One of the questions I get most often is how to implement security constraints with Redstone.dart. Some time ago, I&#39;ve published a <a href="https://github.com/luizmineo/auth_example">simple example</a> that illustrates how the Redstone.dart API can be used to implement authentication and authorization. In this post, I&#39;ll explain this example in details.</p>
+
+<p>First of all, let&#39;s download and execute it. The project is available on <a href="https://github.com/luizmineo/auth_example">github</a>, so you can just clone its repository:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">$ git clone git@github.com:luizmineo/auth_example.git
+</code></pre></div>
+<p>(Also, you can download it as a <a href="https://github.com/luizmineo/auth_example/archive/master.zip">zip file</a>)</p>
+
+<p>Before running it, be sure to have a <a href="http://www.mongodb.org/">MongoDB</a> instance available in your environment. By default, the application will try to connect to a local MongoDB instance, and create/use a database named &quot;auth_example&quot;. Take a look at the <code>bin/server.dart</code> file to change these settings.</p>
+
+<p>If you are using Ubuntu, or other Debian based linux distribution, you can just do the following to install MongoDB:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">$ sudo apt-get install mongodb
+</code></pre></div>
+<p>Now, open up <a href="https://www.dartlang.org/tools/editor/">Dart Editor</a>, go to <code>File -&gt; Open Existing Folder...</code> and select the project folder.</p>
+
+<p>To run the application, we need to create two launch configurations: One to start our server, and another to start the client in Dartium. </p>
+
+<p>Go to <code>Run -&gt; Manage Launches</code>.</p>
+
+<p>To create the server launch:</p>
+
+<ul>
+<li>Create a new command-line launch</li>
+<li>Set <em>Dart Script</em> to <em>bin/server.dart</em></li>
+<li>Set <em>Working Directory</em> to the project path</li>
+<li>Click on the <em>Apply</em> button</li>
+</ul>
+
+<p>To create the client lauch:</p>
+
+<ul>
+<li>Create a new Dartium launch</li>
+<li>Change <em>Launch Target</em> to <em>URL</em></li>
+<li>Set <em>URL</em> to <em><a href="http://localhost:8080">http://localhost:8080</a></em></li>
+<li>Set <em>Source Location</em> to the project path</li>
+<li>Uncheck the <em>Use pub serve to serve the application</em> option</li>
+<li>Click on the <em>Apply</em> button</li>
+</ul>
+
+<p>Now, start the server and then the client. If everything went right, you&#39;ll see a very basic html page. It has no style, just a bunch of html controls that we can use to test our server.</p>
+
+<p><img src="/assets/img/auth_example_print.png" alt="auth_example html page"></p>
+
+<p>First, let&#39;s try to access a private service. Go to the &quot;Echo service&quot; form, write something in the text input field, and click on the &quot;Send&quot; button. Instead of returning the input, the service will return a 401 status code.</p>
+
+<p>Now create a new user and authenticate with it. If you try the echo service again, it will return the input. If your user is an admin, you can also execute the users service.</p>
+
+<p>Pretty cool, right? So, how does it work?</p>
+
+<p>Open up the <code>lib/authentication.dart</code> file. You&#39;ll find our <code>authenticationFilter()</code> interceptor.</p>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Interceptor</span><span class="p">(</span><span class="s1">r&#39;/services/private/.+&#39;</span><span class="p">)</span>
+<span class="n">authenticationFilter</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">app</span><span class="p">.</span><span class="n">request</span><span class="p">.</span><span class="n">session</span><span class="p">[</span><span class="s2">&quot;username&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">app</span><span class="p">.</span><span class="n">chain</span><span class="p">.</span><span class="n">interrupt</span><span class="p">(</span><span class="nl">statusCode:</span> <span class="n">HttpStatus</span><span class="p">.</span><span class="n">UNAUTHORIZED</span><span class="p">,</span> <span class="nl">responseValue:</span> <span class="p">{</span><span class="s2">&quot;error&quot;</span><span class="o">:</span> <span class="s2">&quot;NOT_AUTHENTICATED&quot;</span><span class="p">});</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="n">app</span><span class="p">.</span><span class="n">chain</span><span class="p">.</span><span class="n">next</span><span class="p">();</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>This interceptor is applied to any request which path starts with <code>/services/private</code>. It checks if the corresponding session has an &quot;username&quot; attribute. If so, the interceptor calls the next handler of the chain, otherwise, it returns a response with the 401 status code.</p>
+
+<p>In the same script, you&#39;ll find the login and logout services:</p>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Route</span><span class="p">(</span><span class="s2">&quot;/services/login&quot;</span><span class="p">,</span> <span class="nl">methods:</span> <span class="kd">const</span><span class="p">[</span><span class="n">app</span><span class="p">.</span><span class="n">POST</span><span class="p">])</span>
+<span class="n">login</span><span class="p">(</span><span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Attr</span><span class="p">()</span> <span class="n">Db</span> <span class="n">conn</span><span class="p">,</span> <span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Body</span><span class="p">(</span><span class="n">app</span><span class="p">.</span><span class="n">JSON</span><span class="p">)</span> <span class="n">Map</span> <span class="n">body</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="n">userCollection</span> <span class="o">=</span> <span class="n">conn</span><span class="p">.</span><span class="n">collection</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">);</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">body</span><span class="p">[</span><span class="s2">&quot;username&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">||</span> <span class="n">body</span><span class="p">[</span><span class="s2">&quot;password&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;success&quot;</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span> <span class="s2">&quot;error&quot;</span><span class="o">:</span> <span class="s2">&quot;WRONG_USER_OR_PASSWORD&quot;</span><span class="p">};</span>
+  <span class="p">}</span>
+  <span class="kd">var</span> <span class="n">pass</span> <span class="o">=</span> <span class="n">encryptPassword</span><span class="p">(</span><span class="n">body</span><span class="p">[</span><span class="s2">&quot;password&quot;</span><span class="p">].</span><span class="n">trim</span><span class="p">());</span>
+  <span class="k">return</span> <span class="n">userCollection</span><span class="p">.</span><span class="n">findOne</span><span class="p">({</span><span class="s2">&quot;username&quot;</span><span class="o">:</span> <span class="n">body</span><span class="p">[</span><span class="s2">&quot;username&quot;</span><span class="p">],</span> <span class="s2">&quot;password&quot;</span><span class="o">:</span> <span class="n">pass</span><span class="p">})</span>
+      <span class="p">.</span><span class="n">then</span><span class="p">((</span><span class="n">user</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">user</span> <span class="o">==</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
+          <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;success&quot;</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span>
+            <span class="s2">&quot;error&quot;</span><span class="o">:</span> <span class="s2">&quot;WRONG_USER_OR_PASSWORD&quot;</span>
+          <span class="p">};</span>
+        <span class="p">}</span>
+
+        <span class="kd">var</span> <span class="n">session</span> <span class="o">=</span> <span class="n">app</span><span class="p">.</span><span class="n">request</span><span class="p">.</span><span class="n">session</span><span class="p">;</span>
+        <span class="n">session</span><span class="p">[</span><span class="s2">&quot;username&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">user</span><span class="p">[</span><span class="s2">&quot;username&quot;</span><span class="p">];</span>
+
+        <span class="n">Set</span> <span class="n">roles</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Set</span><span class="p">();</span>
+        <span class="kt">bool</span> <span class="n">admin</span> <span class="o">=</span> <span class="n">user</span><span class="p">[</span><span class="s2">&quot;admin&quot;</span><span class="p">];</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">admin</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="n">admin</span><span class="p">)</span> <span class="p">{</span>
+          <span class="n">roles</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">ADMIN</span><span class="p">);</span>
+        <span class="p">}</span>
+        <span class="n">session</span><span class="p">[</span><span class="s2">&quot;roles&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">roles</span><span class="p">;</span>
+
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;success&quot;</span><span class="o">:</span> <span class="kc">true</span><span class="p">};</span>
+      <span class="p">});</span>
+<span class="p">}</span>
+
+<span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Route</span><span class="p">(</span><span class="s2">&quot;/services/logout&quot;</span><span class="p">)</span>
+<span class="n">logout</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">app</span><span class="p">.</span><span class="n">request</span><span class="p">.</span><span class="n">session</span><span class="p">.</span><span class="n">destroy</span><span class="p">();</span>
+  <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;success&quot;</span><span class="o">:</span> <span class="kc">true</span><span class="p">};</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>The login service verifies if the provided user exists in the database. If it does, it creates the &quot;username&quot; and &quot;roles&quot; attributes in the corresponding http session. The logout service just destroy the current session.</p>
+
+<p>To create a private service, which can be executed only by authenticated users, we can just put it under the <code>/services/private</code> path. If you open the <code>lib/services.dart</code> file, you&#39;ll see the echo service implementation:</p>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="c1">//A private service. Any authenticated user can execute &#39;echo&#39;</span>
+<span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Route</span><span class="p">(</span><span class="s2">&quot;/services/private/echo/:arg&quot;</span><span class="p">)</span>
+<span class="n">echo</span><span class="p">(</span><span class="kt">String</span> <span class="n">arg</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="n">arg</span><span class="p">;</span>
+</code></pre></div>
+<p>Now we need a way to define services that can be executed only by admin users. We can just define another interceptor to the <code>/services/private/admin/.+</code> path pattern, but that wouldn&#39;t be an ideal solution. Some applications can have a lot of roles (or user types), and associate each role with a path can be impractical. Instead, we will create an authorization plugin.</p>
+
+<p>Open up the <code>lib/authorization.dart</code> file:</p>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="kd">const</span> <span class="kt">String</span> <span class="n">ADMIN</span> <span class="o">=</span> <span class="s2">&quot;ADMIN&quot;</span><span class="p">;</span>
+
+<span class="kd">class</span> <span class="nc">Secure</span> <span class="p">{</span>
+
+  <span class="kd">final</span> <span class="kt">String</span> <span class="n">role</span><span class="p">;</span>
+
+  <span class="kd">const</span> <span class="n">Secure</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="n">role</span><span class="p">);</span>
+
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="n">AuthorizationPlugin</span><span class="p">(</span><span class="n">app</span><span class="p">.</span><span class="n">Manager</span> <span class="n">manager</span><span class="p">)</span> <span class="p">{</span>
+
+  <span class="n">manager</span><span class="p">.</span><span class="n">addRouteWrapper</span><span class="p">(</span><span class="n">Secure</span><span class="p">,</span> <span class="p">(</span><span class="n">metadata</span><span class="p">,</span> <span class="n">pathSegments</span><span class="p">,</span> <span class="n">injector</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">route</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="kt">String</span> <span class="n">role</span> <span class="o">=</span> <span class="p">(</span><span class="n">metadata</span> <span class="o">as</span> <span class="n">Secure</span><span class="p">).</span><span class="n">role</span><span class="p">;</span>
+    <span class="n">Set</span> <span class="n">userRoles</span> <span class="o">=</span> <span class="n">app</span><span class="p">.</span><span class="n">request</span><span class="p">.</span><span class="n">session</span><span class="p">[</span><span class="s2">&quot;roles&quot;</span><span class="p">];</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">userRoles</span><span class="p">.</span><span class="n">contains</span><span class="p">(</span><span class="n">role</span><span class="p">))</span> <span class="p">{</span>
+      <span class="k">throw</span> <span class="k">new</span> <span class="n">app</span><span class="p">.</span><span class="n">ErrorResponse</span><span class="p">(</span><span class="m">403</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;error&quot;</span><span class="o">:</span> <span class="s2">&quot;NOT_AUTHORIZED&quot;</span><span class="p">});</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">route</span><span class="p">(</span><span class="n">pathSegments</span><span class="p">,</span> <span class="n">injector</span><span class="p">,</span> <span class="n">request</span><span class="p">);</span>
+
+  <span class="p">},</span> <span class="nl">includeGroups:</span> <span class="kc">true</span><span class="p">);</span>
+
+<span class="p">}</span>
+</code></pre></div>
+<p>A Redstone.dart plugin is just a function that receives a <code>Manager</code> object. The manager allows a plugin to inspect the current server structure (installed routes, interceptors, error handlers and groups) and modify it. Our authorization plugin defines a <code>Secure</code> annotation, and then add a wrapper to any route that is annotated with it. You can see a wrapper as a <a href="https://github.com/dart-lang/bleeding_edge/tree/master/dart/pkg/shelf#handlers-and-middleware">Shelf middleware</a>, it&#39;s a function that receives the target route as an argument, and may or may not forward the request to it.</p>
+
+<p>If you open the <code>bin/server.dart</code> file, you&#39;ll see that the <code>addPlugin()</code> function is used to install our authorization plugin:</p>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="n">app</span><span class="p">.</span><span class="n">addPlugin</span><span class="p">(</span><span class="n">AuthorizationPlugin</span><span class="p">);</span>
+</code></pre></div>
+<p>Now, to create a service that can be executed only by authenticated users that are admin, we can just put it under the <code>/services/private</code> path, and annotate it with <code>@Secure</code>:</p>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="c1">//A private service. Only authenticated users with the &#39;ADMIN&#39; role</span>
+<span class="c1">//can view the list of registered users</span>
+<span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Route</span><span class="p">(</span><span class="s2">&quot;/services/private/listusers&quot;</span><span class="p">)</span>
+<span class="err">@</span><span class="n">Secure</span><span class="p">(</span><span class="n">ADMIN</span><span class="p">)</span>
+<span class="n">listUsers</span><span class="p">(</span><span class="err">@</span><span class="n">app</span><span class="p">.</span><span class="n">Attr</span><span class="p">()</span> <span class="n">Db</span> <span class="n">conn</span><span class="p">)</span> <span class="p">{</span>
+
+  <span class="kd">var</span> <span class="n">userCollection</span> <span class="o">=</span> <span class="n">conn</span><span class="p">.</span><span class="n">collection</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">);</span>
+  <span class="k">return</span> <span class="n">userCollection</span><span class="p">.</span><span class="n">find</span><span class="p">(</span><span class="n">where</span><span class="p">.</span><span class="n">excludeFields</span><span class="p">(</span><span class="kd">const</span> <span class="p">[</span><span class="s2">&quot;_id&quot;</span><span class="p">,</span> <span class="s2">&quot;password&quot;</span><span class="p">])).</span><span class="n">toList</span><span class="p">();</span>
+
+<span class="p">}</span>
+</code></pre></div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-12 comments-area">
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+            /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+            var disqus_shortname = 'redstonedart'; // required: replace example with your forum shortname
+
+            /* * * DON'T EDIT BELOW THIS LINE * * */
+            (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+            })();
+        </script>
+        <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+        <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+    
+      </div>
+    </div>
+</div>
+
+    <div class="container-fluid footer">
+  <div class="row">
+    <div class="col-xs-12">
+      <div class="footer-panel">
+        <ul class="gh-links">
+          <li>
+            <iframe src="http://ghbtns.com/github-btn.html?user=luizmineo&repo=redstone.dart&type=watch&count=true" allowtransparency="true" frameborder="0" scrolling="0" width="110" height="20"></iframe>
+          </li>
+          <li>
+            <iframe src="http://ghbtns.com/github-btn.html?user=luizmineo&repo=redstone.dart&type=fork&count=true" allowtransparency="true" frameborder="0" scrolling="0" width="110" height="20"></iframe>
+          </li>
+          <li>
+            <iframe src="http://ghbtns.com/github-btn.html?user=luizmineo&repo=redstone.dart&type=follow" allowtransparency="true" frameborder="0" scrolling="0" width="150" height="20"></iframe>
+          </li>
+        </ul>
+        <p>Built and mantained by <a href="https://github.com/luizmineo" target="_blank">Luiz Mineo</a>, with the help of <a href="https://github.com/luizmineo/redstone.dart/graphs/contributors">contributors</a>.</p>
+        <p>Code licensed under <a href="https://github.com/luizmineo/redstone.dart/blob/master/LICENSE" target="_blank">MIT</a></p>
+        <ul class="footer-links">
+          <li>Currently v0.5.8</li>
+          <li>-</li>
+          <li><a href="/blog">Blog</a></li>
+          <li>-</li>
+          <li><a href="https://github.com/luizmineo/redstone.dart">Github</a></li>
+          <li>-</li>
+          <li><a href="http://groups.google.com/d/forum/redstonedart">Mailing List</a></li>
+          <li>-</li>
+          <li><a href="/doc">Documentation</a></li>
+          <li>-</li>
+          <li><a href="http://www.dartdocs.org/documentation/redstone/0.5.8/index.html#redstone">API Reference</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/jquery-1.11.0.min.js"></script>
+<script src="/js/bootstrap.min.js"></script>
+
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-50600290-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+    </body>
+</html>

@@ -48,7 +48,7 @@
       <ul class="nav navbar-nav">
         <li ><a href="/blog">Blog</a></li>
         <li  class="active" ><a href="/doc">Documentation</a></li>
-        <li><a href="http://www.dartdocs.org/documentation/redstone/0.5.7+2/index.html#redstone">API Reference</a></li>
+        <li><a href="http://www.dartdocs.org/documentation/redstone/0.5.8/index.html#redstone">API Reference</a></li>
       </ul>
     </div>
   </div>
@@ -115,7 +115,26 @@
 <td>port</td>
 <td>8080</td>
 </tr>
+<tr>
+<td>protocol</td>
+<td>http</td>
+</tr>
 </tbody></table>
+
+<h2 id="secure-connections-(https)">Secure connections (https)</h2>
+
+<p>In order to start a secure server (https), you should specify the optional <code>secureOptions</code> argument
+when calling the <code>start ()</code> method.</p>
+
+<p>The <code>secureOptions</code> is a <code>Map&lt;Symbol, dynamic&gt;</code> that will be forwarded to the <a href="https://api.dartlang.org/apidocs/channels/stable/dartdoc-viewer/dart-io.HttpServer#id_bindSecure"><code>HttpServer.bindSecure()</code></a> method:</p>
+<div class="highlight"><pre><code class="language-dart" data-lang="dart"><span class="k">import</span> <span class="s1">&#39;package:redstone/server.dart&#39;</span> <span class="k">as</span> <span class="n">app</span><span class="p">;</span>
+
+<span class="n">main</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">app</span><span class="p">.</span><span class="n">setupConsoleLog</span><span class="p">();</span>
+  <span class="n">app</span><span class="p">.</span><span class="n">start</span><span class="p">(</span><span class="nl">secureOptions:</span> <span class="p">{</span><span class="err">#</span><span class="nl">certificateName:</span> <span class="s2">&quot;CN=RedStone&quot;</span><span class="p">});</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>See the <a href="https://github.com/luizmineo/redstone.dart/blob/master/example/https.dart"><code>https.dart</code></a> for a working example.</p>
 
 <h2 id="static-files">Static Files</h2>
 
@@ -188,9 +207,10 @@
             <iframe src="http://ghbtns.com/github-btn.html?user=luizmineo&repo=redstone.dart&type=follow" allowtransparency="true" frameborder="0" scrolling="0" width="150" height="20"></iframe>
           </li>
         </ul>
-        <p>Built and mantained by <a href="https://github.com/luizmineo" target="_blank">Luiz Mineo</a>. Code licensed under <a href="https://github.com/luizmineo/redstone.dart/blob/master/LICENSE" target="_blank">MIT</a>.</p>
+        <p>Built and mantained by <a href="https://github.com/luizmineo" target="_blank">Luiz Mineo</a>, with the help of <a href="https://github.com/luizmineo/redstone.dart/graphs/contributors">contributors</a>.</p>
+        <p>Code licensed under <a href="https://github.com/luizmineo/redstone.dart/blob/master/LICENSE" target="_blank">MIT</a></p>
         <ul class="footer-links">
-          <li>Currently v0.5.7+2</li>
+          <li>Currently v0.5.8</li>
           <li>-</li>
           <li><a href="/blog">Blog</a></li>
           <li>-</li>
@@ -200,7 +220,7 @@
           <li>-</li>
           <li><a href="/doc">Documentation</a></li>
           <li>-</li>
-          <li><a href="http://www.dartdocs.org/documentation/redstone/0.5.7+2/index.html#redstone">API Reference</a></li>
+          <li><a href="http://www.dartdocs.org/documentation/redstone/0.5.8/index.html#redstone">API Reference</a></li>
         </ul>
       </div>
     </div>
