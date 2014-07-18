@@ -1,5 +1,10 @@
+## v0.5.8
+* Added support for https (Thanks to [vicb](https://github.com/vicb) PR #26, see [documentation](https://github.com/luizmineo/redstone.dart/wiki/Server-Configuration#secure-connections-https))
+* Code cleanup (Thanks to [vicb](https://github.com/vicb) PR #29)
+* Fix: Properly handle error responses produced by a shelf handler
+
 ## v0.5.7+2
-- Improved error handling. See issue #24.
+* Improved error handling. See issue #24.
 
 ## v0.5.7+1
 * Fixed docgen issue (see [dartdocs log](http://www.dartdocs.org/buildlogs/b-324b8609c46a0a8b9060d0b59539a-startupscript.log))
