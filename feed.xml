@@ -12,7 +12,7 @@
         <description>&lt;p&gt;One of the questions I get most often is how to implement security constraints with Redstone.dart. Some time ago, I&amp;#39;ve published a &lt;a href=&quot;https://github.com/luizmineo/auth_example&quot;&gt;simple example&lt;/a&gt; that illustrates how the Redstone.dart API can be used to implement authentication and authorization. In this post, I&amp;#39;ll explain this example in details.&lt;/p&gt;
 
 &lt;p&gt;First of all, let&amp;#39;s download and execute it. The project is available on &lt;a href=&quot;https://github.com/luizmineo/auth_example&quot;&gt;github&lt;/a&gt;, so you can just clone its repository:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;$ git clone git@github.com:luizmineo/auth_example.git
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;$ git clone https://github.com/luizmineo/auth_example.git
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;(Also, you can download it as a &lt;a href=&quot;https://github.com/luizmineo/auth_example/archive/master.zip&quot;&gt;zip file&lt;/a&gt;)&lt;/p&gt;
 
