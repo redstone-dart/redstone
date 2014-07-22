@@ -1,3 +1,6 @@
+## v0.5.9
+* Fix: Redstone.dart can't be used with shelf_web_socket (issue #30).
+
 ## v0.5.8+1
 * Fixed docgen issue (see [dartdocs log](http://www.dartdocs.org/buildlogs/b-4066095f44173ae2e2ca3bb6a2f72-startupscript.log))
 
