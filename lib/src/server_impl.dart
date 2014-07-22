@@ -79,7 +79,8 @@ final shelf.Middleware _redstoneMiddleware = (shelf.Handler handler) {
                if (!completer.isCompleted) {
                 _commitResponse(response, completer);
                }
-             });
+             })
+             .catchError((e) => completer.completeError(e));
       }
     });
     return completer.future;
@@ -376,7 +377,8 @@ class _ChainImpl implements Chain {
             if (!_interrupted) {
               error = e;
               var level = e is RequestException ? Level.FINE : Level.SEVERE;
-              return _handleError("Failed to execute ${_target.handlerName}", e,
+              var name = _target != null ? _target.handlerName : "shelf handler";
+              return _handleError("Failed to execute ${name}", e,
                   stack: s, logLevel: level,
                   req: request).then((_) => _invokeCallbacks());
             }
