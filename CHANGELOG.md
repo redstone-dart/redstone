@@ -1,3 +1,6 @@
+## v0.5.10
+* Upgraded to di 2.0.1
+
 ## v0.5.9
 * Fix: Redstone.dart can't be used with shelf_web_socket (issue #30).
 
