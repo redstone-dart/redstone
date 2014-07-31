@@ -346,7 +346,7 @@ void _scanHandlers([List<Symbol> libraries]) {
   });
 
   _modules.add(baseModule);
-  _injector = defaultInjector(modules: _modules);
+  _injector = new ModuleInjector(_modules);
 
   routes.forEach((r) => _configureTarget(manager.serverMetadata, r.metadata,
       r.lib.def, r.method, urlPrefix: r.lib.conf.urlPrefix));

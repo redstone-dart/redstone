@@ -16,7 +16,6 @@ import 'package:crypto/crypto.dart';
 import 'package:stack_trace/stack_trace.dart';
 
 import 'package:di/di.dart';
-import 'package:di/auto_injector.dart';
 
 import 'query_map.dart';
 
