@@ -1,3 +1,6 @@
+## v0.5.11
+* Minor performance fix: Redstone.dart shouldn't create a new `shelf.Pipeline` per request.
+
 ## v0.5.10
 * Upgraded to di 2.0.1
 

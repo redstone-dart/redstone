@@ -361,10 +361,10 @@ void addPlugin(RedstonePlugin plugin) {
  * Middlewares are invoked before any interceptor or route.
  */
 void addShelfMiddleware(shelf.Middleware middleware) {
-  if (_initHandler == null) {
-    _initHandler = new shelf.Pipeline().addMiddleware(_redstoneMiddleware);
+  if (_shelfPipeline == null) {
+    _shelfPipeline = _buildShelfPipeline();
   }
-  _initHandler = _initHandler.addMiddleware(middleware);
+  _shelfPipeline = _shelfPipeline.addMiddleware(middleware);
 }
 
 /**
@@ -374,7 +374,7 @@ void addShelfMiddleware(shelf.Middleware middleware) {
  * completed, and no route is found for the requested URL.
  */
 void setShelfHandler(shelf.Handler handler) {
-  _finalHandler = handler;
+  _defaultHandler = handler;
 }
 
 /**

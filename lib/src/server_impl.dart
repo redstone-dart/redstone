@@ -55,6 +55,10 @@ class _RequestImpl extends HttpRequestParser implements UnparsedRequest {
 
 }
 
+final shelf.Handler _redstoneHandler = (shelf.Request req) {
+  return Zone.current[#chain]._handleShelfRequest(req);
+};
+
 final shelf.Middleware _redstoneMiddleware = (shelf.Handler handler) {
   return (shelf.Request shelfRequest) {
     var completer = new Completer();
@@ -86,6 +90,18 @@ final shelf.Middleware _redstoneMiddleware = (shelf.Handler handler) {
     return completer.future;
   };
 };
+
+shelf.Pipeline _buildShelfPipeline() => 
+    new shelf.Pipeline().addMiddleware(_redstoneMiddleware);
+
+void _buildMainHandler() {
+  if (_shelfPipeline != null) {
+    _mainHandler = _shelfPipeline.addHandler(_redstoneHandler);
+  } else {
+    _mainHandler = _buildShelfPipeline()
+                        .addHandler(_redstoneHandler);
+  }
+}
 
 void _commitResponse(shelf.Response resp, Completer completer) {
   if (!resp.headers.containsKey(HttpHeaders.SERVER)) {
@@ -127,7 +143,7 @@ Future<HttpResponse> _dispatchRequest(UnparsedRequest req) {
     List<_Interceptor> interceptors = _getInterceptors(req.httpRequest.uri);
     _Target target = _getTarget(req.httpRequest.uri, state);
 
-    chain = new _ChainImpl(interceptors, target, req, _initHandler, _finalHandler);
+    chain = new _ChainImpl(interceptors, target, req);
   } catch(e, s) {
     _handleError("Failed to handle request.", e, stack: s).then((_) =>
         completer.completeError(e, s));
@@ -143,7 +159,7 @@ void _process(UnparsedRequest req, _RequestState state,
               _ChainImpl chain, Completer completer) {
   runZoned(() {
 
-    shelf_io.handleRequest(req.httpRequest, chain._initHandler).then((_) {
+    shelf_io.handleRequest(req.httpRequest, _mainHandler).then((_) {
       _logger.finer("Closed request for: ${request.url}");
       completer.complete(req.httpRequest.response);
     });
@@ -259,9 +275,6 @@ Future _runTarget(_Target target, UnparsedRequest req, shelf.Handler handler) {
 
 class _ChainImpl implements Chain {
 
-  shelf.Handler _initHandler;
-  shelf.Handler _finalHandler;
-
   List<_Interceptor> _interceptors;
   _Target _target;
 
@@ -276,19 +289,9 @@ class _ChainImpl implements Chain {
 
   List _callbacks = [];
 
-  _ChainImpl(this._interceptors, this._target, this._request,
-             shelf.Pipeline initHandler, this._finalHandler) {
+  _ChainImpl(this._interceptors, this._target, this._request);
 
-    if (initHandler != null) {
-      _initHandler = initHandler.addHandler(_handler);
-    } else {
-      _initHandler = new shelf.Pipeline()
-            .addMiddleware(_redstoneMiddleware)
-            .addHandler(_handler);
-    }
-  }
-
-  Future _handler(shelf.Request req) {
+  Future _handleShelfRequest(shelf.Request req) {
     _request.shelfRequest = req;
     _request.attributes.addAll(req.context);
     Zone.current[#state].chainInitialized = true;
@@ -369,7 +372,7 @@ class _ChainImpl implements Chain {
         _currentInterceptor = null;
         _targetInvoked = true;
         new Future(() {
-          _runTarget(_target, request, _finalHandler).then((_) {
+          _runTarget(_target, request, _defaultHandler).then((_) {
             if (!_interrupted && !Zone.current[#state].requestAborted) {
               return _invokeCallbacks();
             }

@@ -21,8 +21,10 @@ final Map<Type, ResponseProcessor> _responseProcessors = {};
 final Map<Type, RouteWrapper> _routeWrappers = {};
 final Set<Type> _groupAnnotations = new Set();
 
-shelf.Pipeline _initHandler = null;
-shelf.Handler _finalHandler = null;
+shelf.Pipeline _shelfPipeline = null;
+shelf.Handler _defaultHandler = null;
+
+shelf.Handler _mainHandler = null;
 
 final Set<Symbol> _blacklistSet = _buildBlacklistSet();
 
@@ -393,6 +395,9 @@ void _scanHandlers([List<Symbol> libraries]) {
 
   //install plugins
   manager._installPlugins();
+  
+  //install shelf handler
+  _buildMainHandler();
 
   _targets.addAll(_targetsCache.values.map((t) {
     if (t is _TargetWrapper) {
@@ -449,9 +454,10 @@ void _clearHandlers() {
   _routeWrappers.clear();
   _groupAnnotations.clear();
 
-  _initHandler = null;
-  _finalHandler = null;
-
+  _shelfPipeline = null;
+  _defaultHandler = null;
+  _mainHandler = null;
+  
 }
 
 void _configureGroup(_ServerMetadataImpl serverMetadata,
