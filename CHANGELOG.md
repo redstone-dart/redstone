@@ -1,3 +1,6 @@
+## v0.5.12
+* New feature: If a route has `matchSubPaths = true`, the requested subpath can be assigned to a parameter (see issue #36).
+
 ## v0.5.11
 * Minor performance fix: Redstone.dart shouldn't create a new `shelf.Pipeline` per request.
 

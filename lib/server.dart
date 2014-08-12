@@ -459,7 +459,7 @@ void setUp([List<Symbol> libraries]) {
     _scanHandlers(libraries);
   } catch (e) {
     _handleError("Failed to configure handlers.", e);
-    throw e;
+    rethrow;
   }
 }
 

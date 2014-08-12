@@ -9,6 +9,12 @@ mainRoute() => "main_route";
 @app.Route("/path/subpath")
 subRoute() => "sub_route";
 
+@app.Route("/path2/:param", matchSubPaths: true)
+mainRouteWithParam(String param) => param;
+
+@app.Route("/path3/:param*", matchSubPaths: true)
+mainRouteWithSpecialParam(String param) => param;
+
 @app.Route("/handler_by_method")
 getHandler() => "get_handler";
 

@@ -57,19 +57,12 @@ class _Target {
   UrlMatch match(Uri uri) {
     UrlMatch match = urlTemplate.match(uri.path);
     if (match != null) {
-      if (route.matchSubPaths) {
-        if (uri.path.endsWith("/") || match.tail.startsWith("/")) {
-          return match;
-        }
-      } else {
-        if (match.tail.isEmpty) {
-          return match;
-        }
+      if (match.tail.isEmpty) {
+        return match;
+      } else if (route.matchSubPaths && 
+                 (uri.path.endsWith("/") || match.tail.startsWith("/"))) {
+        return match;
       }
-    }
-
-    if (match != null && match.tail.isEmpty) {
-      return match;
     }
     return null;
   }
@@ -721,6 +714,7 @@ void _configureTarget(_ServerMetadataImpl serverMetadata,
 
   var responseProcessors = null;
   var wrapper = null;
+  var specialPathParam = null;
 
   var caller = (UrlMatch match, Request request) {
 
@@ -771,6 +765,10 @@ void _configureTarget(_ServerMetadataImpl serverMetadata,
     return new Future(() {
 
       var pathParams = match.parameters;
+      
+      if (specialPathParam != null) {
+        pathParams[specialPathParam] = pathParams[specialPathParam] + match.tail;
+      }
 
       var posParams = [];
       var namedParams = {};
@@ -815,12 +813,25 @@ void _configureTarget(_ServerMetadataImpl serverMetadata,
 
   };
 
-  String url = route.urlTemplate;
+  String url = route.urlTemplate.trim();
   if (urlPrefix != null) {
     url = _joinUrl(urlPrefix, url);
   }
+  
+  var originalUrl = url;
+  if (url.endsWith("*")) {
+    url = url.substring(0, url.length - 1);
+  }
 
   UrlTemplate urlTemplate = new UrlTemplate(url);
+  
+  if (route.matchSubPaths && urlTemplate.urlParameterNames().isNotEmpty) {
+    var lastParam = urlTemplate.urlParameterNames().last;
+    if (originalUrl.endsWith(":$lastParam*")) {
+      specialPathParam = lastParam;
+    }
+  }
+  
   _Target target;
   if (paramProcessors.bodyType == null) {
     target = new _Target(urlTemplate, handlerName, caller, route);

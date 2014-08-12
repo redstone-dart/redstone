@@ -35,6 +35,8 @@ main() {
       var req = new MockRequest("/path/subpath");
       var req2 = new MockRequest("/path/anotherpath");
       var req3 = new MockRequest("/paths");
+      var req4 = new MockRequest("/path2/sub/path");
+      var req5 = new MockRequest("/path3/sub/path");
       
       return app.dispatch(req).then((resp) {
         expect(resp.mockContent, equals("sub_route"));
@@ -42,6 +44,10 @@ main() {
         expect(resp.mockContent, equals("main_route"));
       }).then((_) => app.dispatch(req3)).then((resp) {
         expect(resp.statusCode, equals(404));
+      }).then((_) => app.dispatch(req4)).then((resp) {
+        expect(resp.mockContent, equals("sub"));
+      }).then((_) => app.dispatch(req5)).then((resp) {
+        expect(resp.mockContent, equals("sub/path"));
       });
     });
     
