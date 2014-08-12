@@ -175,6 +175,15 @@ serviceB() {
 
 If a request for `/path/subpath` is received, then `serviceB` is executed, but if a request for `/path/another_path` is received, `service` is executed.
 
+Also, you can assign the requested sub path to a parameter, adding a trailing `*` character to the url template. Example:
+
+```dart
+@app.Route('/service/:path*', matchSubPaths: true)
+service(String path) {
+ ...
+}
+```
+
 ## The request object
 
 You can use the global `request` object to access the request's information and content:
