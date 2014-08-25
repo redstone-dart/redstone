@@ -112,13 +112,13 @@ void _commitResponse(shelf.Response resp, Completer completer) {
 
 List<_Interceptor> _getInterceptors(Uri uri) {
   String path = uri.path;
-  return new List.from(_interceptors.where((i) {
+  return _interceptors.where((i) {
     var match = i.urlPattern.firstMatch(path);
     if (match != null) {
       return match[0] == path;
     }
     return false;
-  }));
+  }).toList();
 }
 
 _Target _getTarget(Uri uri, _RequestState state) {

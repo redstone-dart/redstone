@@ -554,7 +554,12 @@ abstract class Manager {
    */
   void addRouteWrapper(Type metadataType, RouteWrapper wrapper,
                        {bool includeGroups: false});
-  
+
+  ///Retrieve installed shelf handler
+  shelf.Handler getShelfHandler();
+
+  ///Set or replace the current installed shelf handler
+  void setShelfHandler(shelf.Handler handler);
   
   ///Retrieve an object from the DI Injector
   Object getFromInjector(Type type, [Type annotation]);

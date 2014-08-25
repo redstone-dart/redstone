@@ -1,7 +1,8 @@
 ## v0.5.13
 * Improved plugin API: 
     * Added the `Manager.getFromInjector()` method, which allows plugins to retrieve objects from di modules more easily.
-    * Added the `Manager.findFunctions()`, `Manager.findClasses()` and `Manager.findMethods()` methods, which allow plugins to scan imported libraries.  
+    * Added the `Manager.findFunctions()`, `Manager.findClasses()` and `Manager.findMethods()` methods, which allow plugins to scan imported libraries.
+    * Added the `Manager.getShelfHandler()` and `Manager.setShelfHandler()` methods, which allow plugins to access and replace the current installed shelf handler.
 
 ## v0.5.12
 * New feature: If a route has `matchSubPaths = true`, the requested subpath can be assigned to a parameter (see issue #36).

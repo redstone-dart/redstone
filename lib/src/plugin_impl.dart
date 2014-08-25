@@ -141,6 +141,16 @@ class _ManagerImpl implements Manager {
   }
 
   @override
+  shelf.Handler getShelfHandler() {
+    return _defaultHandler;
+  }
+
+  @override
+  void setShelfHandler(shelf.Handler handler) {
+    _defaultHandler = handler;
+  }
+
+  @override
   Object getFromInjector(Type type, [Type annotation]) =>
     _injector.get(type, annotation);
 
