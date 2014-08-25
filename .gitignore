@@ -1,15 +1,15 @@
-// Don’t commit the following files and directories created by pub, Dart Editor, and dart2js
-/packages/
+# Don’t commit the following files and directories created by pub, Dart Editor, and dart2js
 **/packages
 .project
 .buildlog
+.idea
 *.precompiled.js
 *.js_
 *.js.deps
 *.js.map
 
-// Include when developing application packages
+# Include when developing application packages
 pubspec.lock 
 
-// Avoid committing generated JavaScript files
+# Avoid committing generated JavaScript files
 *.dart.js

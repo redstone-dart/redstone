@@ -554,6 +554,32 @@ abstract class Manager {
    */
   void addRouteWrapper(Type metadataType, RouteWrapper wrapper,
                        {bool includeGroups: false});
+  
+  
+  ///Retrieve an object from the DI Injector
+  Object getFromInjector(Type type, [Type annotation]);
+
+  ///Find all functions annotated with [annotation]
+  Iterable<AnnotatedType<MethodMirror>> findFunctions(Type annotation);
+
+  ///Find all classes annotated with [annotation]
+  Iterable<AnnotatedType<ClassMirror>> findClasses(Type annotation);
+
+  ///Find all methods of [clazz] that are annotated with [annotation]
+  Iterable<AnnotatedType<MethodMirror>> findMethods(ClassMirror clazz, Type annotation);
+
+}
+
+/**
+ *
+ *
+ */
+class AnnotatedType<T> {
+
+  final T mirror;
+  final Object metadata;
+
+  AnnotatedType(this.mirror, this.metadata);
 
 }
 

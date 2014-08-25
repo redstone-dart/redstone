@@ -3,14 +3,18 @@ part of redstone_server;
 class _ManagerImpl implements Manager {
   
   final _ServerMetadataImpl serverMetadata = new _ServerMetadataImpl();
-  
-  void _installPlugins() {
+
+  Iterable<_Lib> _libs;
+
+  void _installPlugins(Iterable<_Lib> libs) {
+    _libs = libs;
     _plugins.forEach((p) {
       serverMetadata._commit();
       p(this);
     });
   }
     
+  @override
   void addRoute(Route conf, String name, RouteHandler route, {String bodyType}) {
     var caller = (UrlMatch match, Request request) {
       _logger.finer("Preparing to execute target: $name");
@@ -53,6 +57,7 @@ class _ManagerImpl implements Manager {
     _logger.info("Configured target for ${conf.urlTemplate} : $name");
   }
   
+  @override
   void addInterceptor(Interceptor conf, String name, Handler interceptor) {
     var caller = () {
 
@@ -70,6 +75,7 @@ class _ManagerImpl implements Manager {
     _logger.info("Configured interceptor for ${conf.urlPattern} : $name");
   }
   
+  @override
   void addErrorHandler(ErrorHandler conf, String name, Handler errorHandler) {
     var caller = () {
 
@@ -103,6 +109,7 @@ class _ManagerImpl implements Manager {
     _logger.info("Configured error handler for status ${conf.statusCode} $url : $name");
   }
   
+  @override
   void addParameterProvider(Type metadataType, ParamProvider parameterProvider, 
                             {List<String> handlerTypes: const [ROUTE]}) {
     handlerTypes.forEach((String type) {
@@ -115,6 +122,7 @@ class _ManagerImpl implements Manager {
     });
   }
   
+  @override
   void addResponseProcessor(Type metadataType, ResponseProcessor processor,
                             {bool includeGroups: false}) {
     _responseProcessors[metadataType] = processor;
@@ -123,6 +131,7 @@ class _ManagerImpl implements Manager {
     }
   }
   
+  @override
   void addRouteWrapper(Type metadataType, RouteWrapper wrapper, 
                        {bool includeGroups: false}) {
     _routeWrappers[metadataType] = wrapper;
@@ -130,6 +139,71 @@ class _ManagerImpl implements Manager {
       _groupAnnotations.add(metadataType);
     }
   }
+
+  @override
+  Object getFromInjector(Type type, [Type annotation]) =>
+    _injector.get(type, annotation);
+
+  @override
+  Iterable<AnnotatedType<MethodMirror>> findFunctions(Type annotation) {
+    var functions = [];
+    _findDeclaredFunctions().forEach((MethodMirror f) {
+
+      var metadata = f.metadata.firstWhere((m) =>
+        m.reflectee.runtimeType == annotation, orElse: () => null);
+
+      if (metadata != null) {
+        functions.add(new AnnotatedType(f, metadata.reflectee));
+      }
+
+    });
+
+    return functions;
+  }
+
+  @override
+  Iterable<AnnotatedType<ClassMirror>> findClasses(Type annotation) {
+    var classes = [];
+    _findDeclaredClasses().forEach((ClassMirror c) {
+
+      var metadata = c.metadata.firstWhere((m) =>
+        m.reflectee.runtimeType == annotation, orElse: () => null);
+
+      if (metadata != null) {
+        classes.add(new AnnotatedType(c, metadata.reflectee));
+      }
+    });
+
+    return classes;
+  }
+
+  @override
+  Iterable<AnnotatedType<MethodMirror>> findMethods(ClassMirror clazz, Type annotation) {
+    var methods = [];
+    _findDeclaredMethods(clazz).forEach((MethodMirror method) {
+
+      var metadata = method.metadata.firstWhere((m) =>
+        m.reflectee.runtimeType == annotation, orElse: () => null);
+
+      if (metadata != null) {
+        methods.add(new AnnotatedType(method, metadata.reflectee));
+      }
+    });
+
+    return methods;
+  }
+
+  _findDeclaredFunctions() =>
+    _libs.map((l) => l.def).expand((LibraryMirror ldef) =>
+      ldef.declarations.values).where((d) => d is MethodMirror);
+
+  _findDeclaredClasses() =>
+    _libs.map((l) => l.def).expand((LibraryMirror ldef) =>
+      ldef.declarations.values).where((d) => d is ClassMirror);
+
+  _findDeclaredMethods(ClassMirror clazz) =>
+    clazz.declarations.values.where((d) => d is MethodMirror);
+
 }
 
 class _ServerMetadataImpl implements ServerMetadata {

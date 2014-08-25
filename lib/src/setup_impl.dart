@@ -310,6 +310,7 @@ void _scanHandlers([List<Symbol> libraries]) {
   List<_HandlerCfg<ErrorHandler>> errors = [];
   List<_Group> groups = [];
 
+  //collect handlers from libraries
   libsToScan.forEach((_Lib lib) {
 
     LibraryMirror def = lib.def;
@@ -340,9 +341,11 @@ void _scanHandlers([List<Symbol> libraries]) {
     });
   });
 
+  //configure dependency injection
   _modules.add(baseModule);
   _injector = new ModuleInjector(_modules);
 
+  //configure handlers
   routes.forEach((r) => _configureTarget(manager.serverMetadata, r.metadata,
       r.lib.def, r.method, urlPrefix: r.lib.conf.urlPrefix));
   errors.forEach((e) => _configureErrorHandler(manager.serverMetadata,
@@ -387,11 +390,13 @@ void _scanHandlers([List<Symbol> libraries]) {
 
 
   //install plugins
-  manager._installPlugins();
+  manager._installPlugins(libsToScan);
   
   //install shelf handler
   _buildMainHandler();
 
+  //pack and sort configured handlers, so they can be used
+  //to process incoming requests
   _targets.addAll(_targetsCache.values.map((t) {
     if (t is _TargetWrapper) {
       t.build();

@@ -142,3 +142,45 @@ class TestGroupWrapper {
   testWrapper() => "target executed";
   
 }
+
+//test scanning
+
+class TestAnnotation {
+
+  const TestAnnotation();
+
+}
+
+@TestAnnotation()
+void annotatedFunction() { }
+
+@TestAnnotation()
+class AnnotatedClass {
+
+  @TestAnnotation()
+  void annotatedMethod() { }
+
+}
+
+//Helper class to handle mirror objects
+class CapturedType {
+
+  Symbol typeName;
+  Object metadata;
+
+  CapturedType(app.AnnotatedType annotatedType) {
+    typeName = annotatedType.mirror.simpleName;
+    metadata = annotatedType.metadata;
+  }
+
+  CapturedType.fromValues(this.typeName, this.metadata);
+
+  operator == (other) {
+    return other is CapturedType &&
+           other.typeName == typeName &&
+           other.metadata == metadata;
+  }
+
+  toString() => "@${metadata} $typeName";
+
+}

@@ -3,6 +3,7 @@ library server_tests;
 import 'dart:convert';
 import 'dart:io';
 import 'dart:async';
+import 'dart:mirrors';
 
 import 'package:unittest/unittest.dart';
 
@@ -592,7 +593,53 @@ main() {
         expect(resp.mockContent, equals("response: target executed"));
       });
     });
-    
+
+  });
+
+  group("Plugins:", () {
+
+    tearDown(app.tearDown);
+
+    test("Find functions, classes and methods", () {
+
+      var completer = new Completer();
+
+      app.addPlugin((app.Manager manager) {
+
+        var expectedFunctions = [
+          new CapturedType.fromValues(#annotatedFunction, const TestAnnotation())
+        ].toSet();
+        var expectedClasses = [
+          new CapturedType.fromValues(#AnnotatedClass, const TestAnnotation())
+        ].toSet();
+        var expectedMethods = [
+          new CapturedType.fromValues(#annotatedMethod, const TestAnnotation())
+        ].toSet();
+
+        var functions = manager.findFunctions(TestAnnotation)
+            .map((t) => new CapturedType(t))
+            .toSet();
+        var classes = manager.findClasses(TestAnnotation)
+            .map((t) => new CapturedType(t))
+            .toSet();
+        var methods = manager.findMethods(reflectClass(AnnotatedClass), TestAnnotation)
+            .map((t) => new CapturedType(t))
+            .toSet();
+
+        expect(functions, equals(expectedFunctions));
+        expect(classes, equals(expectedClasses));
+        expect(methods, equals(expectedMethods));
+
+        completer.complete();
+
+      });
+
+      app.setUp([#plugins]);
+
+      return completer.future;
+
+    });
+
   });
   
   group("Plugins:", () {
