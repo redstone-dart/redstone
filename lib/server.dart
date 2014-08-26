@@ -560,9 +560,16 @@ abstract class Manager {
 
   ///Set or replace the current installed shelf handler
   void setShelfHandler(shelf.Handler handler);
-  
-  ///Retrieve an object from the DI Injector
-  Object getFromInjector(Type type, [Type annotation]);
+
+  /**
+   * Create a new DI injector restricted to the scope of this plugin.
+   *
+   * The returned injector will be a child of the application injector.
+   */
+  Injector createInjector(List<Module> modules);
+
+  ///Retrieve the application DI injector
+  Injector getInjector();
 
   ///Find all functions annotated with [annotation]
   Iterable<AnnotatedType<MethodMirror>> findFunctions(Type annotation);

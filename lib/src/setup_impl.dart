@@ -384,8 +384,7 @@ void _scanHandlers([List<Symbol> libraries]) {
     }
 
     _configureGroup(manager.serverMetadata, g.metadata,
-          g.clazz, _injector,
-          levelHist, urlPrefix: g.lib.conf.urlPrefix);
+          g.clazz, levelHist, urlPrefix: g.lib.conf.urlPrefix);
   });
 
 
@@ -459,7 +458,7 @@ void _clearHandlers() {
 }
 
 void _configureGroup(_ServerMetadataImpl serverMetadata,
-                     Group group, ClassMirror clazz, Injector injector,
+                     Group group, ClassMirror clazz,
                      List<int> chainIdxByLevel, {String urlPrefix}) {
 
   var className = MirrorSystem.getName(clazz.qualifiedName);
@@ -467,7 +466,7 @@ void _configureGroup(_ServerMetadataImpl serverMetadata,
 
   InstanceMirror instance = null;
   try {
-    instance = reflect(injector.get(clazz.reflectedType));
+    instance = reflect(_injector.get(clazz.reflectedType));
   } catch(e) {
     _logger.severe("Failed to get $className", e);
     throw new SetupException(className, "Failed to create a instance of the group $className");

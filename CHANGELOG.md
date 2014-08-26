@@ -1,6 +1,6 @@
 ## v0.5.13
 * Improved plugin API: 
-    * Added the `Manager.getFromInjector()` method, which allows plugins to retrieve objects from di modules more easily.
+    * Added the `Manager.getInjector()` and `Manager.createInjector()` methods, which allow plugins to retrieve objects from di modules more easily.
     * Added the `Manager.findFunctions()`, `Manager.findClasses()` and `Manager.findMethods()` methods, which allow plugins to scan imported libraries.
     * Added the `Manager.getShelfHandler()` and `Manager.setShelfHandler()` methods, which allow plugins to access and replace the current installed shelf handler.
 

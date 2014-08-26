@@ -151,8 +151,12 @@ class _ManagerImpl implements Manager {
   }
 
   @override
-  Object getFromInjector(Type type, [Type annotation]) =>
-    _injector.get(type, annotation);
+  Injector createInjector(List<Module> modules) {
+    return new ModuleInjector(modules, _injector);
+  }
+
+  @override
+  Object getInjector() => _injector;
 
   @override
   Iterable<AnnotatedType<MethodMirror>> findFunctions(Type annotation) {
