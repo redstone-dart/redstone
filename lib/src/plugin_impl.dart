@@ -194,7 +194,7 @@ class _ManagerImpl implements Manager {
   @override
   Iterable<AnnotatedType<MethodMirror>> findMethods(ClassMirror clazz, Type annotation) {
     var methods = [];
-    _findDeclaredMethods(clazz).forEach((MethodMirror method) {
+    clazz.instanceMembers.values.forEach((MethodMirror method) {
 
       var metadata = method.metadata.firstWhere((m) =>
         m.reflectee.runtimeType == annotation, orElse: () => null);
@@ -214,9 +214,6 @@ class _ManagerImpl implements Manager {
   _findDeclaredClasses() =>
     _libs.map((l) => l.def).expand((LibraryMirror ldef) =>
       ldef.declarations.values).where((d) => d is ClassMirror);
-
-  _findDeclaredMethods(ClassMirror clazz) =>
-    clazz.declarations.values.where((d) => d is MethodMirror);
 
 }
 

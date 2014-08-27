@@ -1,3 +1,6 @@
+## v0.5.14
+* Fix: `Manager.findMethods()` should include inherited methods.
+
 ## v0.5.13
 * Improved plugin API: 
     * Added the `Manager.getInjector()` and `Manager.createInjector()` methods, which allow plugins to retrieve objects from di modules more easily.
