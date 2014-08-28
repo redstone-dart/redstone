@@ -1,3 +1,6 @@
+## v0.5.15
+* Fix: Correctly log an exception when no stack trace is provided
+
 ## v0.5.14
 * Fix: `Manager.findMethods()` should include inherited methods.
 
