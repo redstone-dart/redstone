@@ -41,7 +41,7 @@ class QueryMap extends DelegatingMap {
     if (invocation.isGetter) {
       return get(key);
     } else if (invocation.isSetter) {
-      this[key.substring(key.length - 1)] = invocation.positionalArguments.first;
+      this[key.substring(0, key.length - 1)] = invocation.positionalArguments.first;
     } else {
       super.noSuchMethod(invocation);
     }

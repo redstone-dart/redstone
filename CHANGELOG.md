@@ -1,3 +1,6 @@
+## v0.5.16
+* Fix: Setting a new value in a `QueryMap` with the dot notation is not working properly.
+
 ## v0.5.15
 * Fix: Correctly log an exception when no stack trace is provided
 
@@ -39,7 +42,7 @@
 ## v0.5.7
 * Improved plugin API:
     * It's now possible to inspect installed routes, interceptors, error handlers and groups.
-    * Added the `Manager.addRouteWrapper()` method, which allows plugins to modify routes that are annotated with an specific annotation.
+    * Added the `Manager.addRouteWrapper()` method, which allows plugins to modify routes that are annotated with a specific annotation.
 
 ## v0.5.6
 * Fixed logging issues.
