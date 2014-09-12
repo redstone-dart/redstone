@@ -204,7 +204,7 @@ var userValidator = new Validator(User)
                     ..add("password", const Range(min: 6. required: true));
 
 ...
-User user = new User()
+var user = new User()
             ..username = "user"
             ..password = "pass";
               
