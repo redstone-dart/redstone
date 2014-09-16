@@ -362,6 +362,13 @@ transformers:
 
 ```
 
+### Integration with Polymer
+
+Polymer applications usually doesn't have an entry-point (a dart script with the `main` function), so
+you have to provide one. Also, the entry-point has to import all libraries that contains encodable classes, 
+so the transformer will be able to map them. You can see a working example which uses 
+polymer and redstone_mapper [here](https://github.com/luizmineo/io_2014_contacts_demo).
+
 ### Database integration
 
 redstone_mapper provides integration with database drivers through extensions. Currently, the following extensions are available:
