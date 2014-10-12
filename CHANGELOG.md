@@ -1,3 +1,10 @@
+## v0.5.17
+* Updated dependencies.
+* Added the `autoCompress` parameter to the `start()` function.
+* Added `Route.statusCode` and `DefaultRoute.statusCode` parameters.
+
+**Note:** this version requires Dart 1.7 or above
+
 ## v0.5.16
 * Fix: Setting a new value in a `QueryMap` with the dot notation is not working properly.
 

@@ -21,6 +21,9 @@ getHandler() => "get_handler";
 @app.Route("/handler_by_method", methods: const[app.POST])
 postHandler() => "post_handler";
 
+@app.Route("/change_status_code", statusCode: 201)
+changeStatusCode() => "response";
+
 @app.Group("/group")
 class Group {
   
@@ -46,5 +49,8 @@ class Group {
 
   @app.Route("/path/subpath")
   subRoute() => "sub_route";
+
+  @app.Route("/change_status_code", statusCode: 201)
+  changeStatusCode() => "response";
   
 }

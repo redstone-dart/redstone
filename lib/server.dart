@@ -382,10 +382,14 @@ void setShelfHandler(shelf.Handler handler) {
  *
  * The [address] can be a [String] or an [InternetAddress].
  *
+ * If [autoCompress] is true, the server will use gzip to compress the content
+ * when possible.
+ *
  * When [secureOptions] is specified the server will use a secure https connection.
  * [secureOptions] is a map of named arguments forwarded to [HttpServer.bindSecure].
  */
 Future<HttpServer> start({address: _DEFAULT_ADDRESS, int port: _DEFAULT_PORT,
+                          bool autoCompress: false,
                           Map<Symbol, dynamic> secureOptions}) {
   return new Future(() {
 
@@ -400,7 +404,8 @@ Future<HttpServer> start({address: _DEFAULT_ADDRESS, int port: _DEFAULT_PORT,
       serverFuture = Function.apply(HttpServer.bindSecure, [address, port], secureOptions);
     }
 
-    return serverFuture.then((server) {
+    return serverFuture.then((HttpServer server) {
+      server.autoCompress = autoCompress;
       server.listen((HttpRequest req) {
         _logger.fine("Received request for: ${req.uri}");
         _dispatchRequest(new _RequestImpl(req)).catchError((e, s) {

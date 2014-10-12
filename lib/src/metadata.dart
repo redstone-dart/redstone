@@ -6,9 +6,10 @@ part of redstone_server;
  * [urlTemplate] is the url of the target, and can contains arguments prefixed with ':'.
  * [methods] are the HTTP methods accepted by this target, and defaults to GET.
  * The [responseType] is the content type of the response. If it's not provided,
- * the framework will generate it based on the value returned by the method;
- * If [allowMultipartRequest] is true, then the Route is allowed to receive
- * multipart requests (file upload).
+ * the framework will generate it based on the value returned by the method.
+ * The [statusCode] is the default status of the response, and if not provided,
+ * the 200 status code will be used. If [allowMultipartRequest] is true,
+ * then the Route is allowed to receive multipart requests (file upload).
  *
  * Example:
  *
@@ -24,6 +25,8 @@ class Route {
 
   final String responseType;
 
+  final int statusCode;
+
   final bool allowMultipartRequest;
 
   final bool matchSubPaths;
@@ -31,12 +34,14 @@ class Route {
   const Route(this.urlTemplate,
               {this.methods: const [GET],
                this.responseType,
+               this.statusCode: 200,
                this.allowMultipartRequest: false,
                this.matchSubPaths: false});
 
   Route.conf(this.urlTemplate,
              {this.methods: const [GET],
               this.responseType,
+              this.statusCode: 200,
               this.allowMultipartRequest: false,
               this.matchSubPaths: false});
 
@@ -212,6 +217,8 @@ class Group {
  * the suffix will be handled. [methods] are the HTTP
  * methods accepted by this target, and defaults to GET.
  * The [responseType] is the content type of the response.
+ * The [statusCode] is the default status of the response,
+ * and if not provided, the 200 status code will be used.
  * If it's not provided, the framework will generate it based on
  * the value returned by the method; If [allowMultipartRequest]
  * is true, then the Route is allowed to receive multipart
@@ -226,13 +233,17 @@ class DefaultRoute {
 
   final String responseType;
 
+  final int statusCode;
+
   final bool allowMultipartRequest;
 
   final bool matchSubPaths;
 
   const DefaultRoute({this.pathSuffix,
                       this.methods: const [GET],
-                      this.responseType, this.allowMultipartRequest: false,
+                      this.responseType,
+                      this.statusCode: 200,
+                      this.allowMultipartRequest: false,
                       this.matchSubPaths: false});
 }
 

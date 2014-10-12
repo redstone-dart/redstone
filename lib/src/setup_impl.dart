@@ -491,6 +491,7 @@ void _configureGroup(_ServerMetadataImpl serverMetadata,
         }
         Route route = new Route.conf(url, methods: info.methods,
             responseType: info.responseType,
+            statusCode: info.statusCode,
             allowMultipartRequest: info.allowMultipartRequest,
             matchSubPaths: info.matchSubPaths);
 
@@ -800,6 +801,7 @@ void _configureTarget(_ServerMetadataImpl serverMetadata,
 
       _logger.finer("Writing response for target $handlerName");
       return _writeResponse(respValue, route.responseType,
+        statusCode: route.statusCode,
         abortIfChainInterrupted: true,
         processors: responseProcessors)
           .then((_) {
@@ -829,8 +831,8 @@ void _configureTarget(_ServerMetadataImpl serverMetadata,
 
   UrlTemplate urlTemplate = new UrlTemplate(url);
   
-  if (route.matchSubPaths && urlTemplate.urlParameterNames().isNotEmpty) {
-    var lastParam = urlTemplate.urlParameterNames().last;
+  if (route.matchSubPaths && urlTemplate.urlParameterNames.isNotEmpty) {
+    var lastParam = urlTemplate.urlParameterNames.last;
     if (originalUrl.endsWith(":$lastParam*")) {
       specialPathParam = lastParam;
     }

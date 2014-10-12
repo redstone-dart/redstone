@@ -433,6 +433,7 @@ Future _writeResponse(respValue, String responseType, {int statusCode: 200,
       respValue = processors.fold(respValue, (v, p) =>
           p.processor(p.metadata, p.handlerName, v, _injector));
       _writeResponse(respValue, responseType,
+          statusCode: statusCode,
           abortIfChainInterrupted: abortIfChainInterrupted).then((_) =>
               completer.complete());
     } else {
@@ -446,12 +447,14 @@ Future _writeResponse(respValue, String responseType, {int statusCode: 200,
 
     respValue.then((fValue) {
       return _writeResponse(fValue, responseType,
+          statusCode: statusCode,
           processors: processors,
           abortIfChainInterrupted: abortIfChainInterrupted);
     }).then((_) {
       completer.complete();
     }).catchError((e) {
       return _writeResponse(e, responseType,
+                statusCode: statusCode,
                 processors: processors,
                 abortIfChainInterrupted: abortIfChainInterrupted);
     }, test: (e) => e is ErrorResponse)
@@ -464,6 +467,7 @@ Future _writeResponse(respValue, String responseType, {int statusCode: 200,
     respValue = processors.fold(respValue, (v, p) =>
         p.processor(p.metadata, p.handlerName, v, _injector));
     _writeResponse(respValue, responseType,
+        statusCode: statusCode,
         abortIfChainInterrupted: abortIfChainInterrupted).then((_) =>
             completer.complete());
 

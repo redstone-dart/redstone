@@ -3,6 +3,7 @@
 .project
 .buildlog
 .idea
+.pub
 *.precompiled.js
 *.js_
 *.js.deps

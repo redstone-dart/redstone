@@ -38,6 +38,7 @@ main() {
       var req3 = new MockRequest("/paths");
       var req4 = new MockRequest("/path2/sub/path");
       var req5 = new MockRequest("/path3/sub/path");
+      var req6 = new MockRequest("/change_status_code");
       
       return app.dispatch(req).then((resp) {
         expect(resp.mockContent, equals("sub_route"));
@@ -49,6 +50,9 @@ main() {
         expect(resp.mockContent, equals("sub"));
       }).then((_) => app.dispatch(req5)).then((resp) {
         expect(resp.mockContent, equals("sub/path"));
+      }).then((_) => app.dispatch(req6)).then((resp) {
+        expect(resp.statusCode, equals(201));
+        expect(resp.mockContent, equals("response"));
       });
     });
     
@@ -60,6 +64,7 @@ main() {
       var req5 = new MockRequest("/group");
       var req6 = new MockRequest("/group.json");
       var req7 = new MockRequest("/group", method: app.POST);
+      var req8 = new MockRequest("/group/change_status_code");
       
       return app.dispatch(req).then((resp) {
         expect(resp.mockContent, equals("interceptor sub_route"));
@@ -75,6 +80,9 @@ main() {
         expect(resp.mockContent, equals("default_route_json"));
       }).then((_) => app.dispatch(req7)).then((resp) {
         expect(resp.mockContent, equals("default_route_post"));
+      }).then((_) => app.dispatch(req8)).then((resp) {
+        expect(resp.statusCode, equals(201));
+        expect(resp.mockContent, equals("response"));
       });
     });
     
