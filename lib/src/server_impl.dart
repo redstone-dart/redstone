@@ -159,10 +159,19 @@ void _process(UnparsedRequest req, _RequestState state,
               _ChainImpl chain, Completer completer) {
   runZoned(() {
 
-    shelf_io.handleRequest(req.httpRequest, _mainHandler).then((_) {
-      _logger.finer("Closed request for: ${request.url}");
-      completer.complete(req.httpRequest.response);
-    });
+    try {
+      shelf_io.handleRequest(req.httpRequest, _mainHandler).then((_) {
+        _logger.finer("Closed request for: ${request.url}");
+        completer.complete(req.httpRequest.response);
+      });
+    } catch (e) {
+      //Shelf is throwing synchronous errors for invalid requests
+      _handleError("Invalid request!", e, logLevel: Level.FINE);
+      //avoid resource leak
+      try {
+        req.httpRequest.response.close();
+      } catch(e) {}
+    }
 
   }, zoneValues: {
     #request: req,
