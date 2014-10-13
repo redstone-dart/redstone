@@ -2,10 +2,8 @@ library redstone_tasks;
 
 import 'dart:io';
 import 'package:grinder/grinder.dart';
-import 'package:grinder/grinder_files.dart';
 
-
-/// A task to properly deploy server's files
+/// A task to properly deploy server files
 deployServer(GrinderContext ctx) {
 
   Directory devDir = joinDir(Directory.current, ["bin"]);
