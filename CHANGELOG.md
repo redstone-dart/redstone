@@ -1,3 +1,6 @@
+## v0.5.18
+* Updated to Grinder v0.6.1 (see [documentation](https://github.com/luizmineo/redstone.dart/wiki/Deploy))
+
 ## v0.5.17
 * Updated dependencies.
 * Added the `autoCompress` parameter to the `start()` function.
