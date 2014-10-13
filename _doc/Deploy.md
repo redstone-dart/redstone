@@ -28,7 +28,7 @@ main(List<String> args) {
 }
 ```
 
-### Redstone.dart V0.5.17 or below
+### Redstone.dart v0.5.17 or below
 
 ```dart
 import 'package:grinder/grinder.dart';
@@ -70,7 +70,7 @@ If you install Grinder using [pub global](https://www.dartlang.org/tools/pub/cmd
 $ grind all
 ```
 
-### Redstone.dart V0.5.17 or below
+### Redstone.dart v0.5.17 or below
 
 To run `grind.dart` through command line, you need to set the DART_SDK environment variable:
 
