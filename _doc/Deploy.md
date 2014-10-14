@@ -88,3 +88,9 @@ DartVoid already provides a set of app templates built with several frameworks, 
 * [Hello World](https://github.com/DartTemplates/Redstone-Hello)
 * [Guestbook](https://github.com/DartTemplates/Redstone-Guestbook)
 * [Todo List](https://github.com/DartTemplates/Redstone-Angular-Todo)
+
+##Heroku
+
+You can easily deploy Dart applications to [Heroku](https://www.heroku.com/), using the new 
+[cedar-14](https://blog.heroku.com/archives/2014/8/19/cedar-14-public-beta) stack, 
+and the [Dart buildpack](https://github.com/igrigorik/heroku-buildpack-dart). You can see a working example [here](https://github.com/luizmineo/io_2014_contacts_demo).
