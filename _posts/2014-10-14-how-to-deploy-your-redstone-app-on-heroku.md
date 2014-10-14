@@ -122,4 +122,4 @@ $ git push heroku master
 
 If everything goes right, your app will be ready for use! You can see its URL in the output of the `git push` command. It's also possible to access it through the Heroku Dashboard. 
 
-For more information, checkout the [Heroku](https://devcenter.heroku.com/articles/how-heroku-works) and [Dart buildpack](https://github.com/igrigorik/heroku-buildpack-dart) documentations. You can also see a more complete example [here](https://github.com/luizmineo/io_2014_contacts_demo).
+For more information, take a look at the [Heroku](https://devcenter.heroku.com/articles/how-heroku-works) and [Dart buildpack](https://github.com/igrigorik/heroku-buildpack-dart) documentations. You can also see a more complete example [here](https://github.com/luizmineo/io_2014_contacts_demo).
