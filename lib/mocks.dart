@@ -148,8 +148,13 @@ class MockRequest extends HttpRequestParser implements UnparsedRequest {
 
   void parseBodyType() => parseHttpRequestBodyType(headers);
 
-  Future parseBody() => parseHttpRequestBody(shelfRequest.read());
-
+  Future parseBody() {
+    if (bodyHasBeenParsed() == false) {
+      return parseHttpRequestBody(_shelfRequest.read());
+    } else {
+      return parseHttpRequestBody(null);
+    }
+  }
 }
 
 /**
