@@ -403,8 +403,12 @@ main() {
     
     test("interceptors", () {
       var req = new MockRequest("/target");
+      var req2 = new MockRequest("/parse_body");
       return app.dispatch(req).then((resp) {
         expect(resp.mockContent, equals("before_interceptor1|before_interceptor2|target_executed|after_interceptor2|after_interceptor1"));
+      }).then((_) => app.dispatch(req2)).then((resp) {
+        expect(resp.mockContent, equals("target_executed"));
+        expect(resp.statusCode, equals(200));
       });
     });
     

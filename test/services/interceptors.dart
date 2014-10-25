@@ -81,4 +81,12 @@ interceptor7() {
    }
 }
 
+@app.Interceptor("/parse_body", parseRequestBody: true)
+interceptor8() {
+  app.chain.next();
+}
+
+@app.Route("/parse_body")
+target8() => "target_executed";
+
 
