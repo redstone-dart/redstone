@@ -168,6 +168,10 @@ class HttpRequestParser {
     }
   }
 
+  bool bodyHasBeenParsed() {
+    return _bodyParsed != null;
+  }
+
   Future parseHttpRequestBody(Stream<List<int>> body) {
     if (_bodyParsed == null) {
       _bodyParsed = _parseRequestBody(body, _contentType).then((HttpBody reqBody) {
