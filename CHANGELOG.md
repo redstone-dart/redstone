@@ -1,3 +1,6 @@
+##v0.5.19
+* Fix: Error when setting `Intereptor.parseRequestBody = true` (Thanks to [platelk](https://github.com/platelk). See PR [#46](https://github.com/luizmineo/redstone.dart/pull/46)).
+
 ## v0.5.18
 * Updated to Grinder v0.6.1 (see [documentation](https://github.com/luizmineo/redstone.dart/wiki/Deploy))
 
