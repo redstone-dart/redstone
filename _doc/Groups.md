@@ -5,10 +5,10 @@ title: Groups
 prev: Error-handlers
 next: Dependency-Injection
 ---
-The `@Group` annotation is used to define a group of routes, interceptors and error handlers:
+The `@app.Group` annotation is used to define a group of routes, interceptors and error handlers:
 
 ```dart
-@Group("/user")
+@app.Group("/user")
 class UserService {
   
   @app.Route("/find")
@@ -24,10 +24,10 @@ class UserService {
 }
 ```
 
-The prefix defined with the `@Group` annotation, will be prepended in every route and interceptor inside the group. If you need to directly bind to the group's path, you can use the `@DefaultRoute` annotation:
+The prefix defined with the `@app.Group` annotation, will be prepended in every route and interceptor inside the group. If you need to directly bind to the group's path, you can use the `@DefaultRoute` annotation:
 
 ```dart
-@Group("/user")
+@app.Group("/user")
 class UserService {
   
   @app.DefaultRoute()
