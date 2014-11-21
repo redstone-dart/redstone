@@ -51,6 +51,7 @@ MongoDb get mongoDb => app.request.attributes.dbConn;
 The `MongoDb` object is a wrapper that provides helper functions for encoding and decoding objects:
 
 ```dart
+import 'dart:async';
 import 'package:redstone/server.dart' as app;
 import 'package:redstone_mapper/mapper.dart';
 import 'package:redstone_mapper/plugin.dart';
