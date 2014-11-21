@@ -81,13 +81,13 @@ $ dart tool/grind.dart all
 
 ##DartVoid
 
-If you plan to deploy your app at [DartVoid](http://www.dartvoid.com/), you won't need a build script (since DartVoid will manage the deploy for you), but you will need to split your app in two projects: `server` and `client`.
+If you plan to deploy your app at [DartVoid](http://www.dartvoid.com/), you won't need a build script, since DartVoid will manage the deploy for you.
 
 DartVoid already provides a set of app templates built with several frameworks, including Redstone.dart, which you can use to bootstrap your app:
 
-* [Hello World](https://github.com/DartTemplates/Redstone-Hello)
-* [Guestbook](https://github.com/DartTemplates/Redstone-Guestbook)
-* [Todo List](https://github.com/DartTemplates/Redstone-Angular-Todo)
+* [Hello World](https://github.com/DartVoid/Redstone-Hello)
+* [Guestbook](https://github.com/DartVoid/Redstone-Guestbook)
+* [Todo List](https://github.com/DartVoid/Redstone-Angular-Todo)
 
 ##Heroku
 
