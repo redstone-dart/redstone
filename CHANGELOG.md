@@ -1,3 +1,7 @@
+##v0.5.20
+
+* Update `route_hierarchical` version constraint.
+
 ##v0.5.19
 * Fix: Error when setting `Intereptor.parseRequestBody = true` (Thanks to [platelk](https://github.com/platelk). See PR [#46](https://github.com/luizmineo/redstone.dart/pull/46)).
 
