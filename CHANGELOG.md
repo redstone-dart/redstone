@@ -16,6 +16,7 @@
     * Removed `authenticateBasic()` top level function
     * Moved `parseAuthorizationHeader()` top level function to the `request` object (`request.parseAuthorizationHeader()`)
     * The `chain.next()`, `chain.interrupt()` and `chain.abort()` functions now return a `Future<shelf.Response>`. It's necessary to wait for the completion of the returned future when calling one of these functions, although, it's now possible to use them with async/await expressions. Example:
+
 ```dart
 import 'package:redstone/redstone.dart'
 import "package:shelf/shelf.dart" as shelf;
