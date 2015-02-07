@@ -17,7 +17,7 @@
     * Moved `parseAuthorizationHeader()` top level function to the `request` object (`request.parseAuthorizationHeader()`)
     * The `chain.next()`, `chain.interrupt()` and `chain.abort()` functions now return a `Future<shelf.Response>`. It's necessary to wait for the completion of the returned future when calling one of these functions, although, it's now possible to use them with async/await expressions. See the example below.
     * The `chain.redirect()` function now returns a `shelf.Response`
-    * For interceptors and error handlers, it's now necessary to annotate injectable parameters with `@Inject`. Although, it's now possible to use the `@Attr` annotation, which binds a parater with a request attribute.
+    * For interceptors and error handlers, it's now necessary to annotate injectable parameters with `@Inject`. Although, they now accept the `@Attr` annotation, which binds a parameter with a request attribute.
     * Plugin API: Some methods of the `Manager` object are now getters.
 
 **Example: CORS Interceptor**
