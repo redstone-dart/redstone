@@ -15,7 +15,12 @@
     * Renamed `setUp()` and `tearDown()` to `redstoneSetUp()` and `redstoneTearDown()`. This avoids conflicts with the unittest package, if redstone is imported without a lib prefix.
     * Removed `authenticateBasic()` top level function
     * Moved `parseAuthorizationHeader()` top level function to the `request` object (`request.parseAuthorizationHeader()`)
-    * The `chain.next()`, `chain.interrupt()` and `chain.abort()` functions now return a `Future<shelf.Response>`. It's necessary to wait for the completion of the returned future when calling one of these functions, although, it's now possible to use them with async/await expressions. Example:
+    * The `chain.next()`, `chain.interrupt()` and `chain.abort()` functions now return a `Future<shelf.Response>`. It's necessary to wait for the completion of the returned future when calling one of these functions, although, it's now possible to use them with async/await expressions. See the example below.
+    * The `chain.redirect()` function now returns a `shelf.Response`
+    * For interceptors and error handlers, it's now necessary to annotate injectable parameters with `@Inject`. Although, it's now possible to annotate parameters with `@Attr`, to inject request attributes.
+    * Plugin API: Some methods of the `Manager` object are now getters.
+
+**Example: CORS Interceptor**
 
 ```dart
 import 'package:redstone/redstone.dart'
@@ -32,15 +37,11 @@ handleCORS() async {
   return resp.change(headers: {"Access-Control-Allow-Origin": "*"});
 }
 ```
-    * The `chain.redirect()` function now returns a `shelf.Response`
-    * For interceptors and error handlers, it's now necessary to annotate injectable parameters with `@Inject`. Although, it's now possible to annotate parameters with `@Attr`, to inject request attributes.
-    * Plugin API: Some methods of the `Manager` object are now getters.
 
 * **TODO:**
     * Improve unit tests
     * Update plugins (redstone_mapper and redstone_web_socket aren't compatible with this version yet)
     * Improve documentation and website
-
 
 ##v0.5.19
 * Fix: Error when setting `Intereptor.parseRequestBody = true` (Thanks to [platelk](https://github.com/platelk). See PR [#46](https://github.com/luizmineo/redstone.dart/pull/46)).
