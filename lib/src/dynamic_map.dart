@@ -1,29 +1,27 @@
-library redstone_query_map;
+library redstone.src.dynamic_map;
 
 import 'dart:mirrors';
 
 import 'package:collection/collection.dart' show DelegatingMap, DelegatingList;
 
-/**
- * A Map that allows the use of the dot notation to access
- * its values
- * 
- * Usage:
- * 
- *      QueryMap map = new QueryMap({"key": "value"});
- *      print(map.key); //prints 'value'
- */
+/// A Map that allows the use of the dot notation to access
+/// its values
+///
+/// Usage:
+///
+///      DynamicMap map = new DynamicMap({"key": "value"});
+///      print(map.key); //prints 'value'
 @proxy
-class QueryMap extends DelegatingMap {
-  
-  QueryMap(Map map) : super(map);
-  
+class DynamicMap<K, V> extends DelegatingMap {
+
+  DynamicMap(Map<K, V> map) : super(map);
+
   ///Retrieve a value from this map
-  Object get(String key, [Object defaultValue]) {
+  V get(K key, [V defaultValue]) {
     if(containsKey(key)) {
       var value = this[key];
-      if (value is! QueryMap && value is Map) {
-        value = new QueryMap(value);
+      if (value is! DynamicMap && value is Map) {
+        value = new DynamicMap(value);
         this[key] = value;
       } else if (value is! _ListWrapper && value is List) {
         value = new _ListWrapper.wrap(value);
@@ -35,7 +33,7 @@ class QueryMap extends DelegatingMap {
     }
     return null;
   }
-  
+
   noSuchMethod(Invocation invocation) {
     var key = MirrorSystem.getName(invocation.memberName);
     if (invocation.isGetter) {
@@ -49,13 +47,13 @@ class QueryMap extends DelegatingMap {
 }
 
 class _ListWrapper extends DelegatingList {
-  
+
   _ListWrapper(List list) : super(list);
-  
+
   factory _ListWrapper.wrap(List list) {
     list = list.map((e) {
-      if (e is Map && e is! QueryMap) {
-        return new QueryMap(e);
+      if (e is Map && e is! DynamicMap) {
+        return new DynamicMap(e);
       } else if (e is List && e is! _ListWrapper) {
         return new _ListWrapper.wrap(e);
       }

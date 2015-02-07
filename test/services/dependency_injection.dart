@@ -1,6 +1,6 @@
 library dependency_injection;
 
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart';
 import 'package:shelf/shelf.dart' as shelf;
 
 class A {
@@ -25,29 +25,29 @@ class C {
   String get value => "${objA.value} ${objB.value}";
 }
 
-@app.Route("/di")
-service(@app.Inject() A objA, 
-        @app.Inject() B objB, 
-        @app.Attr() C objC) => 
+@Route("/di")
+service(@Inject() A objA, 
+        @Inject() B objB, 
+        @Attr() C objC) => 
     "${objA.value} ${objB.value} ${objC.value}";
     
-@app.Interceptor(r"/di")
-interceptor(C objC) {
-  app.request.attributes["objC"] = objC;
-  app.chain.next();
+@Interceptor(r"/di")
+interceptor(@Inject() C objC) async {
+  request.attributes["objC"] = objC;
+  await chain.next();
 }
 
-@app.Group("/group")
-class Group {
+@Group("/group")
+class ServiceGroup {
   
   C objC;
   
-  Group(C this.objC);
+  ServiceGroup(C this.objC);
   
-  @app.Route("/di")
+  @Route("/di")
   service() => objC.value;
   
 }
 
-@app.ErrorHandler(404)
-errorHandler(C objC) => new shelf.Response.notFound(objC.value);
+@ErrorHandler(404)
+errorHandler(@Inject() C objC) => new shelf.Response.notFound(objC.value);

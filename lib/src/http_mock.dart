@@ -1,6 +1,11 @@
-part of redstone_mocks;
+library redstone.src.http_mock;
 
-//Classes copied from http_server (test/http_mock.dart) on 2014-03-07
+//copied from http_server/test/http_mock.dart
+
+import 'dart:io';
+import 'dart:collection';
+import 'dart:async';
+import 'dart:convert';
 
 class MockHttpHeaders implements HttpHeaders {
   final Map<String, List<String>> _headers =
@@ -142,9 +147,6 @@ class MockHttpHeaders implements HttpHeaders {
     values.add(value);
   }
 
-  /*
-   * Implemented to remove editor warnings
-   */
   dynamic noSuchMethod(Invocation invocation) {
     return super.noSuchMethod(invocation);
   }
@@ -208,20 +210,17 @@ class MockHttpResponse implements HttpResponse {
 
   void write(Object obj) {
     var str = obj.toString();
-    add(conv.UTF8.encode(str));
+    add(UTF8.encode(str));
   }
 
   Future<Socket> detachSocket({bool writeHeaders: true}) {
     throw "MockHttpResponse.detachSocket: Unsupported Operation";
   }
 
-  /*
-   * Implemented to remove editor warnings
-   */
   dynamic noSuchMethod(Invocation invocation) =>
       super.noSuchMethod(invocation);
 
-  String get mockContent => conv.UTF8.decode(_buffer);
+  String get mockContent => UTF8.decode(_buffer);
 
   bool get mockDone => _isDone;
 
@@ -270,9 +269,6 @@ class MockHttpRequest extends Stream<List<int>> implements HttpRequest {
   @override
   String get protocolVersion => "1.1";
 
-  /*
-   * Implemented to remove editor warnings
-   */
   dynamic noSuchMethod(Invocation invocation) {
     return super.noSuchMethod(invocation);
   }

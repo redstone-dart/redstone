@@ -2,7 +2,7 @@ library plugins;
 
 import 'dart:mirrors';
 
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart';
 import 'package:shelf/shelf.dart' as shelf;
 
 //plugin - parameter provider
@@ -13,11 +13,11 @@ class FromJson {
   
 }
 
-FromJsonPlugin(app.Manager manager) {
+FromJsonPlugin(Manager manager) {
   
   manager.addParameterProvider(FromJson, (metadata, type, handlerName, paramName, req, injector) {
-    if (req.bodyType != app.JSON) {
-      throw new app.RequestException("FromJson plugin - $handlerName", "content-type must be 'application/json'");
+    if (req.bodyType != JSON) {
+      throw new ErrorResponse(400, "content-type must be 'application/json'");
     }
     
     ClassMirror clazz = reflectClass(type);
@@ -49,7 +49,7 @@ class User {
   toString() => "name: $name username: $username";
 }
 
-@app.Route("/user", methods: const[app.POST])
+@Route("/user", methods: const[POST])
 printUser(@FromJson() User user) => user.toString();
 
 //plugin - response processor
@@ -60,7 +60,7 @@ class ToJson {
   
 }
 
-ToJsonPlugin(app.Manager manager) {
+ToJsonPlugin(Manager manager) {
   manager.addResponseProcessor(ToJson, (metadata, handlerName, value, injector) {
     if (value == null) {
       return value;
@@ -71,7 +71,7 @@ ToJsonPlugin(app.Manager manager) {
 
 //test plugin
 
-@app.Route("/user/find")
+@Route("/user/find")
 @ToJson()
 returnUser() {
   var user = new User();
@@ -82,30 +82,29 @@ returnUser() {
 
 //plugin - add routes, interceptors and error handlers
 
-TestPlugin(app.Manager manager) {
+TestPlugin(Manager manager) {
   
-  app.Route route = new app.Route.conf("/route/:arg"); 
-  app.Interceptor interceptor = new app.Interceptor.conf("/route/.+");
+  Route route = new Route("/route/:arg"); 
+  Interceptor interceptor = new Interceptor("/route/.+");
   
-  app.Route routeError = new app.Route.conf("/error");
-  app.ErrorHandler errorHandler = new app.ErrorHandler.conf(500);
+  Route routeError = new Route("/error");
+  ErrorHandler errorHandler = new ErrorHandler(500);
   
-  manager.addRoute(route, "testRoute", (pathSegments, injector, request) {
-    return pathSegments["arg"];
+  manager.addRoute(route, "testRoute", (injector, request) {
+    return request.pathParams["arg"];
   });
   
-  manager.addInterceptor(interceptor, "testInterceptor", (injector) {
-    app.chain.next(() {
-      return app.response.readAsString().then((resp) =>
-        new shelf.Response.ok("interceptor $resp"));
-    });
+  manager.addInterceptor(interceptor, "testInterceptor", (injector, request) async {
+    await chain.next();
+    return response.readAsString().then((resp) =>
+      new shelf.Response.ok("interceptor $resp"));
   });
   
-  manager.addRoute(routeError, "testError", (pathSegments, injector, request) {
+  manager.addRoute(routeError, "testError", (injector, request) {
     throw "error";
   });
   
-  manager.addErrorHandler(errorHandler, "testErrorHandler", (injector) {
+  manager.addErrorHandler(errorHandler, "testErrorHandler", (injector, request) {
     return new shelf.Response.internalServerError(body: "error_handler");
   });
   
@@ -119,26 +118,26 @@ class Wrap {
   
 }
 
-WrapperPlugin(app.Manager manager) {
+WrapperPlugin(Manager manager) {
   
-  manager.addRouteWrapper(Wrap, (wrap, pathSegments, injector, request, route) {
+  manager.addRouteWrapper(Wrap, (wrap, injector, request, route) async {
     
-    var resp = route(pathSegments, injector, request);
+    var resp = await route(injector, request);
     return "response: $resp";
     
   }, includeGroups: true);
   
 }
 
-@app.Route("/test_wrapper")
+@Route("/test_wrapper")
 @Wrap()
 testWrapper() => "target executed";
 
-@app.Group("/test_group_wrapper")
+@Group("/test_group_wrapper")
 @Wrap()
 class TestGroupWrapper {
   
-  @app.Route("/test_wrapper")
+  @Route("/test_wrapper")
   testWrapper() => "target executed";
   
 }
@@ -168,7 +167,7 @@ class CapturedType {
   Symbol typeName;
   Object metadata;
 
-  CapturedType(app.AnnotatedType annotatedType) {
+  CapturedType(AnnotatedType annotatedType) {
     typeName = annotatedType.mirror.simpleName;
     metadata = annotatedType.metadata;
   }

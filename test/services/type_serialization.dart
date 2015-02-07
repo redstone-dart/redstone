@@ -4,31 +4,31 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:convert';
 
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart';
 import 'package:shelf/shelf.dart' as shelf;
 
-@app.Route("/types/string")
+@Route("/types/string")
 stringType() => "string";
 
-@app.Route("/types/map")
+@Route("/types/map")
 mapType() => {"key1": "value1", "key2": "value2"};
 
-@app.Route("/types/list")
+@Route("/types/list")
 listType() => ["value1", "value2", "value3"];
 
-@app.Route("/types/null")
+@Route("/types/null")
 nullType() => null;
 
-@app.Route("/types/future")
+@Route("/types/future")
 futureType() => new Future(() => mapType());
 
-@app.Route("/types/other")
+@Route("/types/other")
 otherType() => new _OtherType();
 
-@app.Route("/types/file")
+@Route("/types/file")
 fileType() => new _MockFile();
 
-@app.Route("/types/shelf_response")
+@Route("/types/shelf_response")
 shelfResponse() => new shelf.Response.ok("target_executed");
 
 class _OtherType {

@@ -1,34 +1,34 @@
 library inspect;
 
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart';
 
 //test metadata access
 
-@app.Route("/route1")
+@Route("/route1")
 route1() => "route1";
 
-@app.Route("/route2")
+@Route("/route2")
 route2() => "route2";
 
-@app.Interceptor("/interceptor")
-interceptor() => app.chain.next();
+@Interceptor("/interceptor")
+interceptor() => chain.next();
 
-@app.ErrorHandler(333)
+@ErrorHandler(333)
 errorHandler() => null;
 
-@app.Group("/group")
+@Group("/group")
 class GroupPluginTest {
 
-  @app.Route("/route1")
+  @Route("/route1")
   route1() => "route1";
   
-  @app.Route("/route2")
+  @Route("/route2")
   route2() => "route2";
   
-  @app.Interceptor("/interceptor")
-  interceptor() => app.chain.next();
+  @Interceptor("/interceptor")
+  interceptor() => chain.next();
   
-  @app.ErrorHandler(333)
+  @ErrorHandler(333)
   errorHandler() => null;
 
 }

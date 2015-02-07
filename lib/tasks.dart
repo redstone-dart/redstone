@@ -1,4 +1,4 @@
-library redstone_tasks;
+library redstone.tasks;
 
 import 'dart:io';
 import 'package:grinder/grinder.dart';

@@ -1,6 +1,9 @@
-part of redstone_server;
+library redstone.src.logger;
 
-final Logger _logger = new Logger("redstone_server");
+import 'package:logging/logging.dart';
+import 'package:stack_trace/stack_trace.dart';
+
+final Logger redstoneLogger = new Logger("redstone_server");
 
 /// Setup a simple log handler, that output messages to console.
 void setupConsoleLog([Level level = Level.INFO]) {

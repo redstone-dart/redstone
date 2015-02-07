@@ -1,6 +1,6 @@
 library ignore;
 
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart';
 
-@app.Route("/ignore")
+@Route("/ignore")
 route() => "target_executed";

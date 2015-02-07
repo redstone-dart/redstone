@@ -1,57 +1,56 @@
 library arguments;
 
-import 'package:redstone/server.dart' as app;
-import 'package:redstone/query_map.dart';
+import 'package:redstone/redstone.dart';
 
-@app.Route("/args/:arg1/:arg2/:arg3")
+@Route("/args/:arg1/:arg2/:arg3")
 pathArgs(String arg1, int arg2, [double arg3, String arg4, String arg5 = "arg5"]) =>
     {"arg1": arg1, "arg2": arg2, "arg3": arg3, "arg4": arg4, "arg5": arg5};
     
-@app.Route("/named_args/:arg1/:arg2")
+@Route("/named_args/:arg1/:arg2")
 namedPathArgs(String arg1, {String arg2, String arg3, String arg4: "arg4"}) =>
     {"arg1": arg1, "arg2": arg2, "arg3": arg3, "arg4": arg4};
     
-@app.Route("/query_args")
-queryArgs(@app.QueryParam("arg1") String arg1, 
-          @app.QueryParam("arg2") int arg2, 
-          [@app.QueryParam() double arg3, 
-           @app.QueryParam("arg4") String arg4, 
-           @app.QueryParam("arg5") String arg5 = "arg5",
+@Route("/query_args")
+queryArgs(@QueryParam("arg1") String arg1, 
+          @QueryParam("arg2") int arg2, 
+          [@QueryParam() double arg3, 
+           @QueryParam("arg4") String arg4, 
+           @QueryParam("arg5") String arg5 = "arg5",
            String arg6, String arg7 = "arg7"]) =>
     {"arg1": arg1, "arg2": arg2, "arg3": arg3, "arg4": arg4, "arg5": arg5, "arg6": arg6, "arg7": arg7};
 
-@app.Route("/named_query_args")
-namedQueryArgs(@app.QueryParam() String arg1,
-               {@app.QueryParam() String arg2,
-                @app.QueryParam("arg3") String arg3,
-                @app.QueryParam("arg4") String arg4: "arg4",
+@Route("/named_query_args")
+namedQueryArgs(@QueryParam() String arg1,
+               {@QueryParam() String arg2,
+                @QueryParam("arg3") String arg3,
+                @QueryParam("arg4") String arg4: "arg4",
                 String arg5, String arg6: "arg6"}) =>
     {"arg1": arg1, "arg2": arg2, "arg3": arg3, "arg4": arg4, "arg5": arg5, "arg6": arg6};
 
-@app.Route("/path_query_args/:arg")
-pathAndQueryArgs(String arg, @app.QueryParam("arg") String qArg) =>
+@Route("/path_query_args/:arg")
+pathAndQueryArgs(String arg, @QueryParam("arg") String qArg) =>
     {"arg": arg, "qArg": qArg};
     
-@app.Route("/json/:arg", methods: const [app.POST])
-jsonBody(String arg, @app.Body(app.JSON) Map json) => {"arg": arg, "json": json};
+@Route("/json/:arg", methods: const [POST])
+jsonBody(String arg, @Body(JSON) Map json) => {"arg": arg, "json": json};
 
-@app.Route("/text/:arg", methods: const [app.POST])
-textBody(String arg, @app.Body(app.TEXT) String text) => {"arg": arg, "text": text};
+@Route("/text/:arg", methods: const [POST])
+textBody(String arg, @Body(TEXT) String text) => {"arg": arg, "text": text};
     
-@app.Route("/form/:arg", methods: const [app.POST])
-formBody(String arg, @app.Body(app.FORM) Map form) => {"arg": arg, "form": form};    
+@Route("/form/:arg", methods: const [POST])
+formBody(String arg, @Body(FORM) Map form) => {"arg": arg, "form": form};    
     
-@app.Route("/attr/:arg")
-attr(@app.Attr() String name, String arg, {@app.Attr() int value: 0}) => "$name $arg $value";
+@Route("/attr/:arg")
+attr(@Attr() String name, String arg, {@Attr() int value: 0}) => "$name $arg $value";
 
-@app.Route("/jsonQueryMap", methods: const [app.POST])
-jsonBodyQueryMap(@app.Body(app.JSON) QueryMap json) => new QueryMap({"key": json.key.innerKey});
+@Route("/jsonDynamicMap", methods: const [POST])
+jsonBodyDynamicMap(@Body(JSON) DynamicMap json) => new DynamicMap({"key": json.key.innerKey});
 
-@app.Interceptor("/attr/.+")
+@Interceptor("/attr/.+")
 interceptorAttr() {
-  app.request.attributes["name"] = "name_attr";
-  app.request.attributes["value"] = 1;
-  app.chain.next();
+  request.attributes["name"] = "name_attr";
+  request.attributes["value"] = 1;
+  return chain.next();
 }
     
     

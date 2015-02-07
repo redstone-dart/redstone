@@ -1,16 +1,14 @@
 library server_tests;
 
-import 'dart:convert';
-import 'dart:io';
+import 'dart:convert' as conv;
 import 'dart:async';
 import 'dart:mirrors';
 
 import 'package:unittest/unittest.dart';
 
 import 'package:di/di.dart';
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart';
 import 'package:shelf/shelf.dart' as shelf;
-import 'package:redstone/mocks.dart';
 import 'package:logging/logging.dart';
 
 import 'services/routes.dart';
@@ -25,449 +23,366 @@ import 'services/inspect.dart';
 
 main() {
   
-  //app.setupConsoleLog(Level.ALL);
+  //setupConsoleLog(Level.ALL);
   
   group("Routes:", () {
     
-    setUp(() => app.setUp([#routes]));
-    tearDown(app.tearDown);
+    setUp(() => redstoneSetUp([#routes]));
+    tearDown(redstoneTearDown);
     
-    test("path matching", () {
+    test("path matching", () async {
       var req = new MockRequest("/path/subpath");
       var req2 = new MockRequest("/path/anotherpath");
       var req3 = new MockRequest("/paths");
       var req4 = new MockRequest("/path2/sub/path");
-      var req5 = new MockRequest("/path3/sub/path");
-      var req6 = new MockRequest("/change_status_code");
+      var req5 = new MockRequest("/change_status_code");
       
-      return app.dispatch(req).then((resp) {
-        expect(resp.mockContent, equals("sub_route"));
-      }).then((_) => app.dispatch(req2)).then((resp) {
-        expect(resp.mockContent, equals("main_route"));
-      }).then((_) => app.dispatch(req3)).then((resp) {
-        expect(resp.statusCode, equals(404));
-      }).then((_) => app.dispatch(req4)).then((resp) {
-        expect(resp.mockContent, equals("sub"));
-      }).then((_) => app.dispatch(req5)).then((resp) {
-        expect(resp.mockContent, equals("sub/path"));
-      }).then((_) => app.dispatch(req6)).then((resp) {
-        expect(resp.statusCode, equals(201));
-        expect(resp.mockContent, equals("response"));
-      });
+      var resp = await dispatch(req);
+      expect(resp.mockContent, equals("sub_route"));
+      resp = await dispatch(req2);
+      expect(resp.mockContent, equals("main_route"));
+      resp = await dispatch(req3);
+      expect(resp.statusCode, equals(404));
+      resp = await dispatch(req4);
+      expect(resp.mockContent, equals("sub/path"));
+      resp = await dispatch(req5);
+      expect(resp.statusCode, equals(201));
+      expect(resp.mockContent, equals("response"));
     });
     
-    test("group path matching", () {
+    test("group path matching", () async {
       var req = new MockRequest("/group/path/subpath");
       var req2 = new MockRequest("/group/path/anotherpath");
-      var req3 = new MockRequest("/group/path");
-      var req4 = new MockRequest("/group/paths");
-      var req5 = new MockRequest("/group");
-      var req6 = new MockRequest("/group.json");
-      var req7 = new MockRequest("/group", method: app.POST);
-      var req8 = new MockRequest("/group/change_status_code");
+      var req3 = new MockRequest("/group/paths");
+      var req4 = new MockRequest("/group");
+      var req5 = new MockRequest("/group.json");
+      var req6 = new MockRequest("/group", method: POST);
+      var req7 = new MockRequest("/group/change_status_code");
       
-      return app.dispatch(req).then((resp) {
-        expect(resp.mockContent, equals("interceptor sub_route"));
-      }).then((_) => app.dispatch(req2)).then((resp) {
-        expect(resp.mockContent, equals("interceptor main_route"));
-      }).then((_) => app.dispatch(req3)).then((resp) {
-        expect(resp.mockContent, equals("interceptor main_route"));
-      }).then((_) => app.dispatch(req4)).then((resp) {
-        expect(resp.statusCode, equals(404));
-      }).then((_) => app.dispatch(req5)).then((resp) {
-        expect(resp.mockContent, equals("default_route"));
-      }).then((_) => app.dispatch(req6)).then((resp) {
-        expect(resp.mockContent, equals("default_route_json"));
-      }).then((_) => app.dispatch(req7)).then((resp) {
-        expect(resp.mockContent, equals("default_route_post"));
-      }).then((_) => app.dispatch(req8)).then((resp) {
-        expect(resp.statusCode, equals(201));
-        expect(resp.mockContent, equals("response"));
-      });
+      var resp = await dispatch(req);
+      expect(resp.mockContent, equals("interceptor sub_route"));
+      resp = await dispatch(req2);
+      expect(resp.mockContent, equals("interceptor main_route"));
+      resp = await dispatch(req3);
+      expect(resp.statusCode, equals(404));
+      resp = await dispatch(req4);
+      expect(resp.mockContent, equals("default_route"));
+      resp = await dispatch(req5);
+      expect(resp.mockContent, equals("default_route_json"));
+      resp = await dispatch(req6);
+      expect(resp.mockContent, equals("default_route_post"));
+      resp = await dispatch(req7);
+      expect(resp.statusCode, equals(201));
+      expect(resp.mockContent, equals("response"));
     });
     
-    test("multiple handlers", () {
+    test("multiple handlers", () async {
       var req = new MockRequest("/handler_by_method");
-      var req2 = new MockRequest("/handler_by_method", method: app.POST);
+      var req2 = new MockRequest("/handler_by_method", method: POST);
       
-      return app.dispatch(req).then((resp) {
-        expect(resp.mockContent, equals("get_handler"));
-      }).then((_) => app.dispatch(req2)).then((resp) {
-        expect(resp.mockContent, equals("post_handler"));
-      });
+      var resp = await dispatch(req);
+      expect(resp.mockContent, equals("get_handler"));
+      resp = await dispatch(req2);
+      expect(resp.mockContent, equals("post_handler"));
     });
   });
   
   group("Response serialization:", () {
     
-    setUp(() => app.setUp([#type_serialization]));
-    tearDown(app.tearDown);
+    setUp(() => redstoneSetUp([#type_serialization]));
+    tearDown(redstoneTearDown);
     
-    test("String -> text/plain", () {
+    test("String -> text/plain", () async {
       var req = new MockRequest("/types/string");
-      return app.dispatch(req).then((resp) {
-        expect(resp.headers.value("content-type"), contains("text/plain"));
-        expect(resp.mockContent, equals("string"));
-      });
+      var resp = await dispatch(req);
+      expect(resp.headers.value("content-type"), contains("text/plain"));
+      expect(resp.mockContent, equals("string"));
     });
     
-    test("Map -> application/json", () {
+    test("Map -> application/json", () async {
       var req = new MockRequest("/types/map");
-      return app.dispatch(req).then((resp) {
-        expect(resp.headers.value("content-type"), contains("application/json"));
-        expect(JSON.decode(resp.mockContent), equals({"key1": "value1", "key2": "value2"}));
-      });
+      var resp = await dispatch(req);
+      expect(resp.headers.value("content-type"), contains("application/json"));
+      expect(conv.JSON.decode(resp.mockContent), equals({"key1": "value1", "key2": "value2"}));
     });
     
-    test("List -> application/json", () {
+    test("List -> application/json", () async {
       var req = new MockRequest("/types/list");
-      return app.dispatch(req).then((resp) {
-        expect(resp.headers.value("content-type"), contains("application/json"));
-        expect(JSON.decode(resp.mockContent), equals(["value1", "value2", "value3"]));
-      });
+      var resp = await dispatch(req);
+      expect(resp.headers.value("content-type"), contains("application/json"));
+      expect(conv.JSON.decode(resp.mockContent), equals(["value1", "value2", "value3"]));
     });
     
-    test("null -> empty response", () {
+    test("null -> empty response", () async {
       var req = new MockRequest("/types/null");
-      return app.dispatch(req).then((resp) {
-        expect(resp.headers.value("content-type"), isNull);
-        expect(resp.mockContent, isEmpty);
-      });
+      var resp = await dispatch(req);
+      expect(resp.headers.value("content-type"), isNull);
+      expect(resp.mockContent, isEmpty);
     });
     
-    test("Future -> (wait its completion)", () {
+    test("Future -> (wait its completion)", () async {
       var req = new MockRequest("/types/future");
-      return app.dispatch(req).then((resp) {
-        expect(resp.headers.value("content-type"), contains("application/json"));
-        expect(JSON.decode(resp.mockContent), equals({"key1": "value1", "key2": "value2"}));
-      });           
+      var resp = await dispatch(req);
+      expect(resp.headers.value("content-type"), contains("application/json"));
+      expect(conv.JSON.decode(resp.mockContent), equals({"key1": "value1", "key2": "value2"}));           
     });
     
-    test("other types -> text/plain", () {
+    test("other types -> text/plain", () async {
       var req = new MockRequest("/types/other");
-      return app.dispatch(req).then((resp) {
-        expect(resp.headers.value("content-type"), contains("text/plain"));
-        expect(resp.mockContent, equals("other_type"));
-      });
+      var resp = await dispatch(req);
+      expect(resp.headers.value("content-type"), contains("text/plain"));
+      expect(resp.mockContent, equals("other_type"));
     });
     
-    test("File -> (MimeType of the file)", () {
+    test("File -> (MimeType of the file)", () async {
       var req = new MockRequest("/types/file");
-      return app.dispatch(req).then((resp) {
-        expect(resp.headers.value("content-type"), contains("application/json"));
-        expect(JSON.decode(resp.mockContent), equals({"key": "value"}));
-      });
+      var resp = await dispatch(req);
+      expect(resp.headers.value("content-type"), contains("application/json"));
+      expect(conv.JSON.decode(resp.mockContent), equals({"key": "value"}));
     });
     
-    test("Shelf Response", () {
+    test("Shelf Response", () async {
       var req = new MockRequest("/types/shelf_response");
-      return app.dispatch(req).then((resp) {
-        expect(resp.mockContent, equals("target_executed"));
-      });
+      var resp = await dispatch(req);
+      expect(resp.mockContent, equals("target_executed"));
     });
     
   });
   
   group("Route arguments:", () {
     
-    setUp(() => app.setUp([#arguments]));
-    tearDown(app.tearDown);
+    setUp(() => redstoneSetUp([#arguments]));
+    tearDown(redstoneTearDown);
     
-    test("path parameters", () {
+    test("path parameters", () async {
       var req = new MockRequest("/args/arg/1/1.2");
-      return app.dispatch(req).then((resp) {
-        expect(JSON.decode(resp.mockContent), equals({
-          "arg1": "arg", 
-          "arg2": 1, 
-          "arg3": 1.2, 
-          "arg4": null, 
-          "arg5": "arg5"
-        }));
-      });
+      var resp = await dispatch(req);
+      expect(conv.JSON.decode(resp.mockContent), equals({
+        "arg1": "arg", 
+        "arg2": 1, 
+        "arg3": 1.2, 
+        "arg4": null, 
+        "arg5": "arg5"
+      }));
     });
     
-    test("path parameters with named arguments", () {
+    test("path parameters with named arguments", () async {
       var req = new MockRequest("/named_args/arg1/arg2");
-      return app.dispatch(req).then((resp) {
-        expect(JSON.decode(resp.mockContent), equals({
-          "arg1": "arg1", 
-          "arg2": "arg2",  
-          "arg3": null, 
-          "arg4": "arg4"
-        }));
-      });
+      var resp = await dispatch(req);
+      expect(conv.JSON.decode(resp.mockContent), equals({
+        "arg1": "arg1", 
+        "arg2": "arg2",  
+        "arg3": null, 
+        "arg4": "arg4"
+      }));
     });
     
-    test("query parameters", () {
+    test("query parameters", () async {
       var req = new MockRequest("/query_args", queryParams: {
         "arg1": "arg1", "arg2": "1", "arg3": "1.2"
       });
-      return app.dispatch(req).then((resp) {
-        expect(JSON.decode(resp.mockContent), equals({
-          "arg1": "arg1", 
-          "arg2": 1, 
-          "arg3": 1.2, 
-          "arg4": null, 
-          "arg5": "arg5",
-          "arg6": null,
-          "arg7": "arg7"
-        }));
-      });
+      var resp = await dispatch(req);
+      expect(conv.JSON.decode(resp.mockContent), equals({
+        "arg1": "arg1", 
+        "arg2": 1, 
+        "arg3": 1.2, 
+        "arg4": null, 
+        "arg5": "arg5",
+        "arg6": null,
+        "arg7": "arg7"
+      }));
     });
     
-    test("query parameters with named arguments", () {
+    test("query parameters with named arguments", () async {
       var req = new MockRequest("/named_query_args", queryParams: {
         "arg1": "arg1", "arg2": "arg2"
       });
-      return app.dispatch(req).then((resp) {
-        expect(JSON.decode(resp.mockContent), equals({
-          "arg1": "arg1", 
-          "arg2": "arg2", 
-          "arg3": null, 
-          "arg4": "arg4",
-          "arg5": null,
-          "arg6": "arg6"
-        }));
-      });
+      var resp = await dispatch(req);
+      expect(conv.JSON.decode(resp.mockContent), equals({
+        "arg1": "arg1", 
+        "arg2": "arg2", 
+        "arg3": null, 
+        "arg4": "arg4",
+        "arg5": null,
+        "arg6": "arg6"
+      }));
     });
     
-    test("path and query parameters", () {
+    test("path and query parameters", () async {
       var req = new MockRequest("/path_query_args/arg1", queryParams: {
         "arg": "arg2"
       });
-      return app.dispatch(req).then((resp) {
-        expect(JSON.decode(resp.mockContent), equals({
-          "arg": "arg1", 
-          "qArg": "arg2"
-        }));
-      });
+      var resp = await dispatch(req);
+      expect(conv.JSON.decode(resp.mockContent), equals({
+        "arg": "arg1", 
+        "qArg": "arg2"
+      }));
     });
     
-    test("request content as JSON", () {
-      var req = new MockRequest("/json/arg1", method: app.POST, bodyType: app.JSON, body: {
+    test("request content as JSON", () async {
+      var req = new MockRequest("/json/arg1", method: POST, bodyType: JSON, body: {
         "key": "value"
       });
-      return app.dispatch(req).then((resp) {
-        expect(JSON.decode(resp.mockContent), equals({
-          "arg": "arg1",
-          "json": {"key": "value"}
-        }));
-      });
+      var resp = await dispatch(req);
+      expect(conv.JSON.decode(resp.mockContent), equals({
+        "arg": "arg1",
+        "json": {"key": "value"}
+      }));
     });
     
-    test("request content as FORM", () {
-      var req = new MockRequest("/form/arg1", method: app.POST, bodyType: app.FORM, body: {
+    test("request content as FORM", () async {
+      var req = new MockRequest("/form/arg1", method: POST, bodyType: FORM, body: {
         "key": "value"
       });
-      return app.dispatch(req).then((resp) {
-        expect(JSON.decode(resp.mockContent), equals({
-          "arg": "arg1",
-          "form": {"key": "value"}
-        }));
-      });
+      var resp = await dispatch(req);
+      expect(conv.JSON.decode(resp.mockContent), equals({
+        "arg": "arg1",
+        "form": {"key": "value"}
+      }));
     });
     
-    test("request content as TEXT", () {
-      var req = new MockRequest("/text/arg1", method: app.POST, bodyType: app.TEXT, body: "plain text");
-      return app.dispatch(req).then((resp) {
-        expect(JSON.decode(resp.mockContent), equals({
-          "arg": "arg1",
-          "text": "plain text"
-        }));
-      });
+    test("request content as TEXT", () async {
+      var req = new MockRequest("/text/arg1", method: POST, bodyType: TEXT, body: "plain text");
+      var resp = await dispatch(req);
+      expect(conv.JSON.decode(resp.mockContent), equals({
+        "arg": "arg1",
+        "text": "plain text"
+      }));
     });
     
-    test("request content as JSON using QueryMap", () {
-      var req = new MockRequest("/jsonQueryMap", method: app.POST, bodyType: app.JSON, body: {
+    test("request content as JSON using DynamicMap", () async {
+      var req = new MockRequest("/jsonDynamicMap", method: POST, bodyType: JSON, body: {
         "key": {
           "innerKey": "value"
         }
       });
-      return app.dispatch(req).then((resp) {
-        expect(JSON.decode(resp.mockContent), equals({"key": "value"}));
-      });
+      var resp = await dispatch(req);
+      expect(conv.JSON.decode(resp.mockContent), equals({"key": "value"}));
     });
     
-    test("request attributes", () {
+    test("request attributes", () async {
       var req = new MockRequest("/attr/arg1");
-      return app.dispatch(req).then((resp) {
-        expect(resp.mockContent, equals("name_attr arg1 1"));
-      });
+      var resp = await dispatch(req);
+      expect(resp.mockContent, equals("name_attr arg1 1"));
     });
     
   });
   
   group("Error handling:", () {
     
-    setUp(() => app.setUp([#errors]));
-    tearDown(app.tearDown);
+    setUp(() => redstoneSetUp([#errors]));
+    tearDown(redstoneTearDown);
     
-    test("wrong method", () {
+    test("wrong method", () async {
       var req = new MockRequest("/wrong_method");
-      return app.dispatch(req).then((resp) {
-        expect(resp.statusCode, equals(405));
-      });
+      var resp = await dispatch(req);
+      expect(resp.statusCode, equals(405));
     });
     
-    test("wrong type", () {
-      var req = new MockRequest("/wrong_type", method: app.POST, 
-          bodyType: app.FORM, body: {"key": "value"});
-      return app.dispatch(req).then((resp) {
-        expect(resp.statusCode, equals(400));
-      });
+    test("wrong type", () async {
+      var req = new MockRequest("/wrong_type", method: POST, 
+          bodyType: FORM, body: {"key": "value"});
+      var resp = await dispatch(req);
+      expect(resp.statusCode, equals(400));
     });
     
-    test("wrong value", () {
+    test("wrong value", () async {
       var req = new MockRequest("/wrong_value/not_int");
-      return app.dispatch(req).then((resp) {
-        expect(resp.statusCode, equals(400));
-      });
+      var resp = await dispatch(req);
+      expect(resp.statusCode, equals(400));
     });
     
-    test("route error", () {
+    test("route error", () async {
       var req = new MockRequest("/route_error");
-      return app.dispatch(req).then((resp) {
-        expect(resp.statusCode, equals(500));
-        expect(resp.mockContent, equals("server_error"));
-      });
+      var resp = await dispatch(req);
+      expect(resp.statusCode, equals(500));
+      expect(resp.mockContent, equals("server_error"));
     });
  
-    test("async route error", () {
+    test("async route error", () async {
       var req = new MockRequest("/async_route_error");
-      return app.dispatch(req).then((resp) {
-        expect(resp.statusCode, equals(500));
-        expect(resp.mockContent, equals("server_error"));
-      });
+      var resp = await dispatch(req);
+      expect(resp.statusCode, equals(500));
+      expect(resp.mockContent, equals("server_error"));
     });
     
-    test("interceptor error", () {
+    test("interceptor error", () async {
       var req = new MockRequest("/interceptor_error");
-      return app.dispatch(req).then((resp) {
-        expect(resp.statusCode, equals(500));
-        expect(resp.mockContent, equals("server_error"));
-      });
+      var resp = await dispatch(req);
+      expect(resp.statusCode, equals(500));
+      expect(resp.mockContent, equals("server_error"));
     });
     
-    test("async interceptor error", () {
+    test("async interceptor error", () async {
       var req = new MockRequest("/async_interceptor_error");
-      return app.dispatch(req).then((resp) {
-        expect(resp.statusCode, equals(500));
-        expect(resp.mockContent, equals("target_executed server_error"));
-      });
+      var resp = await dispatch(req);
+      expect(resp.statusCode, equals(500));
+      expect(resp.mockContent, equals("server_error"));
     });
     
-    test("resource not found", () {
+    test("resource not found", () async {
       var req = new MockRequest("/not_found");
-      return app.dispatch(req).then((resp) {
-        expect(resp.statusCode, equals(404));
-        expect(resp.mockContent, equals("not_found"));
-      });
+      var resp = await dispatch(req);
+      expect(resp.statusCode, equals(404));
+      expect(resp.mockContent, equals("not_found"));
     });
     
-    test("Ignore route response if abort() is called", () {
-      var req = new MockRequest("/abort");
-      return app.dispatch(req).then((resp) {
-        expect(resp.statusCode, equals(500));
-        expect(resp.mockContent, equals("server_error"));
-      });
-    });
-    
-    test("Ignore route response if redirect() is called", () {
-      var req = new MockRequest("/redirect");
-      return app.dispatch(req).then((resp) {
-        expect(resp.statusCode, equals(302));
-      });
-    });
-    
-    test("Find error handler by path", () {
+    test("Find error handler by path", () async {
       var req = new MockRequest("/sub_handler");
-      return app.dispatch(req).then((resp) {
-        expect(resp.statusCode, equals(500));
-        expect(resp.mockContent, equals("server_error sub_error_handler"));
-      });
+      var resp = await dispatch(req);
+      expect(resp.statusCode, equals(500));
+      expect(resp.mockContent, equals("server_error sub_error_handler"));
     });
     
-    test("Error response", () {
+    test("Error response", () async {
       var req = new MockRequest("/error_response");
-      return app.dispatch(req).then((resp) {
-        expect(resp.statusCode, equals(400));
-        expect(resp.mockContent, equals("handling: error_response"));
-      });
+      var resp = await dispatch(req);
+      expect(resp.statusCode, equals(400));
+      expect(resp.mockContent, equals("handling: error_response"));
     });
   });
   
   group("Chain:", () {
     
-    setUp(() => app.setUp([#interceptors]));
-    tearDown(app.tearDown);
+    setUp(() => redstoneSetUp([#interceptors]));
+    tearDown(redstoneTearDown);
     
-    test("interceptors", () {
+    test("interceptors", () async {
       var req = new MockRequest("/target");
       var req2 = new MockRequest("/parse_body");
-      return app.dispatch(req).then((resp) {
-        expect(resp.mockContent, equals("before_interceptor1|before_interceptor2|target_executed|after_interceptor2|after_interceptor1"));
-      }).then((_) => app.dispatch(req2)).then((resp) {
-        expect(resp.mockContent, equals("target_executed"));
-        expect(resp.statusCode, equals(200));
-      });
+      
+      var resp = await dispatch(req);
+      expect(resp.mockContent, equals("before_interceptor1|before_interceptor2|target_executed|after_interceptor2|after_interceptor1"));
+      resp = await dispatch(req2);
+      expect(resp.mockContent, equals("target_executed"));
+      expect(resp.statusCode, equals(200));
     });
     
-    test("interrupt", () {
+    test("interrupt", () async {
       var req = new MockRequest("/interrupt");
-      return app.dispatch(req).then((resp) {
-        expect(resp.statusCode, equals(401));
-        expect(resp.mockContent, equals("chain_interrupted"));      
-      });
+      var resp = await dispatch(req);
+      expect(resp.statusCode, equals(401));
+      expect(resp.mockContent, equals("chain_interrupted"));  
     });
     
-    test("redirect", () {
+    test("redirect", () async {
       var req = new MockRequest("/redirect");
-      return app.dispatch(req).then((resp) {
-        expect(resp.statusCode, equals(302));   
-      });
+      var resp = await dispatch(req);
+      expect(resp.statusCode, equals(302));
     });
     
-    test("abort", () {
+    test("abort", () async {
       var req = new MockRequest("/abort");
-      return app.dispatch(req).then((resp) {
-        expect(resp.statusCode, equals(401));   
-      });
+      var resp = await dispatch(req);
+      expect(resp.statusCode, equals(401));
     });
     
-    test("without basic auth", () {
-       var req = new MockRequest("/basicauth");
-       return app.dispatch(req).then((resp) {
-         expect(resp.statusCode, equals(401));   
-       });
-     });
-    
-    test("wrong basic auth", () {
-       var headers = {HttpHeaders.AUTHORIZATION: "Basic xxx"};
-       var req = new MockRequest("/basicauth", headers: headers);
-       return app.dispatch(req).then((resp) {
-         expect(resp.headers[HttpHeaders.WWW_AUTHENTICATE][0], equals('Basic realm="Redstone"'));   
-         expect(resp.statusCode, equals(401));   
-       });
-     });
-    
-    test("basic auth", () {
-       // username: 'Aladdin' password: 'open sesame'
-       // Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==
-       var headers = {HttpHeaders.AUTHORIZATION: 'Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ=='};
-       var req = new MockRequest("/basicauth", headers: headers);
-       return app.dispatch(req).then((resp) {
-         expect(resp.statusCode, equals(200));
-         expect(resp.mockContent, equals("basic_auth"));
-       });
-     });
-    
-    test("basic auth parse", () {
+    test("basic auth parse", () async {
        var req = new MockRequest("/basicauth_data", 
-             basicAuth: new app.Credentials("Aladdin", "open sesame"));
-       return app.dispatch(req).then((resp) {
-         expect(resp.statusCode, equals(200));
-         expect(resp.mockContent, equals("basic_auth"));
-       });
+             basicAuth: new Credentials("Aladdin", "open sesame"));
+       var resp = await dispatch(req);
+       expect(resp.statusCode, equals(200));
+       expect(resp.mockContent, equals("basic_auth"));
      });
     
   });
@@ -475,148 +390,135 @@ main() {
   group("dependency injection:", () {
     
     setUp(() { 
-      app.addModule(new Module()
+      addModule(new Module()
          ..bind(A)
          ..bind(B)
          ..bind(C));
-      app.setUp([#dependency_injection]);
+      return redstoneSetUp([#dependency_injection]);
     });
-    tearDown(() => app.tearDown());
+    tearDown(redstoneTearDown);
     
-    test("Routes and interceptors", () {
+    test("Routes and interceptors", () async {
       var req = new MockRequest("/di");
-      return app.dispatch(req).then((resp) {
-        expect(resp.mockContent, equals("value_a value_b value_a value_b"));
-      });
+      var resp = await dispatch(req);
+      expect(resp.mockContent, equals("value_a value_b value_a value_b"));
     });
     
-    test("Groups", () {
+    test("Groups", () async {
       var req = new MockRequest("/group/di");
-      return app.dispatch(req).then((resp) {
-        expect(resp.mockContent, equals("value_a value_b"));
-      });
+      var resp = await dispatch(req);
+      expect(resp.mockContent, equals("value_a value_b"));
     });
     
-    test("Error handlers", () {
+    test("Error handlers", () async {
       var req = new MockRequest("/invalid_path");
-      return app.dispatch(req).then((resp) {
-        expect(resp.statusCode, equals(404));
-        expect(resp.mockContent, equals("value_a value_b"));
-      });
+      var resp = await dispatch(req);
+      expect(resp.statusCode, equals(404));
+      expect(resp.mockContent, equals("value_a value_b"));
     });
   });
   
   group("install library:", () {
     
-    setUp(() => app.setUp([#install_lib]));
-    tearDown(app.tearDown);
+    setUp(() => redstoneSetUp([#install_lib]));
+    tearDown(redstoneTearDown);
     
-    test("URL prefix", () {
+    test("URL prefix", () async {
       var req = new MockRequest("/prefix/route");
       var req2 = new MockRequest("/prefix/group/route");
       var req3 = new MockRequest("/prefix/error");
       
-      return app.dispatch(req).then((resp) {
-        expect(resp.mockContent, equals("interceptor_executed target_executed"));
-      }).then((_) => app.dispatch(req2)).then((resp) {
-        expect(resp.mockContent, equals("interceptor_executed target_executed"));
-      }).then((_) => app.dispatch(req3)).then((resp) {
-        expect(resp.mockContent, equals("error_handler_executed"));
-      });
+      var resp = await dispatch(req);
+      expect(resp.mockContent, equals("interceptor_executed target_executed"));
+      resp = await dispatch(req2);
+      expect(resp.mockContent, equals("interceptor_executed target_executed"));
+      resp = await dispatch(req3);
+      expect(resp.mockContent, equals("error_handler_executed"));
     });
     
-    test("Chain", () {
+    test("Chain", () async {
       var req = new MockRequest("/chain/route");
-      return app.dispatch(req).then((resp) {
-        expect(resp.mockContent, equals("root interceptor_1 interceptor_2 interceptor_3 interceptor_4 target "));
-      });
+      var resp = await dispatch(req);
+      expect(resp.mockContent, equals("root interceptor_1 interceptor_2 interceptor_3 interceptor_4 target "));
     });
     
-    test("@Ignore", () {
+    test("@Ignore", () async {
       var req = new MockRequest("/ignore");
-      return app.dispatch(req).then((resp) {
-        expect(resp.statusCode, equals(404));
-      });
+      var resp = await dispatch(req);
+      expect(resp.statusCode, equals(404));
     });
   });
   
   group("Plugins:", () {
     
     setUp(() { 
-      app.addPlugin(FromJsonPlugin);
-      app.addPlugin(ToJsonPlugin);
-      app.addPlugin(TestPlugin);
-      app.addPlugin(WrapperPlugin);
-      app.setUp([#plugins]);
+      addPlugin(FromJsonPlugin);
+      addPlugin(ToJsonPlugin);
+      addPlugin(TestPlugin);
+      addPlugin(WrapperPlugin);
+      return redstoneSetUp([#plugins]);
     });
-    tearDown(app.tearDown);
+    tearDown(redstoneTearDown);
     
-    test("Parameter provider", () {
+    test("Parameter provider", () async {
       
-      var req = new MockRequest("/user", method: app.POST, bodyType: app.JSON, body: {
+      var req = new MockRequest("/user", method: POST, bodyType: JSON, body: {
         "name": "name",
         "username": "username"
       });
-      return app.dispatch(req).then((resp) {
-        expect(resp.mockContent, equals("name: name username: username"));
-      });
-      
+      var resp = await dispatch(req);
+      expect(resp.mockContent, equals("name: name username: username"));
     });
     
-    test("Parameter provider - exception", () {
-      var req = new MockRequest("/user", method: app.POST, bodyType: app.FORM, body: {
+    test("Parameter provider - exception", () async {
+      var req = new MockRequest("/user", method: POST, bodyType: FORM, body: {
         "name": "name",
         "username": "username"
       });
-      return app.dispatch(req).then((resp) {
-        expect(resp.statusCode, equals(400));
-      });
+      var resp = await dispatch(req);
+      expect(resp.statusCode, equals(400));
     });
     
-    test("Response processor", () {
+    test("Response processor", () async {
       var req = new MockRequest("/user/find");
-      
-      return app.dispatch(req).then((resp) {
-        expect(JSON.decode(resp.mockContent), equals({
-          "name": "name",
-          "username": "username"
-        }));
-      }); 
+      var resp = await dispatch(req);
+      expect(conv.JSON.decode(resp.mockContent), equals({
+        "name": "name",
+        "username": "username"
+      })); 
     });
     
-    test("Routes", () {
+    test("Routes", () async {
       var req = new MockRequest("/route/value");
       var req2 = new MockRequest("/error");
       
-      return app.dispatch(req).then((resp) {
-        expect(resp.mockContent, equals("interceptor value"));
-      }).then((_) => app.dispatch(req2)).then((resp) {
-        expect(resp.mockContent, equals("error_handler"));
-      });
+      var resp = await dispatch(req);
+      expect(resp.mockContent, equals("interceptor value"));
+      resp = await dispatch(req2);
+      expect(resp.mockContent, equals("error_handler"));
     });
     
-    test("Route wrapper", () {
+    test("Route wrapper", () async {
       var req = new MockRequest("/test_wrapper");
       var req2 = new MockRequest("/test_group_wrapper/test_wrapper");
       
-      return app.dispatch(req).then((resp) {
-        expect(resp.mockContent, equals("response: target executed"));
-      }).then((_) => app.dispatch(req2)).then((resp) {
-        expect(resp.mockContent, equals("response: target executed"));
-      });
+      var resp = await dispatch(req);
+      expect(resp.mockContent, equals("response: target executed"));
+      resp = await dispatch(req2);
+      expect(resp.mockContent, equals("response: target executed"));
     });
 
   });
 
   group("Plugins:", () {
 
-    tearDown(app.tearDown);
+    tearDown(redstoneTearDown);
 
-    test("Find functions, classes and methods", () {
+    test("Find functions, classes and methods", () async {
 
       var completer = new Completer();
 
-      app.addPlugin((app.Manager manager) {
+      addPlugin((Manager manager) {
 
         var expectedFunctions = [
           new CapturedType.fromValues(#annotatedFunction, const TestAnnotation())
@@ -646,9 +548,7 @@ main() {
 
       });
 
-      app.setUp([#plugins]);
-
-      return completer.future;
+      return redstoneSetUp([#plugins]).then((_) => completer.future);
 
     });
 
@@ -656,7 +556,7 @@ main() {
   
   group("Plugins:", () {
     
-    tearDown(app.tearDown);
+    tearDown(redstoneTearDown);
     
     test("Metadata access", () {
       
@@ -690,7 +590,7 @@ main() {
       var expectedErrorHandlers = new Set()
                             ..add(333); 
       
-      app.addPlugin((manager) {
+      addPlugin((manager) {
    
         try {
           extractMetadata(manager.serverMetadata);
@@ -713,48 +613,44 @@ main() {
         } catch(e) {
           completer.completeError(e);
         }
-      }); 
-      
-      app.setUp([#inspect]);
+      });
      
-      return completer.future;
+      return redstoneSetUp([#inspect]).then((_) => completer.future);
     });
     
   });
   
   group("Shelf:", () {
     
-    tearDown(app.tearDown);
+    tearDown(redstoneTearDown);
     
-    test("Middlewares", () {
+    test("Middlewares", () async {
       
-      app.addShelfMiddleware(shelf.createMiddleware(responseHandler: (shelf.Response resp) {
+      addShelfMiddleware(shelf.createMiddleware(responseHandler: (shelf.Response resp) {
         return resp.readAsString().then((value) =>
             new shelf.Response.ok("middleware_1 $value"));
       }));
-      app.addShelfMiddleware(shelf.createMiddleware(responseHandler: (shelf.Response resp) {
+      addShelfMiddleware(shelf.createMiddleware(responseHandler: (shelf.Response resp) {
         return resp.readAsString().then((value) =>
             new shelf.Response.ok("middleware_2 $value"));
       }));
-      app.setUp([#routes]);
+      await redstoneSetUp([#routes]);
       
-      MockRequest req = new MockRequest("/path");
-      return app.dispatch(req).then((resp) {
-        expect(resp.mockContent, equals("middleware_1 middleware_2 main_route"));
-      });
-      
+      MockRequest req = new MockRequest("/path/arg");
+      var resp = await dispatch(req);
+      expect(resp.mockContent, equals("middleware_1 middleware_2 main_route"));
     });
     
-    test("Handler", () {
-      app.setShelfHandler((shelf.Request req) {
+    test("Handler", () async {
+      setShelfHandler((shelf.Request req) {
         return new shelf.Response.ok("handler_executed");
       });
-      app.setUp([#routes]);
+      await redstoneSetUp([#routes]);
+      
       MockRequest req = new MockRequest("/invalid_path");
-      return app.dispatch(req).then((resp) {
-        expect(resp.mockContent, equals("handler_executed"));
-        expect(resp.statusCode, equals(200));
-      });
+      var resp = await dispatch(req);
+      expect(resp.mockContent, equals("handler_executed"));
+      expect(resp.statusCode, equals(200));
     });
   });
   
