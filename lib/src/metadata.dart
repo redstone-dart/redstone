@@ -44,7 +44,7 @@ abstract class RequestTarget {
 ///
 /// Example:
 ///
-///     @app.Route('/user/:username', methods: const[app.GET, app.POST])
+///     @Route('/user/:username', methods: const[GET, POST])
 ///     helloUser(String username) => "Hello, $username";
 ///
 class Route implements RequestTarget {
@@ -76,8 +76,8 @@ class Route implements RequestTarget {
 ///
 /// Example:
 ///
-///     @app.Route('/json_service/echo', methods: const[app.POST])
-///     echoJson(@app.Body(app.JSON) Map json) => json;
+///     @Route('/json_service/echo', methods: const[POST])
+///     echoJson(@Body(JSON) Map json) => json;
 ///
 class Body {
 
@@ -93,8 +93,8 @@ class Body {
 ///
 /// Example:
 ///
-///     @app.Route('/userInfo')
-///     getUserInfo(@app.QueryParam('user') String user) {
+///     @Route('/userInfo')
+///     getUserInfo(@QueryParam('user') String user) {
 ///      ...
 ///     }
 ///
@@ -111,8 +111,8 @@ class QueryParam {
 ///
 /// Example:
 ///
-///     @app.Route('/service')
-///     service(@app.Attr("conn") DbConn conn) {
+///     @Route('/service')
+///     service(@Attr("conn") DbConn conn) {
 ///      ...
 ///     }
 ///
@@ -127,8 +127,8 @@ class Attr {
 ///
 /// Example:
 ///
-///     @app.Route('/service')
-///     service(@app.Inject() DbConn conn) {
+///     @Route('/service')
+///     service(@Inject() DbConn conn) {
 ///      ...
 ///     }
 ///
@@ -147,10 +147,10 @@ class Inject {
 ///
 /// Example:
 ///
-///     @app.Interceptor(r'/.*')
+///     @Interceptor(r'/.*')
 ///     configureResponse() {
-///       app.request.response.headers.add('Access-Control-Allow-Origin', '*');
-///       app.chain.next();
+///       request.response.headers.add('Access-Control-Allow-Origin', '*');
+///       chain.next();
 ///     }
 ///
 class Interceptor {
@@ -171,8 +171,8 @@ class Interceptor {
 ///
 /// Example:
 ///
-///     @app.ErrorHandler(HttpStatus.NOT_FOUND)
-///     handleNotFound() => app.redirect('/error_page/not_found.html');
+///     @ErrorHandler(HttpStatus.NOT_FOUND)
+///     handleNotFound() => redirect('/error_page/not_found.html');
 ///
 class ErrorHandler {
 
@@ -189,15 +189,15 @@ class ErrorHandler {
 ///
 /// Example:
 ///
-///     @app.Group('/user')
+///     @Group('/user')
 ///     class UserService {
 ///
-///       @app.Route('/find')
+///       @Route('/find')
 ///       find() {
 ///         ...
 ///       }
 ///
-///       @app.Route('/add')
+///       @Route('/add')
 ///       add() {
 ///         ...
 ///       }

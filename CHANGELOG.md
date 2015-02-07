@@ -1,3 +1,46 @@
+##v0.6.0-alpha.1
+
+**NOTE: this is a pre-release version!**
+
+* **Version highlights:**
+    * Fully rewritten from scratch! (The code base now has a better library layout, which is easier to maintain and evolve)
+    * Polished API
+    * New `chain.forward()` function, which allows routes, interceptors and error handlers to internally dispatch a request to another resource
+    * Better support for `async/await` (see below)
+
+* **BREAKING CHANGES:**
+    * Renamed `redstone/server.dart` to `redstone/redstone.dart`
+    * Renamed `QueryMap` to `DynamicMap`
+    * Removed `Route.matchSubPaths` property (`route_hierarchical` supports this by default now)
+    * Renamed `setUp()` and `tearDown()` to `redstoneSetUp()` and `redstoneTearDown()`. This avoids conflicts with the unittest package, if redstone is imported without a lib prefix.
+    * Removed `authenticateBasic()` top level function
+    * Moved `parseAuthorizationHeader()` top level function to the `request` object (`request.parseAuthorizationHeader()`)
+    * The `chain.next()`, `chain.interrupt()` and `chain.abort()` functions now return a `Future<shelf.Response>`. It's necessary to wait for the completion of the returned future when calling one of these functions, although, it's now possible to use them with async/await expressions. Example:
+```dart
+import 'package:redstone/redstone.dart'
+import "package:shelf/shelf.dart" as shelf;
+
+@Interceptor(r'/.*')
+handleCORS() async {
+  shelf.Response resp;
+  if (request.method == "OPTIONS") {
+    resp = await chain.interrupt();
+  } else {
+    resp = await chain.next();
+  }
+  return resp.change(headers: {"Access-Control-Allow-Origin": "*"});
+}
+```
+    * The `chain.redirect()` function now returns a `shelf.Response`
+    * For interceptors and error handlers, it's now necessary to annotate injectable parameters with `@Inject`. Although, it's now possible to annotate parameters with `@Attr`, to inject request attributes.
+    * Plugin API: Some methods of the `Manager` object are now getters.
+
+* **TODO:**
+    * Improve unit tests
+    * Update plugins (redstone_mapper and redstone_web_socket aren't compatible with this version yet)
+    * Improve documentation and website
+
+
 ##v0.5.19
 * Fix: Error when setting `Intereptor.parseRequestBody = true` (Thanks to [platelk](https://github.com/platelk). See PR [#46](https://github.com/luizmineo/redstone.dart/pull/46)).
 
