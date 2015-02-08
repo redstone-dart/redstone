@@ -16,7 +16,8 @@ class RequestContext {
 
   Chain chain;
   RequestParser request;
-  shelf.Response response = new shelf.Response.ok(null);
+  shelf.Response response = new shelf.Response.ok(null,
+    headers: const {HttpHeaders.SERVER: "dart:io with Redstone.dart/Shelf"});
 
   RequestContext(this.request);
 

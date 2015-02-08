@@ -5,9 +5,9 @@
 * **Version highlights:**
     * Fully rewritten from scratch! (The code base now has a better library layout, which is easier to maintain and evolve)
     * Polished API
-    * Added the `chain.forward()` function, which allows routes, interceptors and error handlers to internally dispatch a request to another resource
-    * Added the `chain.createResponse()` function, whichcan be used to easily create `shelf.Response` objects
-    * Better support for `async/await` (see below)
+        * Added the `chain.forward()` function, which allows routes, interceptors and error handlers to internally dispatch a request to another resource
+        * Added the `chain.createResponse()` function, which can be used to easily create `shelf.Response` objects
+        * Better support for `async/await` (see below)
 
 * **BREAKING CHANGES:**
     * Renamed `redstone/server.dart` to `redstone/redstone.dart`
@@ -19,6 +19,7 @@
     * Removed the `chain.interrupt()` function. 
     * The `chain.next()` and `chain.abort()` functions now return a `Future<shelf.Response>`. It's necessary to wait for the completion of the returned future when calling one of these functions, although, it's now possible to use them with async/await expressions. See the example below.
     * The `chain.redirect()` function now returns a `shelf.Response`
+    * Redstone now generates an error page for every response which status code is less than 200, or greater than 299. To prevent this behavior, set `showErrorPage` to false
     * For interceptors and error handlers, it's now necessary to annotate injectable parameters with `@Inject`. Although, they now also accept the `@Attr` annotation, which binds a parameter with a request attribute.
     * Plugin API: Some methods of the `Manager` object are now getters.
 

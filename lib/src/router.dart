@@ -42,7 +42,7 @@ class Router {
   }
   
   Future handleRequest(HttpRequest request) {
-    
+
     var requestParser = new RequestParser(request);
     return dispatchRequest(requestParser);
 
