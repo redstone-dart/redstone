@@ -29,7 +29,7 @@ target2() => "not_reached";
 
 @Interceptor("/interrupt")
 interceptor3() {
-  return chain.interrupt(statusCode: 401, responseValue: "chain_interrupted");
+  return chain.createResponse(401, responseValue: "chain_interrupted");
 }
 
 @Route("/redirect")

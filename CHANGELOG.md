@@ -5,7 +5,8 @@
 * **Version highlights:**
     * Fully rewritten from scratch! (The code base now has a better library layout, which is easier to maintain and evolve)
     * Polished API
-    * New `chain.forward()` function, which allows routes, interceptors and error handlers to internally dispatch a request to another resource
+    * Added the `chain.forward()` function, which allows routes, interceptors and error handlers to internally dispatch a request to another resource
+    * Added the `chain.createResponse()` function, whichcan be used to easily create `shelf.Response` objects
     * Better support for `async/await` (see below)
 
 * **BREAKING CHANGES:**
@@ -15,7 +16,8 @@
     * Renamed `setUp()` and `tearDown()` to `redstoneSetUp()` and `redstoneTearDown()`. This avoids conflicts with the unittest package, if redstone is imported without a lib prefix.
     * Removed `authenticateBasic()` top level function
     * Moved `parseAuthorizationHeader()` top level function to the `request` object (`request.parseAuthorizationHeader()`)
-    * The `chain.next()`, `chain.interrupt()` and `chain.abort()` functions now return a `Future<shelf.Response>`. It's necessary to wait for the completion of the returned future when calling one of these functions, although, it's now possible to use them with async/await expressions. See the example below.
+    * Removed the `chain.interrupt()` function. 
+    * The `chain.next()` and `chain.abort()` functions now return a `Future<shelf.Response>`. It's necessary to wait for the completion of the returned future when calling one of these functions, although, it's now possible to use them with async/await expressions. See the example below.
     * The `chain.redirect()` function now returns a `shelf.Response`
     * For interceptors and error handlers, it's now necessary to annotate injectable parameters with `@Inject`. Although, they now also accept the `@Attr` annotation, which binds a parameter with a request attribute.
     * Plugin API: Some methods of the `Manager` object are now getters.
@@ -28,13 +30,10 @@ import "package:shelf/shelf.dart" as shelf;
 
 @Interceptor(r'/.*')
 handleCORS() async {
-  shelf.Response resp;
-  if (request.method == "OPTIONS") {
-    resp = await chain.interrupt();
-  } else {
-    resp = await chain.next();
+  if (request.method != "OPTIONS") {
+    await chain.next();
   }
-  return resp.change(headers: {"Access-Control-Allow-Origin": "*"});
+  return response.change(headers: {"Access-Control-Allow-Origin": "*"});
 }
 ```
 

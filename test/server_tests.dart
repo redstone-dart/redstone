@@ -23,6 +23,7 @@ import 'services/inspect.dart';
 
 main() {
   
+  showErrorPage = false;
   //setupConsoleLog(Level.ALL);
   
   group("Routes:", () {

@@ -21,6 +21,7 @@ import 'logger.dart';
 class Router {
 
   ServerContext _serverCtx;
+  bool showErrorPage;
   
   _TargetListBuilder _targetListBuilder = new _TargetListBuilder();
   _InterceptorListBuilder _interceptorListBuilder = new _InterceptorListBuilder();
@@ -32,7 +33,7 @@ class Router {
   shelf.Handler _shelfHandler;
   shelf.Handler _forwardShelfHandler;
 
-  Router(this._serverCtx) {
+  Router(this._serverCtx, this.showErrorPage) {
     _loadHandlers();
     _targets = _targetListBuilder.build();
     _interceptors = _interceptorListBuilder.build();
@@ -78,7 +79,7 @@ class Router {
     
     return (shelf.Request req) {
       _ChainImpl chain = new _ChainImpl(_targets, _interceptors, 
-          _errorHandlers, _forwardShelfHandler);
+          _errorHandlers, _forwardShelfHandler, showErrorPage);
       currentContext.chain = chain;
       var completer = new Completer();
       runZoned(() async {
@@ -86,11 +87,11 @@ class Router {
           shelf.Response resp = await innerHandler(req);
           if (resp.statusCode < 200 || resp.statusCode >= 300) {
             currentContext.response = resp;
-            resp = await chain._handleError(null, null, resp.statusCode);
+            resp = await chain._handleError(null, null, resp.statusCode, true);
           }
           completer.complete(resp);
         } catch (e, stack) {
-          completer.complete(chain._handleError(e, stack));
+          completer.complete(chain._handleError(e, stack, 500, true));
         }
       }, onError: (e, stack) {
         redstoneLogger.severe("Failed to handle request to ${req.url}");
@@ -107,7 +108,7 @@ class Router {
     return (shelf.Request req) async {
           
       _ChainImpl chain = new _ChainImpl(_targets, const [], 
-          _errorHandlers, _forwardShelfHandler);
+          _errorHandlers, _forwardShelfHandler, false);
       var currentChain = currentContext.chain;
       currentContext.chain = chain;
       try {
@@ -350,44 +351,31 @@ class _ChainImpl implements Chain {
   final List<_Interceptor> _interceptors;
   final Map<int, List<_ErrorHandler>> _errorHandlers;
   final shelf.Handler _forwardShelfHandler;
+  final bool showErrorPage;
   
   Iterator<_Interceptor> _reqInterceptors;
   _Target _reqTarget;
   
   Object _error;
-  bool _interrupted = false;
   
   bool _errorHandlerExecuted = false;
   
   _ChainImpl(this._targets, this._interceptors, 
-             this._errorHandlers, this._forwardShelfHandler);
+             this._errorHandlers, this._forwardShelfHandler, 
+             this.showErrorPage);
   
   @override
   dynamic get error => _error;
 
   @override
-  bool get interrupted => _interrupted;
-
-  @override
-  Future<shelf.Response> interrupt({int statusCode, Object responseValue, String responseType}) async {
-    if (_interrupted) {
-      return currentContext.response;
-    }
-    _interrupted = true;
-    _errorHandlerExecuted = true;
-    if (statusCode != null || responseValue != null) {
-      var resp = await writeResponse(null, responseValue, 
-          statusCode: statusCode, responseType: responseType);
-      currentContext.response = resp;
-    }
-    return currentContext.response;
+  Future<shelf.Response> createResponse(int statusCode, {Object responseValue, String responseType}) async {
+    var resp = await writeResponse(null, responseValue,
+        statusCode: statusCode, responseType: responseType);
+    return resp;
   }
 
   @override
   Future<shelf.Response> next() async {
-    if (_interrupted) {
-      return currentContext.response;
-    }
     if (_reqInterceptors.moveNext()) {
       try {
         var resp = await _reqInterceptors.current.interceptor(currentContext.request);
@@ -427,20 +415,12 @@ class _ChainImpl implements Chain {
 
   @override
   Future<shelf.Response> abort(int statusCode) async {
-    if (_interrupted) {
-      return currentContext.response;
-    }
-    
     await _handleError(null, null, statusCode);
     return currentContext.response;
   }
 
   @override
   shelf.Response redirect(String url) {
-    if (_interrupted) {
-      return currentContext.response;
-    }
-    
     var resp = new shelf.Response.found(currentContext.request.url.resolve(url));
     currentContext.response = resp;
     return resp;
@@ -465,33 +445,40 @@ class _ChainImpl implements Chain {
   }
   
   Future<shelf.Response> _handleError([Object err, StackTrace stack, 
-                                       int statusCode = 500]) async {
-    if (_errorHandlerExecuted) {
-      return currentContext.response;
-    }
-    _errorHandlerExecuted = true;
+                                       int statusCode = 500, 
+                                       bool generatePage = false]) async {
     
     statusCode = statusCode != null ? statusCode : 500;
     
-    if (statusCode == 500) {
-      redstoneLogger.severe("Internal server error.", error, stack);
+    if (err != null && statusCode == 500) {
+      redstoneLogger.severe("Internal server error.", err, stack);
     }
     
-    _error = err;
-    shelf.Response resp = await writeResponse(null, err, statusCode: statusCode);
-    currentContext.response = resp;
-    statusCode = resp.statusCode;
+    if (!_errorHandlerExecuted) {
+      _errorHandlerExecuted = true;
+      _error = err;
+      shelf.Response resp = currentContext.response;
+      if (err != null || resp.statusCode != statusCode) {
+        resp = await writeResponse(null, err, statusCode: statusCode);
+      }
+      currentContext.response = resp;
+      statusCode = resp.statusCode;
+      
+      _ErrorHandler errorHandler = _findErrorHandler();
+      if (errorHandler != null) {
+        resp = await errorHandler.errorHandler(currentContext.request);
+        if (resp is shelf.Response) {
+          currentContext.response = resp;
+        }
+      }
+    }
     
-    _ErrorHandler errorHandler = _findErrorHandler();
-    if (errorHandler != null) {
-      resp = await errorHandler.errorHandler(currentContext.request);
-      if (resp is shelf.Response) {
+    if (generatePage) {
+      if (showErrorPage) {
+        shelf.Response resp = await writeErrorPage(
+            currentContext.request.httpRequest.uri.path, err, stack, statusCode);
         currentContext.response = resp;
       }
-    } else if (resp is! ErrorResponse){
-      resp = await writeErrorPage(
-          currentContext.request.httpRequest.uri.path, err, stack, statusCode);
-      currentContext.response = resp;
     }
     
     return currentContext.response;
@@ -527,7 +514,6 @@ class _ChainImpl implements Chain {
   }
   
   _ErrorHandler _findErrorHandler() {
-    
     var statusCode = currentContext.response.statusCode;
     var reqPath = currentContext.request.httpRequest.uri.path;
     List<_ErrorHandler> handlers = _errorHandlers[statusCode];
@@ -542,7 +528,6 @@ class _ChainImpl implements Chain {
       var match = e.urlRegex.firstMatch(reqPath);
       return match != null ? match[0] == reqPath : false;
     }, orElse: () => null);
-    
   }
 }
 

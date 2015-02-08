@@ -40,8 +40,8 @@ asyncInterceptorError() async {
 notFoundHandler() => new shelf.Response.notFound("not_found");
 
 @ErrorHandler(500)
-serverErrorHandler() => response.readAsString().then((resp) => 
-    new shelf.Response.internalServerError(body: "server_error"));
+serverErrorHandler() => 
+    new shelf.Response.internalServerError(body: "server_error");
 
 @Route("/sub_handler")
 subHandler() => throw "server_error";
@@ -54,10 +54,9 @@ subErrorHandler() => new shelf.Response.internalServerError(
 errorResponse() => throw new ErrorResponse(400, "error_response");
 
 @ErrorHandler(400, urlPattern: "/error_response")
-handleErrorResponse() {
-  return response.readAsString().then((resp) {
-    return new shelf.Response(response.statusCode, 
-                              body: "handling: $resp",
-                              headers: response.headers);
-  });
+handleErrorResponse() async {
+  String resp = await response.readAsString();
+  return new shelf.Response(response.statusCode, 
+      body: "handling: $resp",
+      headers: response.headers);
 }

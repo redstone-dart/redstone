@@ -26,6 +26,12 @@ ShelfContext _shelfContext = new ShelfContext();
 
 Router _router;
 
+///By default, redstone generates a error page whenever
+///a response with status code less than 200, or greater
+///or equal than 300, is returned. To prevent this 
+///behavior, set this flag to false.
+bool showErrorPage = true;
+
 /// The request information and content.
 ///
 /// Since each request run in it's own [Zone], it's completely safe
@@ -157,7 +163,7 @@ Future redstoneSetUp([List<Symbol> libraries]) async {
   var scanner = new Scanner(libraries);
   var processor = new Processor(scanner.scan(), _shelfContext, 
       _modules, _plugins);
-  _router = new Router(await processor.parse());
+  _router = new Router(await processor.parse(), showErrorPage);
 }
 
 /// Remove all modules, plugins, routes, interceptors and error handlers.

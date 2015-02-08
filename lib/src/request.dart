@@ -77,9 +77,11 @@ abstract class Chain {
   /// Call the next element of this chain (an interceptor or a route)
   Future<shelf.Response> next();
 
-  ///Interrupt this chain. If [statusCode] or [responseValue] is provided,
-  ///a new Response will be created.
-  Future<shelf.Response> interrupt({int statusCode, Object responseValue, String responseType});
+  ///Create a new response object
+  ///
+  ///If [responseValue] is provided, it'll be serialized and written to the response body. If
+  ///[responseType] is provided, it'll be set as the content-type of the response.
+  Future<shelf.Response> createResponse(int statusCode, {Object responseValue, String responseType});
   
   ///Dispatch a request for [url].
   ///
@@ -87,9 +89,6 @@ abstract class Chain {
   ///will be invoked. Shelf middlewares and interceptors
   ///won't be triggered.
   Future<shelf.Response> forward(String url);
-
-  ///Returns true if this chain was interrupted
-  bool get interrupted;
   
   /// Abort the current request.
   ///
