@@ -4,10 +4,10 @@
 
 * **Version highlights:**
     * Fully rewritten from scratch! (The code base now has a better library layout, which is easier to maintain and evolve)
-    * Polished API
-        * Added the `chain.forward()` function, which allows routes, interceptors and error handlers to internally dispatch a request to another resource
-        * Added the `chain.createResponse()` function, which can be used to easily create `shelf.Response` objects
-        * Better support for `async/await` (see below)
+    * Polished API (see breaking changes)
+    * Added the `chain.forward()` function, which allows routes, interceptors and error handlers to internally dispatch a request to another resource
+    * Added the `chain.createResponse()` function, which can be used to easily create `shelf.Response` objects
+    * Better support for `async/await` (see breaking changes)
 
 * **BREAKING CHANGES:**
     * Renamed `redstone/server.dart` to `redstone/redstone.dart`
