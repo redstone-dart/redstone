@@ -1,25 +1,12 @@
-Redstone.dart
-=========
+**NOTE: This is a pre-release version!**
 
-[![Build Status](https://drone.io/github.com/luizmineo/redstone.dart/status.png)](https://drone.io/github.com/luizmineo/redstone.dart/latest)
+See [CHANGELOG.md] for new features and breaking changes.
 
-Redstone.dart is a server-side, metadata driven microframework for [Dart](https://www.dartlang.org/).
+To install, set the `redstone: 0.6.0-alpha.1` constraint to yout pubspec.yaml
 
-####How does it work?
-Redstone.dart allows you to easily publish your functions and classes through a web interface, by just adding some annotations to them.
-
-```dart
-
-import 'package:redstone/server.dart' as app;
-
-@app.Route("/")
-helloWorld() => "Hello, World!";
-
-main() {
-  app.setupConsoleLog();
-  app.start();
-}
+```yaml
+name: mydartproject
+description: My Dart Project
+dependencies:
+    redstone: 0.6.0-alpha.1
 ```
-
-####Want to know more?
-Check out our [wiki](https://github.com/luizmineo/redstone.dart/wiki)!
