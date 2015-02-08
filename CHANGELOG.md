@@ -22,6 +22,10 @@
     * Redstone now generates an error page for every response which status code is less than 200, or greater than 299. To prevent this behavior, set `showErrorPage` to false
     * For interceptors and error handlers, it's now necessary to annotate injectable parameters with `@Inject`. Although, they now also accept the `@Attr` annotation, which binds a parameter with a request attribute.
     * Plugin API: Some methods of the `Manager` object are now getters.
+    * Plugin API: Renamed `RouteHandler` to `DynamicRoute`
+    * Plugin API: Renamed `Handler` to `DynamicHandler`
+    * Plugin API: `DynamicRoute` and `RouteWrapper` do not receive the `pathSegments` map anymore, although, it can be accessed through the `request.pathSegments` property
+    * `request.queryParams` is now a `DynamicMap<String, List<String>>`. Also, you can now use the `@QueryParam` annotation with `List` objects
 
 **Example: CORS Interceptor**
 
