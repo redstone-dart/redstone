@@ -14,6 +14,7 @@
     * Renamed `QueryMap` to `DynamicMap`
     * Removed `Route.matchSubPaths` property (`route_hierarchical` supports this by default now)
     * Renamed `setUp()` and `tearDown()` to `redstoneSetUp()` and `redstoneTearDown()`. This avoids conflicts with the unittest package, if redstone is imported without a lib prefix.
+    * `redstoneSetUp()` now returns a `Future`. You need to wait for its completion before dispatching any request.
     * Removed `authenticateBasic()` top level function
     * Moved `parseAuthorizationHeader()` top level function to the `request` object (`request.parseAuthorizationHeader()`)
     * Removed the `chain.interrupt()` function. 
