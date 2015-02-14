@@ -18,6 +18,7 @@ import 'response_writer.dart';
 import 'dynamic_map.dart';
 import 'logger.dart';
 
+/// An router is responsible for handling http requests.
 class Router {
 
   ServerContext _serverCtx;
@@ -91,13 +92,20 @@ class Router {
           }
           completer.complete(resp);
         } catch (e, stack) {
+          if (e is shelf.HijackException) {
+            completer.completeError(e);
+            return;
+          }
           completer.complete(chain._handleError(e, stack, 500, true));
         }
       }, onError: (e, stack) {
-        redstoneLogger.severe("Failed to handle request to ${req.url}");
+        if (e is shelf.HijackException) {
+          return;
+        }
+        redstoneLogger.severe("Failed to handle request for ${req.url}");
       }); 
       return completer.future.then((r) {
-        redstoneLogger.fine("Request to ${req.url} returned status ${r.statusCode}");
+        redstoneLogger.fine("Request for ${req.url} returned status ${r.statusCode}");
         return r;
       });
     };
@@ -383,6 +391,9 @@ class _ChainImpl implements Chain {
           currentContext.response = resp;
         }
       } catch(err, stack) {
+        if (err is shelf.HijackException) {
+          rethrow;
+        }
         await _handleError(err, stack);
       }
       return currentContext.response;
@@ -406,6 +417,9 @@ class _ChainImpl implements Chain {
         }
         currentContext.response = resp;
       } catch(err, stack) {
+        if (err is shelf.HijackException) {
+          rethrow;
+        }
         await _handleError(err, stack);
       }
     }
@@ -499,14 +513,14 @@ class _ChainImpl implements Chain {
     for (_Target target in _targets) {
       UrlMatch match = target.template.match(currentContext.request.httpRequest.uri.path);
       if (match != null && match.tail.isEmpty) {
-        var pathParams = {};
+        var urlParameters = {};
         match.parameters.forEach((String key, String value) {
           if (key.endsWith("*")) {
             key = key.substring(0, key.length - 1);
           }
-          pathParams[key] = value;
+          urlParameters[key] = value;
         }); 
-        currentContext.request.pathParams = new DynamicMap(pathParams);
+        currentContext.request.urlParameters = new DynamicMap(urlParameters);
         _reqTarget = target;
         return;
       }

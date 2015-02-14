@@ -36,7 +36,7 @@ class RouteProcessor implements Function {
     
     _paramsProcessor = new ParametersProcessor(routeMetadata.name, 
         routeMetadata.mirror.parameters, injector, 
-            routeMetadata.parameterProviders, _pathHandler);
+            routeMetadata.parameterProviders, _urlHandler);
     
     _paramsProcessor
       ..addDefaultMetadataHandlers()
@@ -152,7 +152,7 @@ class RouteProcessor implements Function {
           mirror.type.typeArguments[0];
       
       return (Request req, Converter converter) {
-        List<String> args = req.queryParams[key];
+        List<String> args = req.queryParameters[key];
         if (args == null) {
           return null;
         }
@@ -161,7 +161,7 @@ class RouteProcessor implements Function {
       };
     } else {
       return (Request req, Converter converter) {
-        List<String> args = req.queryParams[key];
+        List<String> args = req.queryParameters[key];
         if (args == null || args.isEmpty) {
           return null;
         }
@@ -171,11 +171,11 @@ class RouteProcessor implements Function {
     
   }
   
-  ArgHandler _pathHandler(String handlerName, Injector injector, 
+  ArgHandler _urlHandler(String handlerName, Injector injector, 
                           Object metadata, ParameterMirror mirror) {
     var name = MirrorSystem.getName(mirror.simpleName);
     return (Request req, Converter converter) => 
-        convertValue(converter, name, req.pathParams[name], handlerName);
+        convertValue(converter, name, req.urlParameters[name], handlerName);
   }
  
 }

@@ -2,7 +2,6 @@ library redstone.src.request_parser;
 
 import 'dart:io';
 import 'dart:async';
-import 'dart:collection';
 import 'dart:convert' as conv;
 
 import 'package:shelf/shelf.dart' as shelf;
@@ -19,7 +18,7 @@ class RequestParser implements Request {
   shelf.Request _shelfRequest;
 
   DynamicMap<String, String> _headers = null;
-  DynamicMap<String, List<String>> _queryParams = null;
+  DynamicMap<String, List<String>> _queryParameters = null;
   DynamicMap _attributes = null;
   
   ContentType _contentType = null;
@@ -50,7 +49,7 @@ class RequestParser implements Request {
   DynamicMap get attributes => _attributes;
   
   @override
-  DynamicMap<String, String> pathParams = null;
+  DynamicMap<String, String> urlParameters = null;
   
   conv.Encoding encoding = conv.UTF8;
 
@@ -106,13 +105,13 @@ class RequestParser implements Request {
   }
 
   @override
-  DynamicMap<String, List<String>> get queryParams {
-    if (_queryParams != null) {
-      return _queryParams;
+  DynamicMap<String, List<String>> get queryParameters {
+    if (_queryParameters != null) {
+      return _queryParameters;
     }
     
     _splitQueryString();
-    return _queryParams;
+    return _queryParameters;
   }
 
   @override
@@ -128,7 +127,7 @@ class RequestParser implements Request {
     _shelfRequest = shelfRequest;
     _headers = new DynamicMap(shelfRequest.headers);
     _attributes = new DynamicMap({}..addAll(shelfRequest.context));
-    _queryParams = null;
+    _queryParameters = null;
   }
 
   @override
@@ -221,7 +220,7 @@ class RequestParser implements Request {
       return map;
     });
     
-    _queryParams = new DynamicMap(params);
+    _queryParameters = new DynamicMap(params);
     
   }
 

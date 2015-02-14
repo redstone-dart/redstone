@@ -16,7 +16,6 @@ const BodyType FORM = BodyType.FORM;
 const BodyType TEXT = BodyType.TEXT;
 const BodyType BINARY = BodyType.BINARY;
 
-///
 abstract class RequestTarget {
   
   List<String> get methods;

@@ -1,3 +1,12 @@
+##v0.6.0-alpha.2
+
+**NOTE: this is a pre-release version!**
+
+* Renamed `request.queryParams` to `request.queryParameters`
+* Renamed `request.pathParams` to `request.urlParameters`
+* Fix support for websocket connections
+* Fix code comments to match the new API
+
 ##v0.6.0-alpha.1
 
 **NOTE: this is a pre-release version!**

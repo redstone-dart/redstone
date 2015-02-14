@@ -30,7 +30,7 @@ class MockRequest extends RequestParser {
 
   factory MockRequest(String path, {String method: GET,
               String scheme: "http", String host: "localhost",
-              int port: 8080, Map<String, String> queryParams: const {},
+              int port: 8080, Map<String, dynamic> queryParameters,
               BodyType bodyType: BINARY, dynamic body, String contentType,
               bool isMultipart: false,
               Map<String, String> headers,
@@ -52,9 +52,22 @@ class MockRequest extends RequestParser {
     }
 
     var _httpHeaders = new MockHttpHeaders(hValues);
+    
+    String query = null;
+    if (queryParameters != null) {
+      StringBuffer queryBuffer = new StringBuffer();
+      queryParameters.forEach((key, value) {
+        if (value is List) {
+          value.forEach((v) => queryBuffer.write("$key=$v&"));
+        } else {
+          queryBuffer.write("$key=$value&");
+        }
+      });
+      query = queryBuffer.toString().substring(0, queryBuffer.length - 1);
+    }
 
     Uri requestedUri = new Uri(scheme: scheme, host: host, port: port,
-        path: path, queryParameters: queryParams);
+        path: path, query: query);
     Uri uri = new Uri(path: path);
     var httpRequest = new MockHttpRequest(requestedUri, uri, method, _httpHeaders, bodyStream, session: session);
     

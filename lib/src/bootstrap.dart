@@ -26,42 +26,33 @@ ShelfContext _shelfContext = new ShelfContext();
 
 Router _router;
 
-///By default, redstone generates a error page whenever
+///By default, redstone generates an error page whenever
 ///a response with status code less than 200, or greater
 ///or equal than 300, is returned. To prevent this 
 ///behavior, set this flag to false.
 bool showErrorPage = true;
 
-/// The request information and content.
-///
-/// Since each request run in it's own [Zone], it's completely safe
-/// to access this object at any time, even in async callbacks.
+/// Returns the current request
 Request get request => currentContext.request;
 
-/// The [Response] object, used for sending back the response to the client.
+/// Returns the current response
 shelf.Response get response => currentContext.response;
 
-/// The [Response] object, used for sending back the response to the client.
+/// Sets a new response object
 void set response(shelf.Response value) {
   currentContext.response = value;
 }
 
-/// The request chain.
-///
-/// Since each request run in its own [Zone], it's completely safe
-/// to access this object at any time, even in async callbacks.
+/// Returns the current request chain
 Chain get chain => currentContext.chain;
 
-/// Abort the current request.
-///
-/// If there is an ErrorHandler registered to [statusCode], it
-/// will be invoked. Otherwise, the default ErrorHandler will be invoked.
+/// Creates a new response for [statusCode]. If there is an
+/// ErrorHandler registered for this status code, it will
+/// be invoked.
 Future<shelf.Response> abort(int statusCode) =>
   currentContext.chain.abort(statusCode);
 
-/// Redirect the user to [url].
-///
-/// [url] can be absolute, or relative to the url of the current request.
+/// Creates a new response with an 302 status code.
 shelf.Response redirect(String url) =>
   currentContext.chain.redirect(url);
 

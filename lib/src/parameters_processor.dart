@@ -27,6 +27,9 @@ final listType = reflectClass(List);
 final dynamicType = reflectType(dynamic);
 final voidType = currentMirrorSystem().voidType;
 
+/// A [ParametersProcessor] is responsible for
+/// mapping request information (such as query parameters,
+/// body data and attributes) to handlers arguments.
 class ParametersProcessor implements Function {
   
   final String handlerName;

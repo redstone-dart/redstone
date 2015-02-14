@@ -28,11 +28,15 @@ abstract class Request {
   /// The method, such as 'GET' or 'POST', for the request (read-only).
   String get method;
 
-  /// The query parameters associated with the request
-  DynamicMap<String, List<String>> get queryParams;
+  /// Returns a list of query parameters
+  DynamicMap<String, List<String>> get queryParameters;
   
+  /// Returns a map of parameters in the URL 
   /// 
-  DynamicMap<String, String> get pathParams;
+  /// This map is populated only when a route is called.
+  /// The map's keys are the named paremeters defined in the 
+  /// URL template of the route.
+  DynamicMap<String, String> get urlParameters;
 
   /// The body type, such as 'JSON', 'TEXT' or 'FORM'
   BodyType get bodyType;
@@ -65,40 +69,38 @@ abstract class Request {
 
 }
 
-/// The chain of the given request.
-///
-/// A chain is composed of a target and 0 or more interceptors,
-/// and it can be directly manipulated only by interceptors.
+/// A chain of handlers.
+/// 
+/// A handler can be a route, interceptor, error handler, shelf middleware
+/// or shelf handler.
 abstract class Chain {
 
-  ///The error object thrown by the target
+  /// Returns the last error thrown by a handler
+  /// (an interceptor, route, error handler or shelf handler)
   dynamic get error;
 
-  /// Call the next element of this chain (an interceptor or a route)
+  /// Calls the next element of this chain (an interceptor, route or shelf handler)
   Future<shelf.Response> next();
 
-  ///Create a new response object
+  /// Creates a new response object
   ///
-  ///If [responseValue] is provided, it'll be serialized and written to the response body. If
-  ///[responseType] is provided, it'll be set as the content-type of the response.
+  /// If [responseValue] is provided, it'll be serialized and written to the response body. If
+  /// [responseType] is provided, it'll be set as the content-type of the response.
   Future<shelf.Response> createResponse(int statusCode, {Object responseValue, String responseType});
   
-  ///Dispatch a request for [url].
+  /// Dispatch a request for [url].
   ///
-  ///Only routes, shelf handlers and error handlers bound to [url] 
-  ///will be invoked. Shelf middlewares and interceptors
-  ///won't be triggered.
+  /// Only routes, shelf handlers and error handlers bound to [url] 
+  /// will be invoked. Shelf middlewares and interceptors
+  /// won't be triggered.
   Future<shelf.Response> forward(String url);
   
-  /// Abort the current request.
-  ///
-  /// If there is an ErrorHandler registered to [statusCode], it
-  /// will be invoked. Otherwise, the default ErrorHandler will be invoked.
+  /// Creates a new response for [statusCode]. If there is an
+  /// ErrorHandler registered for this status code, it will
+  /// be invoked.
   Future<shelf.Response> abort(int statusCode);
   
-  /// Redirect the user to [url].
-  ///
-  /// [url] can be absolute, or relative to the url of the current request.
+  /// Creates a new response with an 302 status code.
   shelf.Response redirect(String url);
 
 }

@@ -16,6 +16,9 @@ import 'response_writer.dart';
 import 'parameters_processor.dart';
 import 'request_parser.dart';
 
+/// An processor is responsible for creating
+/// and managing handlers (routes, interceptors, error handlers
+/// and groups). It's also responsible for plugins execution.
 class Processor implements Manager {
 
   final ServerMetadata serverMetadata;

@@ -179,7 +179,7 @@ main() {
     });
     
     test("query parameters", () async {
-      var req = new MockRequest("/query_args", queryParams: {
+      var req = new MockRequest("/query_args", queryParameters: {
         "arg1": "arg1", "arg2": "1", "arg3": "1.2"
       });
       var resp = await dispatch(req);
@@ -195,7 +195,7 @@ main() {
     });
     
     test("query parameters with named arguments", () async {
-      var req = new MockRequest("/named_query_args", queryParams: {
+      var req = new MockRequest("/named_query_args", queryParameters: {
         "arg1": "arg1", "arg2": "arg2"
       });
       var resp = await dispatch(req);
@@ -210,7 +210,7 @@ main() {
     });
     
     test("path and query parameters", () async {
-      var req = new MockRequest("/path_query_args/arg1", queryParams: {
+      var req = new MockRequest("/path_query_args/arg1", queryParameters: {
         "arg": "arg2"
       });
       var resp = await dispatch(req);

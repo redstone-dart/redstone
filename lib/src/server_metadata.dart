@@ -35,9 +35,7 @@ typedef dynamic ResponseProcessor(dynamic metadata, String handlerName,
 /// Handler types
 enum HandlerType {ROUTE, INTERCEPTOR, ERROR_HANDLER}
 
-///
-///
-///
+/// The base metadata class for handlers
 class HandlerMetadata<T, M> {
   
   static int _idSource = 0;
@@ -70,8 +68,7 @@ class HandlerMetadata<T, M> {
 
 }
 
-///
-///
+/// Library metadata information
 class LibraryMetadata extends HandlerMetadata<Install, LibraryMirror>
     implements ApplicationMetadata {
 
@@ -91,7 +88,7 @@ class LibraryMetadata extends HandlerMetadata<Install, LibraryMirror>
 
 }
 
-/// Provides access to all installed routes, interceptors,
+/// Provides access for installed routes, interceptors,
 /// error handlers and groups that composes an application.
 class ApplicationMetadata {
 
@@ -127,14 +124,13 @@ class ApplicationMetadata {
 
 }
 
-///
-///
+/// Metadata of the current application
 class ServerMetadata extends ApplicationMetadata {
   
-  ///
+  /// Returns the metadata of loaded libraries
   final List<LibraryMetadata> rootLibraries;
   
-  ///
+  /// Returns all libraries loaded by Redstone
   final List<LibraryMirror> loadedLibraries;
   
   
@@ -161,6 +157,7 @@ abstract class RequestTargetMetadata implements
   
 }
 
+/// Route metadata information
 class RouteMetadata extends HandlerMetadata<Route, MethodMirror>
     implements RequestTargetMetadata {
 
@@ -178,6 +175,7 @@ class RouteMetadata extends HandlerMetadata<Route, MethodMirror>
 
 }
 
+/// Default route metadata information
 class DefaultRouteMetadata extends HandlerMetadata<DefaultRoute, MethodMirror> 
     implements RequestTargetMetadata {
 
@@ -213,6 +211,7 @@ class ResponseProcessorMetadata {
   
 }
 
+/// Interceptor metadata information
 class InterceptorMetadata extends
     HandlerMetadata<Interceptor, MethodMirror> {
   
@@ -226,6 +225,7 @@ class InterceptorMetadata extends
 
 }
 
+/// Error handler metadata information
 class ErrorHandlerMetadata extends
     HandlerMetadata<ErrorHandler, MethodMirror> {
   
@@ -239,6 +239,7 @@ class ErrorHandlerMetadata extends
 
 }
 
+/// Group metadata information
 class GroupMetadata extends HandlerMetadata<Group, ClassMirror> {
 
   final List<DefaultRouteMetadata> defaultRoutes;
@@ -261,8 +262,8 @@ class GroupMetadata extends HandlerMetadata<Group, ClassMirror> {
 
 }
 
-///
-///
+/// An [SetupException] can be thrown during
+/// the setUp stage of Redstone
 class SetupException implements Exception {
 
   final String handler;

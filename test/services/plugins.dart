@@ -91,7 +91,7 @@ TestPlugin(Manager manager) {
   ErrorHandler errorHandler = new ErrorHandler(500);
   
   manager.addRoute(route, "testRoute", (injector, request) {
-    return request.pathParams["arg"];
+    return request.urlParameters["arg"];
   });
   
   manager.addInterceptor(interceptor, "testInterceptor", (injector, request) async {

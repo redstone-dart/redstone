@@ -5,6 +5,8 @@ import 'dart:mirrors';
 import 'server_metadata.dart';
 import 'metadata.dart';
 
+/// A Scanner is responsible for retrieving 
+/// the metadata information of an application
 class Scanner {
 
   final List<Symbol> libraries;
