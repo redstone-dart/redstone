@@ -1,3 +1,10 @@
+##v0.6.0-alpha.3
+
+**NOTE: this is a pre-release version!**
+
+* Added new constants for the commons http methods. [#80](https://github.com/luizmineo/redstone.dart/issues/80)
+* Added the `shared` and `logSetUp` optional parameters to the `start()` function
+
 ##v0.6.0-alpha.2
 
 **NOTE: this is a pre-release version!**

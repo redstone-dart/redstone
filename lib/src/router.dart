@@ -18,11 +18,14 @@ import 'response_writer.dart';
 import 'dynamic_map.dart';
 import 'logger.dart';
 
+const String serverSignature = "dart:io with Redstone.dart/Shelf";
+
 /// An router is responsible for handling http requests.
 class Router {
 
   ServerContext _serverCtx;
   bool showErrorPage;
+  bool logSetUp;
   
   _TargetListBuilder _targetListBuilder = new _TargetListBuilder();
   _InterceptorListBuilder _interceptorListBuilder = new _InterceptorListBuilder();
@@ -34,7 +37,7 @@ class Router {
   shelf.Handler _shelfHandler;
   shelf.Handler _forwardShelfHandler;
 
-  Router(this._serverCtx, this.showErrorPage) {
+  Router(this._serverCtx, this.showErrorPage, this.logSetUp) {
     _loadHandlers();
     _targets = _targetListBuilder.build();
     _interceptors = _interceptorListBuilder.build();
@@ -104,9 +107,9 @@ class Router {
         }
         redstoneLogger.severe("Failed to handle request for ${req.url}");
       }); 
-      return completer.future.then((r) {
-        redstoneLogger.fine("Request for ${req.url} returned status ${r.statusCode}");
-        return r;
+      return completer.future.then((shelf.Response response) {
+        redstoneLogger.fine("Request for ${req.url} returned status ${response.statusCode}");
+        return response.change(headers: const {HttpHeaders.SERVER: serverSignature});
       });
     };
     
@@ -219,8 +222,10 @@ class Router {
         urlTemplate = new UrlTemplate(route.conf.urlTemplate);
       }
       
-      redstoneLogger.info(
-          "Configured target for ${url} ${route.conf.methods}: ${route.name}");
+      if (logSetUp) {
+        redstoneLogger.info(
+            "Configured target for ${url} ${route.conf.methods}: ${route.name}");
+      }
       _targetListBuilder.add(urlTemplate, route.conf.methods, 
           _serverCtx.routeInvokers[route]);
     }
@@ -242,9 +247,11 @@ class Router {
         }
         
         urlTemplate = new UrlTemplate(url);
-        redstoneLogger.info(
-          "Configured target for ${url} ${route.conf.methods}: ${route.name}"
-          " (group: ${group.name})");
+        if (logSetUp) {
+          redstoneLogger.info(
+            "Configured target for ${url} ${route.conf.methods}: ${route.name}"
+            " (group: ${group.name})");
+        }
         _targetListBuilder.add(urlTemplate, route.conf.methods, 
             _serverCtx.routeInvokers[route]);
       }
@@ -262,9 +269,11 @@ class Router {
           urlTemplate = new UrlTemplate(url);
         }
         
-        redstoneLogger.info(
-          "Configured target for ${url} ${route.conf.methods}: ${route.name}"
-          " (group: ${group.name})");
+        if (logSetUp) {
+          redstoneLogger.info(
+            "Configured target for ${url} ${route.conf.methods}: ${route.name}"
+            " (group: ${group.name})");
+        }
         _targetListBuilder.add(urlTemplate, route.conf.methods, 
             _serverCtx.routeInvokers[route]);
       }
@@ -279,7 +288,9 @@ class Router {
     var interceptors = lib.interceptors
         .map((i) { 
             var url = _joinUrl(pathPrefix, i.conf.urlPattern);
-            redstoneLogger.info("Configured interceptor for $url : ${i.name}");
+            if (logSetUp) {
+              redstoneLogger.info("Configured interceptor for $url : ${i.name}");
+            }
             return new _Interceptor(
               new RegExp(url), 
               []..addAll(chainIdxByLevel)..add(i.conf.chainIdx), 
@@ -290,8 +301,10 @@ class Router {
       var pattern = _joinUrl(pathPrefix, g.conf.urlPrefix);
       interceptors.addAll(g.interceptors.map((i) {
         var url = _joinUrl(pattern, i.conf.urlPattern);
-        redstoneLogger.info("Configured interceptor for $url : ${i.name}"
-        " (group: ${g.name})");
+        if (logSetUp) {
+          redstoneLogger.info("Configured interceptor for $url : ${i.name}"
+            " (group: ${g.name})");
+        }
         return new _Interceptor(
           new RegExp(url), 
           []..addAll(chainIdxByLevel)..add(i.conf.chainIdx), 
@@ -311,9 +324,11 @@ class Router {
       var pattern = _joinUrl(pathPrefix, handlerPattern);
       
       var urlInfo = pattern != null ? " - $pattern" : "";
-      redstoneLogger.info(
-        "Configured error handler for status ${e.conf.statusCode} $urlInfo :" 
-        "${e.name}");
+      if (logSetUp) {
+        redstoneLogger.info(
+          "Configured error handler for status ${e.conf.statusCode} $urlInfo :" 
+          "${e.name}");
+      }
       
       _errorHandlerMapBuilder.add(e.conf.statusCode, 
           new _ErrorHandler(pattern != null ? new RegExp(pattern) : null, 
@@ -326,9 +341,11 @@ class Router {
         var handlerPattern = e.conf.urlPattern == null ?
            r"/.*" : e.conf.urlPattern;
         handlerPattern = _joinUrl(handlerPattern, e.conf.urlPattern);
-        redstoneLogger.info(
-          "Configured error handler for status ${e.conf.statusCode} "
-          "$handlerPattern : ${e.name} (group: ${g.name})");
+        if (logSetUp) {
+          redstoneLogger.info(
+            "Configured error handler for status ${e.conf.statusCode} "
+            "$handlerPattern : ${e.name} (group: ${g.name})");
+        }
         _errorHandlerMapBuilder.add(e.conf.statusCode, 
           new _ErrorHandler(new RegExp(handlerPattern), 
               _serverCtx.errorHandlerInvokers[e]));

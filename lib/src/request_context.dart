@@ -10,26 +10,21 @@ import 'request_parser.dart';
 
 const String REQUEST_CONTEXT_KEY = "req_ctx";
 
-///
-///
 class RequestContext {
 
   Chain chain;
   RequestParser request;
-  shelf.Response response = new shelf.Response.ok(null,
-    headers: const {HttpHeaders.SERVER: "dart:io with Redstone.dart/Shelf"});
+  shelf.Response response = new shelf.Response.ok(null);
 
   RequestContext(this.request);
 
 }
 
-///
-///
+
 RequestContext get currentContext =>
     Zone.current[REQUEST_CONTEXT_KEY];
 
-///
-///
+
 class RequestException implements Exception {
 
   final String handler;

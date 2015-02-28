@@ -12,10 +12,10 @@ import 'package:http/src/utils.dart';
 import 'package:http_parser/src/media_type.dart';
 import 'package:http_server/src/http_body.dart';
 
-import 'package:redstone/src/http_mock.dart';
-import 'package:redstone/src/request.dart';
-import 'package:redstone/src/request_parser.dart';
-import 'package:redstone/src/metadata.dart';
+import 'http_mock.dart';
+import 'request.dart';
+import 'request_parser.dart';
+import 'constants.dart';
 
 /// A class to simulate requests in unit tests.
 ///

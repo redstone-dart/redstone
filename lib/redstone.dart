@@ -4,6 +4,7 @@ export 'src/bootstrap.dart';
 export 'src/dynamic_map.dart';
 export 'src/logger.dart';
 export 'src/metadata.dart';
+export 'src/constants.dart';
 export 'src/plugin.dart';
 export 'src/request.dart';
 export 'src/server_metadata.dart';

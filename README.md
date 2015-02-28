@@ -8,5 +8,5 @@ To install, set the `redstone: 0.6.0-alpha.2` constraint to yout pubspec.yaml
 name: mydartproject
 description: My Dart Project
 dependencies:
-    redstone: 0.6.0-alpha.2
+    redstone: 0.6.0-alpha.3
 ```

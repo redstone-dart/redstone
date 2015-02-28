@@ -93,20 +93,28 @@ void setShelfHandler(shelf.Handler handler) {
 ///
 /// If [autoCompress] is true, the server will use gzip to compress the content
 /// when possible.
+/// 
+/// The optional argument [shared] can be used to perform additional binds to the same
+/// [address] and [port], from different isolates.
+/// 
+/// If [logSetUp] is false, the server won't create an log entry for every handler
+/// configured. By default, it's setted to true.  
 ///
 /// When [secureOptions] is specified the server will use a secure https connection.
 /// [secureOptions] is a map of named arguments forwarded to [HttpServer.bindSecure].
 Future<HttpServer> start({address: _DEFAULT_ADDRESS, int port: _DEFAULT_PORT,
-                          bool autoCompress: false,
+                          bool autoCompress: false, bool shared: false, 
+                          bool logSetUp: true,
                           Map<Symbol, dynamic> secureOptions}) async {
   
   await redstoneSetUp();
   
   HttpServer server;
   if (secureOptions == null) {
-    server = await HttpServer.bind(address, port);
+    server = await HttpServer.bind(address, port, shared: shared);
   } else {
     redstoneLogger.info("Using a secure connection with options: $secureOptions");
+    secureOptions[#shared] = shared;
     server = await Function.apply(HttpServer.bindSecure, [address, port], secureOptions);
   }
   
@@ -150,11 +158,14 @@ Future handleRequest(HttpRequest request) async {
 ///
 /// If [libraries] is provided, then the scan process will be limited
 /// to those libraries.
-Future redstoneSetUp([List<Symbol> libraries]) async {
+/// 
+/// If [logSetUp] is false, the server won't create an log entry for every handler
+/// configured. By default, it's setted to true. 
+Future redstoneSetUp([List<Symbol> libraries, bool logSetUp = true]) async {
   var scanner = new Scanner(libraries);
   var processor = new Processor(scanner.scan(), _shelfContext, 
       _modules, _plugins);
-  _router = new Router(await processor.parse(), showErrorPage);
+  _router = new Router(await processor.parse(), showErrorPage, logSetUp);
 }
 
 /// Remove all modules, plugins, routes, interceptors and error handlers.

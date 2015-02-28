@@ -2,19 +2,7 @@ library redstone.src.metadata;
 
 import 'dart:convert' as conv;
 
-///HTTP methods
-const String GET = "GET";
-const String POST = "POST";
-const String PUT = "PUT";
-const String DELETE = "DELETE";
-
-///Content types
-enum BodyType {JSON, FORM, TEXT, BINARY}
-
-const BodyType JSON = BodyType.JSON;
-const BodyType FORM = BodyType.FORM;
-const BodyType TEXT = BodyType.TEXT;
-const BodyType BINARY = BodyType.BINARY;
+import 'constants.dart';
 
 abstract class RequestTarget {
   

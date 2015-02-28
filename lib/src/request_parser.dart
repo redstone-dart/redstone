@@ -8,7 +8,7 @@ import 'package:shelf/shelf.dart' as shelf;
 import 'package:http_server/src/http_body_impl.dart';
 import 'package:crypto/crypto.dart';
 
-import 'metadata.dart';
+import 'constants.dart';
 import 'dynamic_map.dart';
 import 'request.dart';
 

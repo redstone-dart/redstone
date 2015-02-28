@@ -5,7 +5,7 @@ import 'dart:io';
 import 'package:shelf/shelf.dart' as shelf;
 
 import 'dynamic_map.dart';
-import 'metadata.dart';
+import 'constants.dart';
 
 /// The request information and content.
 abstract class Request {
