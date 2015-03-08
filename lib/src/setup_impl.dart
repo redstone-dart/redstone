@@ -374,7 +374,6 @@ void _scanHandlers([List<Symbol> libraries]) {
   currentLevel = 0;
   levelHist = [];
   groups.forEach((g) {
-    List<int> chainIdxByLevel;
     if (g.lib.level > currentLevel) {
       currentLevel = g.lib.level;
       levelHist.add(g.lib.conf.chainIdx);
@@ -813,8 +812,14 @@ void _configureTarget(_ServerMetadataImpl serverMetadata,
                    logLevel: Level.FINER,
                    printErrorPage: false);
              }
-          });
-
+          }).catchError((e, s) {
+             chain.error = e.error;
+             return _handleError("ErrorResponse returned by $handlerName",
+                 e.error, req: request,
+                 statusCode: e.statusCode,
+                 logLevel: Level.FINER,
+                 printErrorPage: false);
+          }, test: (e) => e is ErrorResponse);
     });
 
   };

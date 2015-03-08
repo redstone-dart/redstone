@@ -7,7 +7,7 @@ part of redstone_server;
 class HttpBodyFileUpload {
   final ContentType contentType;
   final String filename;
-  final List<int> content;
+  final dynamic content;
 
   HttpBodyFileUpload(this.contentType, this.filename, this.content);
 

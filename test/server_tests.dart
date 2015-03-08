@@ -388,7 +388,31 @@ main() {
     });
     
     test("Error response", () {
-      var req = new MockRequest("/error_response");
+      var req = new MockRequest("/error_response/sync");
+      return app.dispatch(req).then((resp) {
+        expect(resp.statusCode, equals(400));
+        expect(resp.mockContent, equals("handling: error_response"));
+      });
+    });
+    
+    test("async error response", () {
+      var req = new MockRequest("/error_response/async");
+      return app.dispatch(req).then((resp) {
+        expect(resp.statusCode, equals(400));
+        expect(resp.mockContent, equals("handling: error_response"));
+      });
+    });
+    
+    test("throw error response", () {
+      var req = new MockRequest("/error_response/throw/sync");
+      return app.dispatch(req).then((resp) {
+        expect(resp.statusCode, equals(400));
+        expect(resp.mockContent, equals("handling: error_response"));
+      });
+    });
+    
+    test("async throw error response", () {
+      var req = new MockRequest("/error_response/throw/async");
       return app.dispatch(req).then((resp) {
         expect(resp.statusCode, equals(400));
         expect(resp.mockContent, equals("handling: error_response"));

@@ -462,17 +462,21 @@ Future _writeResponse(respValue, String responseType, {int statusCode: 200,
   } else if (respValue is Future) {
 
     respValue.then((fValue) {
+      if (fValue is ErrorResponse) {
+        throw fValue;
+      }
       return _writeResponse(fValue, responseType,
           statusCode: statusCode,
           processors: processors,
           abortIfChainInterrupted: abortIfChainInterrupted);
     }).then((_) {
       completer.complete();
-    }).catchError((e) {
-      return _writeResponse(e, responseType,
+    }).catchError((e, s) {
+      var f = _writeResponse(e, responseType,
                 statusCode: statusCode,
                 processors: processors,
                 abortIfChainInterrupted: abortIfChainInterrupted);
+      f.then((_) => completer.completeError(e, s));
     }, test: (e) => e is ErrorResponse)
     .catchError((e, s) {
       completer.completeError(e, s);
@@ -629,7 +633,7 @@ void _writeErrorPage(int statusCode, String resource, [Object error, StackTrace 
       <pre>${error}${formattedStack != null ? "\n\n" + formattedStack : ""}</pre>
     </div>
   </div>
-  <div class="footer">Redstone Server - 2014 - Luiz Mineo</div>
+  <div class="footer">Redstone Server - 2015 - Luiz Mineo</div>
 </body>
 </html>''';
 

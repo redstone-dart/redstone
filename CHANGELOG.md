@@ -1,9 +1,14 @@
+##v0.5.21
+
+* Fix connection timeout when throwing/returning an ErrorResponse within a Future ([#83](https://github.com/luizmineo/redstone.dart/issues/83))
+* Fix crash when reading text files in multipart requests ([#77](https://github.com/luizmineo/redstone.dart/issues/77))
+
 ##v0.5.20
 
 * Update `route_hierarchical` version constraint.
 
 ##v0.5.19
-* Fix: Error when setting `Intereptor.parseRequestBody = true` (Thanks to [platelk](https://github.com/platelk). See PR [#46](https://github.com/luizmineo/redstone.dart/pull/46)).
+* Fix: Error when setting `Interceptor.parseRequestBody = true` (Thanks to [platelk](https://github.com/platelk). See PR [#46](https://github.com/luizmineo/redstone.dart/pull/46)).
 
 ## v0.5.18
 * Updated to Grinder v0.6.1 (see [documentation](https://github.com/luizmineo/redstone.dart/wiki/Deploy))

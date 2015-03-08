@@ -61,10 +61,21 @@ subHandler() => throw "server_error";
 subErrorHandler() => new shelf.Response.internalServerError(
     body: "${app.chain.error} sub_error_handler");
 
-@app.Route("/error_response")
-errorResponse() => throw new app.ErrorResponse(400, "error_response");
+@app.Route("/error_response/sync")
+errorResponse() => new app.ErrorResponse(400, "error_response");
 
-@app.ErrorHandler(400, urlPattern: "/error_response")
+@app.Route("/error_response/async")
+asyncErrorResponse() => new Future(() => 
+    new app.ErrorResponse(400, "error_response"));
+
+@app.Route("/error_response/throw/sync")
+throwErrorResponse() => throw new app.ErrorResponse(400, "error_response");
+
+@app.Route("/error_response/throw/async")
+asyncThrowErrorResponse() => new Future(() => 
+    throw new app.ErrorResponse(400, "error_response"));
+
+@app.ErrorHandler(400, urlPattern: "/error_response/.*")
 handleErrorResponse() {
   return app.response.readAsString().then((resp) {
     return new shelf.Response(app.response.statusCode, 
