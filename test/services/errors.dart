@@ -18,8 +18,8 @@ wrongParam(int value) => value;
 serverError() => throw "The client must receive a 500 status code";
 
 @Route("/async_route_error")
-asyncServerError() => new Future(() => 
-    throw "The client must receive a 500 status code");
+asyncServerError() =>
+    new Future(() => throw "The client must receive a 500 status code");
 
 @Route("/interceptor_error")
 targetInterceptorError() => "not_reached";
@@ -40,7 +40,7 @@ asyncInterceptorError() async {
 notFoundHandler() => new shelf.Response.notFound("not_found");
 
 @ErrorHandler(500)
-serverErrorHandler() => 
+serverErrorHandler() =>
     new shelf.Response.internalServerError(body: "server_error");
 
 @Route("/sub_handler")
@@ -56,7 +56,6 @@ errorResponse() => throw new ErrorResponse(400, "error_response");
 @ErrorHandler(400, urlPattern: "/error_response")
 handleErrorResponse() async {
   String resp = await response.readAsString();
-  return new shelf.Response(response.statusCode, 
-      body: "handling: $resp",
-      headers: response.headers);
+  return new shelf.Response(response.statusCode,
+      body: "handling: $resp", headers: response.headers);
 }

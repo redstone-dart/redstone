@@ -18,7 +18,6 @@ typedef dynamic RedstonePlugin(Manager manager);
 /// To access a [Manager] instance, you need to create and register a [RedstonePlugin].
 abstract class Manager {
 
-
   /// The server metadata, which contains all routes, interceptors,
   /// error handlers and groups that composes this application.
   ServerMetadata get serverMetadata;
@@ -27,10 +26,12 @@ abstract class Manager {
   void addRoute(Route conf, String name, DynamicRoute route);
 
   /// Create a new interceptor.
-  void addInterceptor(Interceptor conf, String name, DynamicHandler interceptor);
+  void addInterceptor(
+      Interceptor conf, String name, DynamicHandler interceptor);
 
   /// Create a new error handler.
-  void addErrorHandler(ErrorHandler conf, String name, DynamicHandler errorHandler);
+  void addErrorHandler(
+      ErrorHandler conf, String name, DynamicHandler errorHandler);
 
   /// Create a new parameter provider.
   ///
@@ -39,7 +40,7 @@ abstract class Manager {
   /// the parameter's value. [handlerTypes] are the handler types that can use
   /// this provider, and defaults to ROUTE.
   void addParameterProvider(Type metadataType, ParamProvider parameterProvider,
-                            {List<HandlerType> handlerTypes: const [HandlerType.ROUTE]});
+      {List<HandlerType> handlerTypes: const [HandlerType.ROUTE]});
 
   /// Create a new response processor.
   ///
@@ -48,7 +49,7 @@ abstract class Manager {
   /// value. If [includeGroups] is true and the annotation is used on a group, then
   /// all group's routes will use the processor.
   void addResponseProcessor(Type metadataType, ResponseProcessor processor,
-                            {bool includeGroups: false});
+      {bool includeGroups: false});
 
   /// Create a new route wrapper.
   ///
@@ -68,7 +69,7 @@ abstract class Manager {
   ///
   ///      });
   void addRouteWrapper(Type metadataType, RouteWrapper wrapper,
-                       {bool includeGroups: false});
+      {bool includeGroups: false});
 
   /// Retrieve installed shelf handler
   shelf.Handler get shelfHandler;
@@ -91,25 +92,21 @@ abstract class Manager {
   Iterable<AnnotatedType<ClassMirror>> findClasses(Type annotation);
 
   /// Find all methods of [clazz] that are annotated with [annotation]
-  Iterable<AnnotatedType<MethodMirror>> findMethods(ClassMirror clazz, Type annotation);
-
+  Iterable<AnnotatedType<MethodMirror>> findMethods(
+      ClassMirror clazz, Type annotation);
 }
 
 class AnnotatedType<T> {
-
   final T mirror;
   final Object metadata;
 
   AnnotatedType(this.mirror, this.metadata);
-
 }
 
 class PluginException implements Exception {
-
   final dynamic causedBy;
 
   PluginException(this.causedBy);
 
   String toString() => "Failed to load plugin. Caused by: $causedBy";
-
 }

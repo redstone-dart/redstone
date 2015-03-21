@@ -13,12 +13,11 @@ import 'package:collection/collection.dart' show DelegatingMap, DelegatingList;
 ///      print(map.key); //prints 'value'
 @proxy
 class DynamicMap<K, V> extends DelegatingMap {
-
   DynamicMap(Map<K, V> map) : super(map);
 
   ///Retrieve a value from this map
   V get(K key, [V defaultValue]) {
-    if(containsKey(key)) {
+    if (containsKey(key)) {
       var value = this[key];
       if (value is! DynamicMap && value is Map) {
         value = new DynamicMap(value);
@@ -28,7 +27,7 @@ class DynamicMap<K, V> extends DelegatingMap {
         this[key] = value;
       }
       return value;
-    } else if(defaultValue != null) {
+    } else if (defaultValue != null) {
       return defaultValue;
     }
     return null;
@@ -39,7 +38,8 @@ class DynamicMap<K, V> extends DelegatingMap {
     if (invocation.isGetter) {
       return get(key);
     } else if (invocation.isSetter) {
-      this[key.substring(0, key.length - 1)] = invocation.positionalArguments.first;
+      this[key.substring(0, key.length - 1)] =
+          invocation.positionalArguments.first;
     } else {
       super.noSuchMethod(invocation);
     }
@@ -47,7 +47,6 @@ class DynamicMap<K, V> extends DelegatingMap {
 }
 
 class _ListWrapper extends DelegatingList {
-
   _ListWrapper(List list) : super(list);
 
   factory _ListWrapper.wrap(List list) {

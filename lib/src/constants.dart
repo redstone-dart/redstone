@@ -10,9 +10,8 @@ const String HEAD = "HEAD";
 const String TRACE = "TRACE";
 const String CONNECT = "CONNECT";
 
-
 ///Content types
-enum BodyType {JSON, FORM, TEXT, BINARY}
+enum BodyType { JSON, FORM, TEXT, BINARY }
 
 const BodyType JSON = BodyType.JSON;
 const BodyType FORM = BodyType.FORM;

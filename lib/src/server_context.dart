@@ -14,7 +14,6 @@ typedef Future InterceptorInvoker(RequestParser request);
 typedef Future ErrorHandlerInvoker(Request request);
 
 class ServerContext {
-  
   final ServerMetadata serverMetadata;
   final Map<HandlerMetadata, RouteInvoker> routeInvokers;
   final Map<HandlerMetadata, InterceptorInvoker> interceptorInvokers;
@@ -22,18 +21,12 @@ class ServerContext {
   final ShelfContext shelfContext;
   final Injector injector;
 
-  ServerContext(this.serverMetadata,
-                this.routeInvokers,
-                this.interceptorInvokers,
-                this.errorHandlerInvokers,
-                this.shelfContext,
-                this.injector);
-  
+  ServerContext(this.serverMetadata, this.routeInvokers,
+      this.interceptorInvokers, this.errorHandlerInvokers, this.shelfContext,
+      this.injector);
 }
 
 class ShelfContext {
-
   final List<shelf.Middleware> middlewares = [];
   shelf.Handler handler;
-
 }

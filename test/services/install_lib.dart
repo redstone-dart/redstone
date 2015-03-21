@@ -13,8 +13,9 @@ import 'install/ignore.dart';
 @Interceptor("/chain/.+")
 interceptorRoot() async {
   await chain.next();
-  return response.readAsString().then((resp) =>
-      new shelf.Response.ok("root $resp"));
+  return response
+      .readAsString()
+      .then((resp) => new shelf.Response.ok("root $resp"));
 }
 
 @Route("/chain/route")

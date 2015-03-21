@@ -1,3 +1,12 @@
+##v0.6.0-beta.1
+
+**NOTE: this is a pre-release version!**
+
+* Updated to shelf 0.6
+* Added the optional parameter `headers` to `chain.forward()`
+* Added the `request.handlerPath` property (see [shelf.Request.handlerPath](http://www.dartdocs.org/documentation/shelf/0.6.0/index.html#shelf/shelf.Request@id_handlerPath))
+* Bug fixes. 
+
 ##v0.6.0-alpha.3
 
 **NOTE: this is a pre-release version!**

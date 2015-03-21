@@ -13,44 +13,43 @@ import 'dynamic_map.dart';
 import 'request.dart';
 
 class RequestParser implements Request {
-  
   final HttpRequest httpRequest;
   shelf.Request _shelfRequest;
 
   DynamicMap<String, String> _headers = null;
   DynamicMap<String, List<String>> _queryParameters = null;
   DynamicMap _attributes = null;
-  
+
   ContentType _contentType = null;
   BodyType _bodyType = null;
   bool _isMultipart = null;
   dynamic _body = null;
-  
+
   Credentials _credentials = null;
-  
+
   RequestParser(this.httpRequest);
-  
+
   Future parseBody() async {
     if (_bodyType == null) {
       _parseBodyType();
     }
-    
+
     if (_body == null) {
-      var httpBody = await HttpBodyHandlerImpl.process(_shelfRequest.read(), 
+      var httpBody = await HttpBodyHandlerImpl.process(_shelfRequest.read(),
           new _HttpHeaders(headers, _contentType), encoding);
-      
+
       _body = httpBody.body;
     }
-    
+
     return null;
   }
 
   @override
   DynamicMap get attributes => _attributes;
-  
+
   @override
   DynamicMap<String, String> urlParameters = null;
-  
+
   conv.Encoding encoding = conv.UTF8;
 
   @override
@@ -61,7 +60,7 @@ class RequestParser implements Request {
     if (_bodyType != null) {
       return _bodyType;
     }
-    
+
     _parseBodyType();
     return _bodyType;
   }
@@ -74,7 +73,7 @@ class RequestParser implements Request {
     if (_isMultipart != null) {
       return _isMultipart;
     }
-    
+
     _parseBodyType();
     return _isMultipart;
   }
@@ -91,7 +90,8 @@ class RequestParser implements Request {
     if (authorization != null) {
       List<String> tokens = authorization.split(" ");
       if ("Basic" == tokens[0]) {
-        String auth = conv.UTF8.decode(CryptoUtils.base64StringToBytes(tokens[1]));
+        String auth =
+            conv.UTF8.decode(CryptoUtils.base64StringToBytes(tokens[1]));
         int idx = auth.indexOf(":");
         if (idx > 0) {
           String username = auth.substring(0, idx);
@@ -109,7 +109,7 @@ class RequestParser implements Request {
     if (_queryParameters != null) {
       return _queryParameters;
     }
-    
+
     _splitQueryString();
     return _queryParameters;
   }
@@ -118,21 +118,25 @@ class RequestParser implements Request {
   Uri get requestedUri => _shelfRequest.requestedUri;
 
   @override
+  String get handlerPath => _shelfRequest.handlerPath;
+
+  @override
   HttpSession get session => httpRequest.session;
 
   @override
   shelf.Request get shelfRequest => _shelfRequest;
-  
+
   set shelfRequest(shelf.Request shelfRequest) {
-    _shelfRequest = shelfRequest;
+    if (this.shelfRequest == null) {
+      _attributes = new DynamicMap({}..addAll(shelfRequest.context));
+    }
     _headers = new DynamicMap(shelfRequest.headers);
-    _attributes = new DynamicMap({}..addAll(shelfRequest.context));
-    _queryParameters = null;
+    _shelfRequest = shelfRequest;
   }
 
   @override
   Uri get url => _shelfRequest.url;
-  
+
   void _parseBodyType() {
     if (_contentType == null) {
       _parseContentType();
@@ -177,27 +181,23 @@ class RequestParser implements Request {
         break;
     }
   }
-  
+
   void _parseContentType() {
-    
     var ct = headers["content-type"];
     if (ct == null) {
       _contentType = ContentType.BINARY;
       return;
     }
-  
+
     _contentType = ContentType.parse(ct);
-    
   }
-  
+
   void _splitQueryString() {
-    
     var params = url.query.split("&").fold({}, (map, element) {
       int index = element.indexOf("=");
       if (index == -1) {
         if (element != "") {
-          var key = Uri.decodeQueryComponent(element, 
-              encoding: encoding);
+          var key = Uri.decodeQueryComponent(element, encoding: encoding);
           var values = map[key];
           if (values == null) {
             values = [];
@@ -206,9 +206,9 @@ class RequestParser implements Request {
           values.add("");
         }
       } else if (index != 0) {
-        var key = Uri.decodeQueryComponent(element.substring(0, index), 
+        var key = Uri.decodeQueryComponent(element.substring(0, index),
             encoding: encoding);
-        var value = Uri.decodeQueryComponent(element.substring(index + 1), 
+        var value = Uri.decodeQueryComponent(element.substring(index + 1),
             encoding: encoding);
         var values = map[key];
         if (values == null) {
@@ -219,28 +219,24 @@ class RequestParser implements Request {
       }
       return map;
     });
-    
-    _queryParameters = new DynamicMap(params);
-    
-  }
 
+    _queryParameters = new DynamicMap(params);
+  }
 }
 
 class _HttpHeaders implements HttpHeaders {
-  
   final Map<String, String> headers;
   ContentType _contentType;
-  
+
   _HttpHeaders(this.headers, this._contentType);
-  
+
   @override
   List<String> operator [](String name) {
     return headers[name].split(";");
   }
-  
+
   @override
   ContentType get contentType => _contentType;
-
 
   @override
   void forEach(void f(String name, List<String> values)) {
@@ -253,5 +249,4 @@ class _HttpHeaders implements HttpHeaders {
   }
 
   noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
-  
 }

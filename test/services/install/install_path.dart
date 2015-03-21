@@ -9,27 +9,28 @@ route() => "target_executed";
 @Interceptor("/route")
 interceptor() async {
   await chain.next();
-  return response.readAsString().then((resp) =>
-      new shelf.Response.ok("interceptor_executed $resp"));
+  return response
+      .readAsString()
+      .then((resp) => new shelf.Response.ok("interceptor_executed $resp"));
 }
 
 @Route("/error")
 error() => throw "error";
 
 @ErrorHandler(500)
-errorHandler() => new shelf.Response.internalServerError(body: "error_handler_executed");
+errorHandler() =>
+    new shelf.Response.internalServerError(body: "error_handler_executed");
 
 @Group("/group")
 class ServiceGroup {
-  
   @Route("/route")
   route() => "target_executed";
 
   @Interceptor("/route")
   interceptor() async {
     await chain.next();
-    return response.readAsString().then((resp) =>
-      new shelf.Response.ok("interceptor_executed $resp"));
+    return response
+        .readAsString()
+        .then((resp) => new shelf.Response.ok("interceptor_executed $resp"));
   }
-  
 }

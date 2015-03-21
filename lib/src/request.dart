@@ -13,28 +13,22 @@ abstract class Request {
   /// The original [Uri] for the request.
   Uri get requestedUri;
 
-  /// The remainder of the [requestedUri] path and query designating the virtual
-  /// "location" of the request's target within the handler.
-  ///
-  /// [url] may be an empty, if [requestedUri] targets the handler
-  /// root and does not have a trailing slash.
-  ///
-  /// [url] is never null. If it is not empty, it will start with `/`.
-  ///
-  /// [scriptName] and [url] combine to create a valid path that should
-  /// correspond to the [requestedUri] path.
+  /// See [shelf.Request.url]
   Uri get url;
+
+  /// See [shelf.Request.handlerPath]
+  String get handlerPath;
 
   /// The method, such as 'GET' or 'POST', for the request (read-only).
   String get method;
 
   /// Returns a list of query parameters
   DynamicMap<String, List<String>> get queryParameters;
-  
-  /// Returns a map of parameters in the URL 
-  /// 
+
+  /// Returns a map of parameters in the URL
+  ///
   /// This map is populated only when a route is called.
-  /// The map's keys are the named paremeters defined in the 
+  /// The map's keys are the named paremeters defined in the
   /// URL template of the route.
   DynamicMap<String, String> get urlParameters;
 
@@ -66,11 +60,10 @@ abstract class Request {
 
   /// Parse authorization header (HTTP Basic Authentication).
   Credentials parseAuthorizationHeader();
-
 }
 
 /// A chain of handlers.
-/// 
+///
 /// A handler can be a route, interceptor, error handler, shelf middleware
 /// or shelf handler.
 abstract class Chain {
@@ -86,33 +79,31 @@ abstract class Chain {
   ///
   /// If [responseValue] is provided, it'll be serialized and written to the response body. If
   /// [responseType] is provided, it'll be set as the content-type of the response.
-  Future<shelf.Response> createResponse(int statusCode, {Object responseValue, String responseType});
-  
-  /// Dispatch a request for [url].
+  Future<shelf.Response> createResponse(int statusCode,
+      {Object responseValue, String responseType});
+
+  /// Dispatch a GET request for [url].
   ///
-  /// Only routes, shelf handlers and error handlers bound to [url] 
+  /// Only routes, shelf handlers and error handlers bound to [url]
   /// will be invoked. Shelf middlewares and interceptors
   /// won't be triggered.
-  Future<shelf.Response> forward(String url);
-  
+  Future<shelf.Response> forward(String url, {Map<String, String> headers});
+
   /// Creates a new response for [statusCode]. If there is an
   /// ErrorHandler registered for this status code, it will
   /// be invoked.
   Future<shelf.Response> abort(int statusCode);
-  
+
   /// Creates a new response with an 302 status code.
   shelf.Response redirect(String url);
-
 }
 
 /// User credentials (HTTP Basic Authentication)
 class Credentials {
-
   String username;
   String password;
 
   Credentials(this.username, this.password);
-
 }
 
 /// An error response.
@@ -121,10 +112,8 @@ class Credentials {
 /// the framework will serialize [error], and create a
 /// response with status [statusCode].
 class ErrorResponse {
-
   final int statusCode;
   final Object error;
 
   ErrorResponse(this.statusCode, this.error);
-
 }

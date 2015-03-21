@@ -25,22 +25,19 @@ import 'constants.dart';
 ///     app.dispatch(req).then((resp) {
 ///       ...
 ///     });
-///     
+///
 class MockRequest extends RequestParser {
-
-  factory MockRequest(String path, {String method: GET,
-              String scheme: "http", String host: "localhost",
-              int port: 8080, Map<String, dynamic> queryParameters,
-              BodyType bodyType: BINARY, dynamic body, String contentType,
-              bool isMultipart: false,
-              Map<String, String> headers,
-              Credentials basicAuth,
-              HttpSession session}) {
-
+  factory MockRequest(String path, {String method: GET, String scheme: "http",
+      String host: "localhost", int port: 8080,
+      Map<String, dynamic> queryParameters, BodyType bodyType: BINARY,
+      dynamic body, String contentType, bool isMultipart: false,
+      Map<String, String> headers, Credentials basicAuth,
+      HttpSession session}) {
     if (headers == null) {
       headers = {};
     }
-    var bodyStream = _handleBody(bodyType, body, contentType, isMultipart, headers);
+    var bodyStream =
+        _handleBody(bodyType, body, contentType, isMultipart, headers);
 
     var hValues = {};
     headers.forEach((k, v) => hValues[k] = [v]);
@@ -52,7 +49,7 @@ class MockRequest extends RequestParser {
     }
 
     var _httpHeaders = new MockHttpHeaders(hValues);
-    
+
     String query = null;
     if (queryParameters != null) {
       StringBuffer queryBuffer = new StringBuffer();
@@ -66,17 +63,16 @@ class MockRequest extends RequestParser {
       query = queryBuffer.toString().substring(0, queryBuffer.length - 1);
     }
 
-    Uri requestedUri = new Uri(scheme: scheme, host: host, port: port,
-        path: path, query: query);
+    Uri requestedUri = new Uri(
+        scheme: scheme, host: host, port: port, path: path, query: query);
     Uri uri = new Uri(path: path);
-    var httpRequest = new MockHttpRequest(requestedUri, uri, method, _httpHeaders, bodyStream, session: session);
-    
-    return new MockRequest.fromMockRequest(httpRequest);
+    var httpRequest = new MockHttpRequest(
+        requestedUri, uri, method, _httpHeaders, bodyStream, session: session);
 
+    return new MockRequest.fromMockRequest(httpRequest);
   }
-  
-  MockRequest.fromMockRequest(MockHttpRequest mockRequest) :
-    super(mockRequest);
+
+  MockRequest.fromMockRequest(MockHttpRequest mockRequest) : super(mockRequest);
 }
 
 /// A mock session, intended to be used
@@ -91,13 +87,13 @@ class MockRequest extends RequestParser {
 ///     });
 ///
 class MockHttpSession extends DelegatingMap implements HttpSession {
-
   final String id;
 
   Function _timeoutCallback;
   bool _destroyed = false;
 
-  MockHttpSession(this.id, {Map<String, String> values}) : super(values == null ? {} : values);
+  MockHttpSession(this.id, {Map<String, String> values})
+      : super(values == null ? {} : values);
 
   void destroy() {
     _destroyed = true;
@@ -114,24 +110,23 @@ class MockHttpSession extends DelegatingMap implements HttpSession {
   bool get isNew => false;
 
   set isNew(bool value) => isNew = value;
-
 }
 
 Stream<List<int>> _handleBody(BodyType bodyType, dynamic body,
-      String contentType, bool isMultipart, Map<String, String> headerValues) {
+    String contentType, bool isMultipart, Map<String, String> headerValues) {
   var serializedBody = const [];
   if (body == null) {
     return new Stream.fromIterable(serializedBody);
   }
-  switch(bodyType) {
+  switch (bodyType) {
     case JSON:
       headerValues["content-type"] =
-        contentType != null ? contentType : "application/json";
+          contentType != null ? contentType : "application/json";
       serializedBody = conv.UTF8.encode(conv.JSON.encode(body));
       break;
     case TEXT:
       headerValues["content-type"] =
-        contentType != null ? contentType : "text/plain";
+          contentType != null ? contentType : "text/plain";
       serializedBody = conv.UTF8.encode(body.toString());
       break;
     case FORM:
@@ -139,10 +134,10 @@ Stream<List<int>> _handleBody(BodyType bodyType, dynamic body,
         var m = new http.MultipartRequest("POST", new Uri());
         (body as Map).forEach((String key, value) {
           if (value is HttpBodyFileUpload) {
-            m.files.add(new http.MultipartFile(
-                key, new Stream.fromIterable([value.content]),
-                    value.content.length, filename: value.filename,
-                      contentType: new MediaType.parse(value.contentType.mimeType)));
+            m.files.add(new http.MultipartFile(key,
+                new Stream.fromIterable([value.content]), value.content.length,
+                filename: value.filename,
+                contentType: new MediaType.parse(value.contentType.mimeType)));
           } else {
             m.fields[key] = value.toString();
           }
@@ -151,9 +146,11 @@ Stream<List<int>> _handleBody(BodyType bodyType, dynamic body,
         headerValues.addAll(m.headers);
         return stream;
       } else {
-        headerValues["content-type"] =
-          contentType != null ? contentType : "application/x-www-form-urlencoded";
-        serializedBody = conv.UTF8.encode(mapToQuery(body, encoding: conv.UTF8));
+        headerValues["content-type"] = contentType != null
+            ? contentType
+            : "application/x-www-form-urlencoded";
+        serializedBody =
+            conv.UTF8.encode(mapToQuery(body, encoding: conv.UTF8));
       }
       break;
     default:

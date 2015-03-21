@@ -20,10 +20,10 @@ doge() async {
 
 @Group("/group")
 class ServicesGroup {
-  @Route("/json", methods: const[POST])
+  @Route("/json", methods: const [POST])
   echoJson(@Body(JSON) Map json) => json;
 
-  @Route("/form", methods: const[POST])
+  @Route("/form", methods: const [POST])
   echoFormAsJson(@Body(FORM) Map form) => form;
 }
 

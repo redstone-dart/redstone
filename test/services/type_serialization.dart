@@ -32,19 +32,16 @@ fileType() => new _MockFile();
 shelfResponse() => new shelf.Response.ok("target_executed");
 
 class _OtherType {
-  
   String toString() => "other_type";
-  
 }
 
 class _MockFile implements File {
-  
-  Stream<List<int>> _stream = new Stream.fromIterable([UTF8.encode(r'{"key": "value"}')]);
-  
+  Stream<List<int>> _stream =
+      new Stream.fromIterable([UTF8.encode(r'{"key": "value"}')]);
+
   String get path => "test.json";
-  
+
   Stream<List<int>> openRead([int start, int end]) => _stream;
-  
-  dynamic noSuchMethod(Invocation invocation) =>
-        super.noSuchMethod(invocation);
+
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

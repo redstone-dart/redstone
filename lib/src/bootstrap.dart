@@ -28,7 +28,7 @@ Router _router;
 
 ///By default, redstone generates an error page whenever
 ///a response with status code less than 200, or greater
-///or equal than 300, is returned. To prevent this 
+///or equal than 300, is returned. To prevent this
 ///behavior, set this flag to false.
 bool showErrorPage = true;
 
@@ -50,11 +50,10 @@ Chain get chain => currentContext.chain;
 /// ErrorHandler registered for this status code, it will
 /// be invoked.
 Future<shelf.Response> abort(int statusCode) =>
-  currentContext.chain.abort(statusCode);
+    currentContext.chain.abort(statusCode);
 
 /// Creates a new response with an 302 status code.
-shelf.Response redirect(String url) =>
-  currentContext.chain.redirect(url);
+shelf.Response redirect(String url) => currentContext.chain.redirect(url);
 
 /// Register a module for dependency injection.
 ///
@@ -93,31 +92,31 @@ void setShelfHandler(shelf.Handler handler) {
 ///
 /// If [autoCompress] is true, the server will use gzip to compress the content
 /// when possible.
-/// 
+///
 /// The optional argument [shared] can be used to perform additional binds to the same
 /// [address] and [port], from different isolates.
-/// 
+///
 /// If [logSetUp] is false, the server won't create an log entry for every handler
-/// configured. By default, it's setted to true.  
+/// configured. By default, it's setted to true.
 ///
 /// When [secureOptions] is specified the server will use a secure https connection.
 /// [secureOptions] is a map of named arguments forwarded to [HttpServer.bindSecure].
 Future<HttpServer> start({address: _DEFAULT_ADDRESS, int port: _DEFAULT_PORT,
-                          bool autoCompress: false, bool shared: false, 
-                          bool logSetUp: true,
-                          Map<Symbol, dynamic> secureOptions}) async {
-  
+    bool autoCompress: false, bool shared: false, bool logSetUp: true,
+    Map<Symbol, dynamic> secureOptions}) async {
   await redstoneSetUp();
-  
+
   HttpServer server;
   if (secureOptions == null) {
     server = await HttpServer.bind(address, port, shared: shared);
   } else {
-    redstoneLogger.info("Using a secure connection with options: $secureOptions");
+    redstoneLogger
+        .info("Using a secure connection with options: $secureOptions");
     secureOptions[#shared] = shared;
-    server = await Function.apply(HttpServer.bindSecure, [address, port], secureOptions);
+    server = await Function.apply(
+        HttpServer.bindSecure, [address, port], secureOptions);
   }
-  
+
   server.autoCompress = autoCompress;
   server.listen((HttpRequest req) {
     redstoneLogger.fine("Received request for: ${req.uri}");
@@ -133,16 +132,12 @@ Future<HttpServer> start({address: _DEFAULT_ADDRESS, int port: _DEFAULT_PORT,
 /// [HttpServer] implements [Stream<HttpRequest>], so it can be passed directly
 /// to [serveRequests].
 Future serveRequests(Stream<HttpRequest> requests) async {
-
   await redstoneSetUp();
 
   requests.listen((HttpRequest req) {
-
     redstoneLogger.fine("Received request for: ${req.uri}");
     _router.handleRequest(req);
-
   });
-
 }
 
 /// Handle a [HttpRequest].
@@ -158,13 +153,13 @@ Future handleRequest(HttpRequest request) async {
 ///
 /// If [libraries] is provided, then the scan process will be limited
 /// to those libraries.
-/// 
+///
 /// If [logSetUp] is false, the server won't create an log entry for every handler
-/// configured. By default, it's setted to true. 
+/// configured. By default, it's setted to true.
 Future redstoneSetUp([List<Symbol> libraries, bool logSetUp = true]) async {
   var scanner = new Scanner(libraries);
-  var processor = new Processor(scanner.scan(), _shelfContext, 
-      _modules, _plugins);
+  var processor =
+      new Processor(scanner.scan(), _shelfContext, _modules, _plugins);
   _router = new Router(await processor.parse(), showErrorPage, logSetUp);
 }
 

@@ -5,17 +5,15 @@ import 'dart:convert' as conv;
 import 'constants.dart';
 
 abstract class RequestTarget {
-  
   List<String> get methods;
-  
+
   String get responseType;
-  
+
   int get statusCode;
-  
+
   bool get allowMultipartRequest;
-  
+
   conv.Encoding get encoding;
-  
 }
 
 /// An annotation to define targets.
@@ -25,8 +23,8 @@ abstract class RequestTarget {
 /// The [encoding] is the default encoding that will be used to parse the request.
 /// The [responseType] is the content type of the response. If it's not provided,
 /// the framework will generate it based on the value returned by the method.
-/// The [statusCode] is the default status of the response, and defaults to 200. 
-/// If [allowMultipartRequest] is true, then the Route is allowed to receive 
+/// The [statusCode] is the default status of the response, and defaults to 200.
+/// If [allowMultipartRequest] is true, then the Route is allowed to receive
 /// multipart requests (file upload).
 ///
 /// Example:
@@ -35,7 +33,6 @@ abstract class RequestTarget {
 ///     helloUser(String username) => "Hello, $username";
 ///
 class Route implements RequestTarget {
-
   final String urlTemplate;
 
   final List<String> methods;
@@ -45,16 +42,12 @@ class Route implements RequestTarget {
   final int statusCode;
 
   final bool allowMultipartRequest;
-  
+
   final conv.Encoding encoding;
 
-  const Route(this.urlTemplate,
-              {this.methods: const [GET],
-               this.responseType,
-               this.statusCode: 200,
-               this.allowMultipartRequest: false,
-               this.encoding: conv.UTF8});
-
+  const Route(this.urlTemplate, {this.methods: const [GET], this.responseType,
+      this.statusCode: 200, this.allowMultipartRequest: false,
+      this.encoding: conv.UTF8});
 }
 
 /// An annotation to define a target parameter.
@@ -67,11 +60,9 @@ class Route implements RequestTarget {
 ///     echoJson(@Body(JSON) Map json) => json;
 ///
 class Body {
-
   final BodyType type;
 
   const Body(this.type);
-
 }
 
 /// An annotation to define a target parameter.
@@ -86,7 +77,6 @@ class Body {
 ///     }
 ///
 class QueryParam {
-
   final String name;
 
   const QueryParam([this.name]);
@@ -104,7 +94,6 @@ class QueryParam {
 ///     }
 ///
 class Attr {
-
   final String name;
 
   const Attr([this.name]);
@@ -120,9 +109,7 @@ class Attr {
 ///     }
 ///
 class Inject {
-
   const Inject();
-
 }
 
 /// An annotation to define interceptors.
@@ -141,13 +128,12 @@ class Inject {
 ///     }
 ///
 class Interceptor {
-
   final String urlPattern;
   final int chainIdx;
   final bool parseRequestBody;
 
-  const Interceptor(this.urlPattern, {this.chainIdx: 0, this.parseRequestBody: false});
-
+  const Interceptor(this.urlPattern,
+      {this.chainIdx: 0, this.parseRequestBody: false});
 }
 
 /// An annotation to define error handlers.
@@ -162,12 +148,10 @@ class Interceptor {
 ///     handleNotFound() => redirect('/error_page/not_found.html');
 ///
 class ErrorHandler {
-
   final int statusCode;
   final String urlPattern;
-  
-  const ErrorHandler(this.statusCode, {this.urlPattern});
 
+  const ErrorHandler(this.statusCode, {this.urlPattern});
 }
 
 /// An annotation to define groups.
@@ -194,11 +178,9 @@ class ErrorHandler {
 ///     }
 ///
 class Group {
-
   final String urlPrefix;
 
   const Group(this.urlPrefix);
-
 }
 
 /// An annotation to define a target which must be bound
@@ -208,15 +190,14 @@ class Group {
 /// the suffix will be handled. [methods] are the HTTP
 /// methods accepted by this target, and defaults to GET.
 /// The [encoding] is the default encoding that will be used to
-/// parse the request. The [responseType] is the content type 
-/// of the response. If it's not provided, the framework 
-/// will generate it based on the value returned by the method; 
-/// The [statusCode] is the default status of the response, and  
+/// parse the request. The [responseType] is the content type
+/// of the response. If it's not provided, the framework
+/// will generate it based on the value returned by the method;
+/// The [statusCode] is the default status of the response, and
 /// defaults to 200. If [allowMultipartRequest]
 /// is true, then the Route is allowed to receive multipart
 /// requests (file upload).
 class DefaultRoute implements RequestTarget {
-  
   final String pathSuffix;
 
   final List<String> methods;
@@ -226,31 +207,24 @@ class DefaultRoute implements RequestTarget {
   final int statusCode;
 
   final bool allowMultipartRequest;
-  
+
   final conv.Encoding encoding;
 
-  const DefaultRoute({this.pathSuffix,
-                      this.methods: const [GET],
-                      this.responseType,
-                      this.statusCode: 200,
-                      this.allowMultipartRequest: false,
-                      this.encoding: conv.UTF8});
+  const DefaultRoute({this.pathSuffix, this.methods: const [GET],
+      this.responseType, this.statusCode: 200,
+      this.allowMultipartRequest: false, this.encoding: conv.UTF8});
 }
 
 /// An annotation to include handlers from other libraries
 class Install {
-
   final String urlPrefix;
   final int chainIdx;
 
   const Install({this.urlPrefix, this.chainIdx});
-
 }
 
 /// Use this annotation to import a library without installing
 /// its handlers
 class Ignore {
-
   const Ignore();
-
 }

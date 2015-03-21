@@ -5,7 +5,6 @@ import 'package:grinder/grinder.dart';
 
 /// A task to properly deploy server files
 deployServer(GrinderContext ctx) {
-
   Directory devDir = joinDir(Directory.current, ["bin"]);
   Directory buildDir = joinDir(Directory.current, ["build", "bin"]);
 

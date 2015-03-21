@@ -13,73 +13,57 @@ import 'server_metadata.dart';
 import 'request.dart';
 import 'request_context.dart';
 
-Future<shelf.Response> writeResponse(String handlerName, dynamic response, 
-       {int statusCode: 200, String responseType, Injector injector,
-       List<ResponseProcessorMetadata> responseProcessors: const []}) async {
-    
+Future<shelf.Response> writeResponse(String handlerName, dynamic response,
+    {int statusCode: 200, String responseType, Injector injector,
+    List<ResponseProcessorMetadata> responseProcessors: const []}) async {
   if (statusCode == null) {
     statusCode = 200;
   }
-  
+
   if (response is RequestException) {
-    return new shelf.Response(response.statusCode, 
-        body: response.message, headers: {
-          "content-type": "text/plain"
-        }, encoding: conv.UTF8);
+    return new shelf.Response(response.statusCode,
+        body: response.message,
+        headers: {"content-type": "text/plain"},
+        encoding: conv.UTF8);
   }
   if (response is ErrorResponse) {
     statusCode = response.statusCode;
     response = response.error;
   }
-  
-  await Future.forEach(responseProcessors, (p) async =>
-    response = await p.processor(p.metadata, 
-        handlerName, response, injector));
-  
+
+  await Future.forEach(responseProcessors, (p) async => response =
+      await p.processor(p.metadata, handlerName, response, injector));
+
   if (response == null) {
     return new shelf.Response(statusCode);
   }
-  
+
   if (response is shelf.Response) {
-    
     return response;
-    
   } else if (response is Map || response is List) {
-    
-    var type = responseType != null ? 
-        responseType : "application/json";
-    return new shelf.Response(statusCode, 
-        body: conv.JSON.encode(response), headers: {
-          "content-type": type
-        }, encoding: conv.UTF8);
-    
+    var type = responseType != null ? responseType : "application/json";
+    return new shelf.Response(statusCode,
+        body: conv.JSON.encode(response),
+        headers: {"content-type": type},
+        encoding: conv.UTF8);
   } else if (response is File) {
-    var type = responseType != null ? 
-        responseType : lookupMimeType(response.path);
-    return new shelf.Response(statusCode, 
-        body: response.openRead(), headers: {
-          "content-type": type
-        });
-    
+    var type =
+        responseType != null ? responseType : lookupMimeType(response.path);
+    return new shelf.Response(statusCode,
+        body: response.openRead(), headers: {"content-type": type});
   } else {
-    
-    var type = responseType != null ? 
-        responseType : "text/plain";
-    return new shelf.Response(statusCode, 
-        body: response.toString(), headers: {
-          "content-type": type
-        });
-    
+    var type = responseType != null ? responseType : "text/plain";
+    return new shelf.Response(statusCode,
+        body: response.toString(), headers: {"content-type": type});
   }
-  
 }
 
-shelf.Response writeErrorPage(String resource, Object error, [StackTrace stack, 
-                              int statusCode]) {
+shelf.Response writeErrorPage(String resource, Object error,
+    [StackTrace stack, int statusCode]) {
   if (error is RequestException) {
     statusCode = error.statusCode;
   }
-  
+
   String description = _getStatusDescription(statusCode);
 
   String formattedStack = null;
@@ -87,8 +71,7 @@ shelf.Response writeErrorPage(String resource, Object error, [StackTrace stack,
     formattedStack = Trace.format(stack);
   }
 
-  String errorTemplate =
-  '''<!DOCTYPE>
+  String errorTemplate = '''<!DOCTYPE>
 <html>
 <head>
   <title>Redstone Server - ${description != null ? description : statusCode}</title>
@@ -147,19 +130,23 @@ shelf.Response writeErrorPage(String resource, Object error, [StackTrace stack,
 </body>
 </html>''';
 
-  return new shelf.Response(statusCode, body: errorTemplate, headers: {
-    "content-type": "text/html"
-  }, encoding: conv.UTF8);
+  return new shelf.Response(statusCode,
+      body: errorTemplate,
+      headers: {"content-type": "text/html"},
+      encoding: conv.UTF8);
 }
 
 String _getStatusDescription(int statusCode) {
-
   switch (statusCode) {
-    case HttpStatus.BAD_REQUEST: return "BAD REQUEST";
-    case HttpStatus.NOT_FOUND: return "NOT FOUND";
-    case HttpStatus.METHOD_NOT_ALLOWED: return "METHOD NOT ALLOWED";
-    case HttpStatus.INTERNAL_SERVER_ERROR: return "INTERNAL SERVER ERROR";
-    default: return null;
+    case HttpStatus.BAD_REQUEST:
+      return "BAD REQUEST";
+    case HttpStatus.NOT_FOUND:
+      return "NOT FOUND";
+    case HttpStatus.METHOD_NOT_ALLOWED:
+      return "METHOD NOT ALLOWED";
+    case HttpStatus.INTERNAL_SERVER_ERROR:
+      return "INTERNAL SERVER ERROR";
+    default:
+      return null;
   }
-
 }

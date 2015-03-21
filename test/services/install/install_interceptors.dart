@@ -8,9 +8,8 @@ import 'install_interceptors_level_1.dart';
 
 @Interceptor("/.+")
 interceptor() async {
-  
   await chain.next();
-  return response.readAsString().then((resp) =>
-    new shelf.Response.ok("interceptor_1 $resp"));
-
+  return response
+      .readAsString()
+      .then((resp) => new shelf.Response.ok("interceptor_1 $resp"));
 }

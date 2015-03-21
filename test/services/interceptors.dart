@@ -12,16 +12,14 @@ target() => "target_executed";
 interceptor1() async {
   await chain.next();
   return response.readAsString().then((resp) =>
-    new shelf.Response.ok(
-        "before_interceptor1|$resp|after_interceptor1"));
+      new shelf.Response.ok("before_interceptor1|$resp|after_interceptor1"));
 }
 
 @Interceptor("/target", chainIdx: 1)
 interceptor2() async {
   await chain.next();
   return response.readAsString().then((resp) =>
-    new shelf.Response.ok(
-        "before_interceptor2|$resp|after_interceptor2"));
+      new shelf.Response.ok("before_interceptor2|$resp|after_interceptor2"));
 }
 
 @Route("/interrupt")
@@ -48,13 +46,13 @@ interceptor5() => abort(401);
 target6() => "basic_auth";
 
 @Interceptor("/basicauth_data")
-interceptor7() { 
-   var authInfo = request.parseAuthorizationHeader();
-   if (authInfo.username == "Aladdin" && authInfo.password == "open sesame") {
-     return chain.next();
-   } else {
-     return abort(403);
-   }
+interceptor7() {
+  var authInfo = request.parseAuthorizationHeader();
+  if (authInfo.username == "Aladdin" && authInfo.password == "open sesame") {
+    return chain.next();
+  } else {
+    return abort(403);
+  }
 }
 
 @Interceptor("/parse_body", parseRequestBody: true)
@@ -64,5 +62,3 @@ interceptor8() {
 
 @Route("/parse_body")
 target8() => "target_executed";
-
-

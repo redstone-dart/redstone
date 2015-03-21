@@ -19,7 +19,7 @@ class MockHttpHeaders implements HttpHeaders {
     }
   }
 
-  List<String> operator[](String name) => _headers[name.toLowerCase()];
+  List<String> operator [](String name) => _headers[name.toLowerCase()];
 
   DateTime get ifModifiedSince {
     List<String> values = _headers[HttpHeaders.IF_MODIFIED_SINCE];
@@ -40,16 +40,16 @@ class MockHttpHeaders implements HttpHeaders {
   }
 
   DateTime get date {
-      List<String> values = _headers[HttpHeaders.DATE];
-      if (values != null) {
-        try {
-          return HttpDate.parse(values[0]);
-        } on Exception catch (e) {
-          return null;
-        }
+    List<String> values = _headers[HttpHeaders.DATE];
+    if (values != null) {
+      try {
+        return HttpDate.parse(values[0]);
+      } on Exception catch (e) {
+        return null;
       }
-      return null;
     }
+    return null;
+  }
 
   void set date(DateTime date) {
     // Format "DateTime" header with date in Greenwich Mean Time (GMT).
@@ -65,15 +65,15 @@ class MockHttpHeaders implements HttpHeaders {
   }
 
   ContentType get contentType {
-   if (_contentType != null) {
-     return _contentType;
-   }
+    if (_contentType != null) {
+      return _contentType;
+    }
 
-   var ct = value("content-type");
-   if (ct != null) {
-     return ContentType.parse(ct);
-   }
-   return null;
+    var ct = value("content-type");
+    if (ct != null) {
+      return ContentType.parse(ct);
+    }
+    return null;
   }
 
   void set(String name, Object value) {
@@ -97,8 +97,7 @@ class MockHttpHeaders implements HttpHeaders {
     return values.first;
   }
 
-  void forEach(void f(String name, List<String> values)) =>
-      _headers.forEach(f);
+  void forEach(void f(String name, List<String> values)) => _headers.forEach(f);
 
   String toString() => '$runtimeType : $_headers';
 
@@ -150,7 +149,6 @@ class MockHttpHeaders implements HttpHeaders {
   dynamic noSuchMethod(Invocation invocation) {
     return super.noSuchMethod(invocation);
   }
-
 }
 
 class MockHttpResponse implements HttpResponse {
@@ -161,11 +159,10 @@ class MockHttpResponse implements HttpResponse {
   Future _doneFuture;
 
   MockHttpResponse() {
-    _doneFuture = _completer.future
-        .whenComplete(() {
-          assert(!_isDone);
-          _isDone = true;
-        });
+    _doneFuture = _completer.future.whenComplete(() {
+      assert(!_isDone);
+      _isDone = true;
+    });
   }
 
   bool _isDone = false;
@@ -217,8 +214,7 @@ class MockHttpResponse implements HttpResponse {
     throw "MockHttpResponse.detachSocket: Unsupported Operation";
   }
 
-  dynamic noSuchMethod(Invocation invocation) =>
-      super.noSuchMethod(invocation);
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 
   String get mockContent => UTF8.decode(_buffer);
 
@@ -232,14 +228,15 @@ class MockHttpResponse implements HttpResponse {
     }
 
     switch (statusCode) {
-      case HttpStatus.NOT_FOUND: return "Not Found";
-      default: return "Status $statusCode";
+      case HttpStatus.NOT_FOUND:
+        return "Not Found";
+      default:
+        return "Status $statusCode";
     }
   }
 }
 
 class MockHttpRequest extends Stream<List<int>> implements HttpRequest {
-
   final Uri requestedUri;
   final Uri uri;
 
@@ -250,17 +247,19 @@ class MockHttpRequest extends Stream<List<int>> implements HttpRequest {
   final HttpSession session;
   final Stream<List<int>> body;
 
-  MockHttpRequest(this.requestedUri, this.uri, this.method, this.headers,
-      this.body, {this.session,
-      this.followRedirects: true, DateTime ifModifiedSince}) {
-    if(ifModifiedSince != null) {
+  MockHttpRequest(
+      this.requestedUri, this.uri, this.method, this.headers, this.body,
+      {this.session, this.followRedirects: true, DateTime ifModifiedSince}) {
+    if (ifModifiedSince != null) {
       headers.ifModifiedSince = ifModifiedSince;
     }
   }
 
   @override
-  StreamSubscription listen(void onData(event), {Function onError, void onDone(), bool cancelOnError}) {
-    return body.listen(onData, onError: onError, onDone: onDone, cancelOnError: cancelOnError);
+  StreamSubscription listen(void onData(event),
+      {Function onError, void onDone(), bool cancelOnError}) {
+    return body.listen(onData,
+        onError: onError, onDone: onDone, cancelOnError: cancelOnError);
   }
 
   @override
