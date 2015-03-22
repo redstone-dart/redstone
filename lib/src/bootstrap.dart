@@ -58,7 +58,7 @@ shelf.Response redirect(String url) => currentContext.chain.redirect(url);
 /// Register a module for dependency injection.
 ///
 /// All modules must be registered before invoking the [start] or
-/// [setUp] methods.
+/// [redstoneSetUp] methods.
 void addModule(Module module) {
   _modules.add(module);
 }
@@ -66,7 +66,7 @@ void addModule(Module module) {
 /// Register a plugin.
 ///
 /// All plugins must be registered before invoking the [start] or
-/// [setUp] methods.
+/// [redstoneSetUp] methods.
 void addPlugin(RedstonePlugin plugin) {
   _plugins.add(plugin);
 }

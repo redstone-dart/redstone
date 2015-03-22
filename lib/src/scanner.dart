@@ -81,14 +81,6 @@ class Scanner {
 
     _loadHandlers(lib);
 
-    if (dependencies.isEmpty &&
-        lib.routes.isEmpty &&
-        lib.interceptors.isEmpty &&
-        lib.errorHandlers.isEmpty &&
-        lib.groups.isEmpty) {
-      return null;
-    }
-
     _loadedLibraries.add(mirror);
 
     return lib;

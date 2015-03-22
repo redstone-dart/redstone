@@ -1,5 +1,5 @@
 name: redstone
-version: 0.6.0-beta.1
+version: 0.6.0-beta.1+1
 author: Luiz Mineo <luiz.mineo@gmail.com>
 description: A metadata driven microframework for Dart 
 homepage: http://redstonedart.org
