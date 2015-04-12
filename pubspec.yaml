@@ -4,6 +4,7 @@ authors:
   - Luiz Mineo <luiz.mineo@gmail.com>
   - Kenneth Endfinger <kaendfinger@gmail.com>
   - Austin Cummings <austincummings95@gmail.com>
+  - Cristian Garcia <cgarcia.e88@gmail.com>
 description: A metadata driven microframework for Dart
 homepage: http://redstonedart.org
 environment:
