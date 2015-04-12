@@ -21,7 +21,7 @@ main() {
 
 #### Want to know more?
 
-Check out our [wiki](https://github.com/luizmineo/redstone.dart/wiki)! :)
+Check out our [wiki](https://github.com/redstone-dart/redstone/wiki)! :)
 
 #### History
 
