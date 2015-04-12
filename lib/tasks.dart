@@ -8,9 +8,9 @@ deployServer(GrinderContext ctx) {
   Directory devDir = joinDir(Directory.current, ["bin"]);
   Directory buildDir = joinDir(Directory.current, ["build", "bin"]);
 
-  deleteEntity(buildDir, ctx);
-  copyDirectory(devDir, buildDir);
+  delete(buildDir);
+  copy(devDir, buildDir);
 
   String buildFile = Platform.script.pathSegments.last;
-  deleteEntity(joinFile(buildDir, [buildFile]), ctx);
+  delete(joinFile(buildDir, [buildFile]));
 }
