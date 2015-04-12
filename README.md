@@ -1,8 +1,8 @@
-# Redstone.dart
+# Redstone
 
 [![Build Status](https://drone.io/github.com/luizmineo/redstone.dart/status.png)](https://drone.io/github.com/luizmineo/redstone.dart/latest)
 
-Redstone.dart is a server-side, metadata driven micro-framework for [Dart](https://www.dartlang.org/).
+Redstone is a server-side, metadata driven micro-framework for [Dart](https://www.dartlang.org/).
 
 #### How does it work?
 Redstone.dart allows you to easily publish your functions and classes through a web interface, by just adding some annotations to them.
@@ -21,7 +21,7 @@ main() {
 
 #### Want to know more?
 
-Check out our [wiki](https://github.com/luizmineo/redstone.dart/wiki)! :)
+Check out our [wiki](https://github.com/redstone-dart/redstone/wiki)! :)
 
 #### History
 
