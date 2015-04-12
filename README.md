@@ -22,3 +22,7 @@ main() {
 #### Want to know more?
 
 Check out our [wiki](https://github.com/luizmineo/redstone.dart/wiki)! :)
+
+#### History
+
+Redstone.dart was created by [Luiz Henrique Farcic Mineo](https://github.com/luizmineo). On April 11th 2015, it was announced that Luiz would no longer be able to maintain this project. The community soon took to the issue tracker to plan a way to keep development up. Along with Luiz, decisions were made to put the entire project into the hands of the community.
