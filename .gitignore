@@ -14,3 +14,6 @@ pubspec.lock
 
 # Avoid committing generated JavaScript files
 *.dart.js
+
+# Cloud 9
+.c9*
