@@ -1,7 +1,7 @@
 part of redstone_server;
 
 //do not scan the following libraries
-var _blacklist = const [
+List<Symbol> _blacklist = const [
 
   #dart.core,
   #dart.async,
