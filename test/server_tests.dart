@@ -4,7 +4,7 @@ import 'dart:convert' as conv;
 import 'dart:async';
 import 'dart:mirrors';
 
-import 'package:unittest/unittest.dart';
+import 'package:test/test.dart';
 
 import 'package:di/di.dart';
 import 'package:redstone/redstone.dart';
