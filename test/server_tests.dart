@@ -187,6 +187,16 @@ main() {
       }));
     });
 
+    test("query parameters with num type", () async {
+      var req = new MockRequest("/query_args_with_num",
+          queryParameters: {"arg1": "1", "arg2": "1.5"});
+      var resp = await dispatch(req);
+      expect(conv.JSON.decode(resp.mockContent), equals({
+        "arg1": 1,
+        "arg2": 1.5,
+      }));
+    });
+
     test("query parameters with named arguments", () async {
       var req = new MockRequest("/named_query_args",
           queryParameters: {"arg1": "arg1", "arg2": "arg2"});

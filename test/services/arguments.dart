@@ -25,6 +25,13 @@ queryArgs(@QueryParam("arg1") String arg1, @QueryParam("arg2") int arg2,
   "arg7": arg7
 };
 
+@Route("/query_args_with_num")
+queryArgsWithNum(@QueryParam("arg1") num arg1,
+                 @QueryParam("arg2") num arg2) => {
+  "arg1": arg1,
+  "arg2": arg2
+};
+
 @Route("/named_query_args")
 namedQueryArgs(@QueryParam() String arg1, {@QueryParam() String arg2,
     @QueryParam("arg3") String arg3, @QueryParam("arg4") String arg4: "arg4",
