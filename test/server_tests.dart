@@ -481,12 +481,15 @@ main() {
     });
 
     test("Route wrapper", () async {
-      var req = new MockRequest("/test_wrapper");
-      var req2 = new MockRequest("/test_group_wrapper/test_wrapper");
+      var reqFunctionWrapper = new MockRequest("/test_wrapper");
+      var reqGroupWrapper = new MockRequest("/test_group_wrapper/test_wrapper");
+      var reqMethodWrapper = new MockRequest("/test_method_wrapper/test_wrapper");
 
-      var resp = await dispatch(req);
+      var resp = await dispatch(reqFunctionWrapper);
       expect(resp.mockContent, equals("response: target executed"));
-      resp = await dispatch(req2);
+      resp = await dispatch(reqGroupWrapper);
+      expect(resp.mockContent, equals("response: target executed"));
+      resp = await dispatch(reqMethodWrapper);
       expect(resp.mockContent, equals("response: target executed"));
     });
   });

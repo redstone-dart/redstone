@@ -128,6 +128,13 @@ class TestGroupWrapper {
   testWrapper() => "target executed";
 }
 
+@Group("/test_method_wrapper")
+class TestMethodWrapper {
+  @Route("/test_wrapper")
+  @Wrap()
+  testWrapper() => "target executed";
+}
+
 //test scanning
 
 class TestAnnotation {

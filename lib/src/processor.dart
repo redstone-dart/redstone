@@ -231,13 +231,14 @@ class Processor implements Manager {
 
   List<HandlerMetadata> _getRoutes(dynamic metadata) {
     if (metadata is ApplicationMetadata) {
-      return metadata.routes;
+      return []
+        ..addAll(metadata.routes)
+        ..addAll(metadata.groups.expand(_getRoutes));
     } else if (metadata is GroupMetadata) {
       return []
         ..addAll(metadata.defaultRoutes)
         ..addAll(metadata.routes);
     }
-
     return [];
   }
 
