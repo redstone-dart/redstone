@@ -18,6 +18,7 @@ import 'request_parser.dart';
 import 'response_writer.dart';
 import 'dynamic_map.dart';
 import 'logger.dart';
+import 'bootstrap.dart';
 
 const String serverSignature = "dart:io with Redstone.dart/Shelf";
 
@@ -332,7 +333,7 @@ class Router {
     });
   }
 
-  String _joinUrl(String prefix, String url) {
+  static String _joinUrl(String prefix, String url) {
     if (prefix == null) {
       return url;
     }
@@ -454,14 +455,12 @@ class _ChainImpl implements Chain {
   Future<shelf.Response> forward(String url,
       {Map<String, String> headers}) async {
     var req = currentContext.request;
-    var newUrl = req.requestedUri.resolve(url);
-    var shelfReqCtx = {};
-    req.attributes.forEach((k, v) {
-      shelfReqCtx[k.toString()] = v;
-    });
-    var newReq = new shelf.Request("GET", newUrl,
-        headers: headers, context: req.attributes);
-    return await _forwardShelfHandler(newReq);
+    var newUrl = url.startsWith('/') ? req.requestedUri.resolve(url) : Router._joinUrl(req.requestedUri.toString(), url);
+    var shelfReqCtx = new Map.from(req.attributes);
+    var newReq = new shelf.Request("GET", newUrl
+      ,headers: headers, context: shelfReqCtx);
+
+    return _forwardShelfHandler(newReq);
   }
 
   Future<shelf.Response> _start() {

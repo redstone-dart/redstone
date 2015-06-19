@@ -484,12 +484,16 @@ main() {
       var reqFunctionWrapper = new MockRequest("/test_wrapper");
       var reqGroupWrapper = new MockRequest("/test_group_wrapper/test_wrapper");
       var reqMethodWrapper = new MockRequest("/test_method_wrapper/test_wrapper");
+      var reqRedirectWrapper = new MockRequest("/test_wrapper/redirect");
 
       var resp = await dispatch(reqFunctionWrapper);
       expect(resp.mockContent, equals("response: target executed"));
       resp = await dispatch(reqGroupWrapper);
       expect(resp.mockContent, equals("response: target executed"));
       resp = await dispatch(reqMethodWrapper);
+      expect(resp.mockContent, equals("response: target executed"));
+      resp = await dispatch(reqRedirectWrapper);
+      print(resp.mockContent);
       expect(resp.mockContent, equals("response: target executed"));
     });
   });

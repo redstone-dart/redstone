@@ -25,6 +25,7 @@ List<RedstonePlugin> _plugins = [];
 ShelfContext _shelfContext = new ShelfContext();
 
 Router _router;
+Router get router => _router;
 
 ///By default, redstone generates an error page whenever
 ///a response with status code less than 200, or greater
