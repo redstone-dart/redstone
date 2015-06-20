@@ -18,6 +18,7 @@ import 'request_parser.dart';
 import 'response_writer.dart';
 import 'dynamic_map.dart';
 import 'logger.dart';
+import 'bootstrap.dart';
 
 const String serverSignature = "dart:io with Redstone.dart/Shelf";
 
@@ -120,6 +121,7 @@ class Router {
       _ChainImpl chain = new _ChainImpl(
           _targets, const [], _errorHandlers, _forwardShelfHandler, false);
       var currentChain = currentContext.chain;
+      var currentRequest = currentContext.request.shelfRequest;
       currentContext.chain = chain;
       try {
         shelf.Response resp = await innerHandler(req);
@@ -130,6 +132,7 @@ class Router {
         return resp;
       } finally {
         currentContext.chain = currentChain;
+        currentContext.request.shelfRequest = currentRequest;
       }
     };
   }
@@ -332,20 +335,6 @@ class Router {
     });
   }
 
-  String _joinUrl(String prefix, String url) {
-    if (prefix == null) {
-      return url;
-    }
-    if (url == null) {
-      return prefix;
-    }
-    if (prefix.endsWith("/")) {
-      prefix = prefix.substring(0, prefix.length - 1);
-    }
-
-    return url.startsWith("/") ? "$prefix$url" : "$prefix/$url";
-  }
-
   String _getContextUrl(String prefix) {
     if (prefix == null) {
       return "/";
@@ -454,14 +443,12 @@ class _ChainImpl implements Chain {
   Future<shelf.Response> forward(String url,
       {Map<String, String> headers}) async {
     var req = currentContext.request;
-    var newUrl = req.requestedUri.resolve(url);
-    var shelfReqCtx = {};
-    req.attributes.forEach((k, v) {
-      shelfReqCtx[k.toString()] = v;
-    });
-    var newReq = new shelf.Request("GET", newUrl,
-        headers: headers, context: req.attributes);
-    return await _forwardShelfHandler(newReq);
+    var newUrl = url.startsWith('/') ? req.requestedUri.resolve(url) : Uri.parse(_joinUrl(req.requestedUri.toString(), url));
+    var shelfReqCtx = new Map.from(req.attributes);
+    var newReq = new shelf.Request("GET", newUrl
+      ,headers: headers, context: shelfReqCtx);
+
+    return _forwardShelfHandler(newReq);
   }
 
   Future<shelf.Response> _start() {
@@ -510,7 +497,7 @@ class _ChainImpl implements Chain {
           stack = currentContext.lastStackTrace;
         }
         shelf.Response resp = await writeErrorPage(
-            currentContext.request.httpRequest.uri.path, err, stack,
+            currentContext.request.shelfRequest.requestedUri.path, err, stack,
             statusCode);
         currentContext.response = resp;
       }
@@ -520,7 +507,7 @@ class _ChainImpl implements Chain {
   }
 
   void _findReqInterceptors() {
-    String reqPath = currentContext.request.httpRequest.uri.path;
+    String reqPath = currentContext.request.shelfRequest.requestedUri.path;
     _reqInterceptors = _interceptors.where((i) {
       var match = i.urlRegex.firstMatch(reqPath);
       if (match != null) {
@@ -533,7 +520,7 @@ class _ChainImpl implements Chain {
   void _findTarget() {
     for (_Target target in _targets) {
       UrlMatch match =
-          target.template.match(currentContext.request.httpRequest.uri.path);
+          target.template.match(currentContext.request.shelfRequest.requestedUri.path);
       if (match != null && match.tail.isEmpty) {
         var urlParameters = {};
         match.parameters.forEach((String key, String value) {
@@ -551,7 +538,7 @@ class _ChainImpl implements Chain {
 
   _ErrorHandler _findErrorHandler() {
     var statusCode = currentContext.response.statusCode;
-    var reqPath = currentContext.request.httpRequest.uri.path;
+    var reqPath = currentContext.request.shelfRequest.requestedUri.path;
     List<_ErrorHandler> handlers = _errorHandlers[statusCode];
     if (handlers == null) {
       return null;
@@ -678,4 +665,18 @@ class _ErrorHandler {
   final ErrorHandlerInvoker errorHandler;
 
   _ErrorHandler(this.urlRegex, this.errorHandler);
+}
+
+String _joinUrl(String prefix, String url) {
+  if (prefix == null) {
+    return url;
+  }
+  if (url == null) {
+    return prefix;
+  }
+  if (prefix.endsWith("/")) {
+    prefix = prefix.substring(0, prefix.length - 1);
+  }
+
+  return url.startsWith("/") ? "$prefix$url" : "$prefix/$url";
 }

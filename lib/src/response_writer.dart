@@ -126,7 +126,7 @@ shelf.Response writeErrorPage(String resource, Object error,
       <pre>${error}${formattedStack != null ? "\n\n" + formattedStack : ""}</pre>
     </div>
   </div>
-  <div class="footer">Redstone Server - 2015 - Luiz Mineo</div>
+  <div class="footer">Redstone Server - 2015 - <a href="https://github.com/redstone-dart">https://github.com/redstone-dart</a></div>
 </body>
 </html>''';
 

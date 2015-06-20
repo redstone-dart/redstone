@@ -107,13 +107,17 @@ TestPlugin(Manager manager) {
 //plugin - add route wrappers
 
 class Wrap {
-  const Wrap();
+  final String msg;
+  const Wrap([this.msg = "response"]);
 }
 
 WrapperPlugin(Manager manager) {
-  manager.addRouteWrapper(Wrap, (wrap, injector, request, route) async {
+  manager.addRouteWrapper(Wrap, (Wrap wrap, injector, request, route) async {
     var resp = await route(injector, request);
-    return "response: $resp";
+
+    if (resp is shelf.Response) return resp;
+
+    return "${wrap.msg}: $resp";
   }, includeGroups: true);
 }
 
@@ -134,6 +138,20 @@ class TestMethodWrapper {
   @Wrap()
   testWrapper() => "target executed";
 }
+
+@Group('/test_wrapper')
+class TestRedirectWrapper {
+  @Route("/redirect")
+  @Wrap("REDIRECT")
+  testWrapperRedirect() => chain.forward('/test_wrapper/b');
+
+  @Route("/b")
+  @Wrap("response")
+  testWrapperB() => "target executed";
+}
+
+
+
 
 //test scanning
 
