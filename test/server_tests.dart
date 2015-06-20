@@ -493,7 +493,6 @@ main() {
       resp = await dispatch(reqMethodWrapper);
       expect(resp.mockContent, equals("response: target executed"));
       resp = await dispatch(reqRedirectWrapper);
-      print(resp.mockContent);
       expect(resp.mockContent, equals("response: target executed"));
     });
   });

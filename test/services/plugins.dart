@@ -143,24 +143,11 @@ class TestMethodWrapper {
 class TestRedirectWrapper {
   @Route("/redirect")
   @Wrap("REDIRECT")
-  testWrapperRedirect() async {
-    print("A");
-    shelf.Response resp;
-    try {
-      resp = await chain.forward('/test_wrapper/b');
-    }
-    catch (e) {
-      print(e);
-    }
-    return resp;
-  }
+  testWrapperRedirect() => chain.forward('/test_wrapper/b');
 
   @Route("/b")
   @Wrap("response")
-  testWrapperB() {
-    print("B");
-    return "target executed";
-  }
+  testWrapperB() => "target executed";
 }
 
 
