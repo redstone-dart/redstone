@@ -814,6 +814,7 @@ void _configureTarget(_ServerMetadataImpl serverMetadata,
              }
           }).catchError((e, s) {
              chain.error = e.error;
+             chain.stackTrace = s;
              return _handleError("ErrorResponse returned by $handlerName",
                  e.error, req: request,
                  statusCode: e.statusCode,
