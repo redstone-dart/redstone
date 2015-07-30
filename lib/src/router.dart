@@ -357,6 +357,7 @@ class _ChainImpl implements Chain {
   _Target _reqTarget;
 
   Object _error;
+  Object _stackTrace;
 
   bool _errorHandlerExecuted = false;
 
@@ -365,6 +366,9 @@ class _ChainImpl implements Chain {
 
   @override
   dynamic get error => _error;
+
+  @override
+  dynamic get stackTrace => _stackTrace;
 
   @override
   Future<shelf.Response> createResponse(int statusCode,
@@ -471,6 +475,7 @@ class _ChainImpl implements Chain {
     if (!_errorHandlerExecuted) {
       _errorHandlerExecuted = true;
       _error = err;
+      _stackTrace = stack;
       currentContext.lastStackTrace = stack;
       shelf.Response resp = currentContext.response;
       if (err != null || resp.statusCode != statusCode) {

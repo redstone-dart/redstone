@@ -72,6 +72,10 @@ abstract class Chain {
   /// (an interceptor, route, error handler or shelf handler)
   dynamic get error;
 
+  /// Returns the stack trace of the last error thrown by a handler
+  /// (an interceptor, route, error handler or shelf handler)
+  dynamic get stackTrace;
+
   /// Calls the next element of this chain (an interceptor, route or shelf handler)
   Future<shelf.Response> next();
 
