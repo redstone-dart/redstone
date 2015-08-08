@@ -176,7 +176,7 @@ Converter getValueConverter(dynamic paramType) {
     return (String value) => num.parse(value);
   }
   if (paramType == boolType) {
-    return (String value) => value.toLowerCase();
+    return (String value) => value.toLowerCase() == "true";
   }
 
   return (String value) => null;
