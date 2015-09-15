@@ -1,8 +1,6 @@
 
 # Redstone
 
-**NOTE: v0.6 is an unstable version!**
-
 [![Join the chat at https://gitter.im/redstone-dart/redstone](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/redstone-dart/redstone?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Build Status](https://travis-ci.org/redstone-dart/redstone.svg?branch=v0.5)](https://travis-ci.org/redstone-dart/redstone)
 
 Redstone is an annotation driven web server micro-framework for [Dart](https://www.dartlang.org/) and influenced by [Flask](http://flask.pocoo.org/). It is based on [shelf](https://pub.dartlang.org/packages/shelf) so you may also use any shelf middleware you like with Redstone.
