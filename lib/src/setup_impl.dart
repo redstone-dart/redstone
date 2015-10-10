@@ -69,7 +69,11 @@ class _Target {
 
   Future handleRequest(Request req, [UrlMatch urlMatch]) {
     if (urlMatch == null) {
-      urlMatch = match(req.url);
+      if(req.url.path.startsWith('/')) {
+        urlMatch = match(req.url);
+      } else {
+        urlMatch = match(Uri.parse("/${req.url}"));
+      }
       if (urlMatch == null) {
         return null;
       }

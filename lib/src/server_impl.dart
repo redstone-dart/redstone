@@ -548,8 +548,14 @@ _ErrorHandler _findErrorHandler(int statusCode, String path) {
     if (e.urlPattern == null) {
       return true;
     }
-    var match = e.urlPattern.firstMatch(path);
-    return match != null ? match[0] == path : false;
+    
+    String intPath = path;
+    
+    if(!path.startsWith('/')) intPath = "/$path";
+   
+    var match = e.urlPattern.firstMatch(intPath);
+    
+    return match != null ? match[0] == intPath : false;
   }, orElse: () => null);
 }
 
