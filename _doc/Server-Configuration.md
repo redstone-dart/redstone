@@ -63,7 +63,7 @@ import 'package:logging/logging.dart';
 
 main() {
   app.setupConsoleLog(Level.ALL);
-  ...
+  // ...
 }
 ```
 
@@ -72,6 +72,6 @@ If you want to output the messages to a different place (for example, a file), y
 ```dart
 Logger.root.level = Level.ALL;
 Logger.root.onRecord.listen((LogRecord rec) {
-  ...
+  // ...
 });
 ```

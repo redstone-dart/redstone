@@ -176,7 +176,7 @@ interceptor(ClassA objA, ClassB objB) {
 ```dart
 @app.ErrorHandler(404)
 notFound(ClassB objB) {
-  ...
+  // ...
 }
 ```
 

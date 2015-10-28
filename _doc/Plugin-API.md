@@ -16,7 +16,7 @@ For example, if your app often needs to convert from json data to Dart objects, 
 printUser(@app.Body() Map json) {
   User user = new User();
   user.fromJson(json);
-  ...
+  // ...
 }
 ```
 
@@ -50,7 +50,7 @@ Now, if you install `FromJsonPlugin`, you can use the `@FromJson` annotation:
 ```dart
 @app.Route("/user", methods: const[app.POST])
 printUser(@FromJson() User user) {
-  ...
+  // ...
 }
 
 main() {
@@ -84,7 +84,7 @@ ToJsonPlugin(app.Manager manager) {
 @ToJson()
 findUser() {
   return new Future(() {
-    ...
+    // ...
     return user;
   });
 }

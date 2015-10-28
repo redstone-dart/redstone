@@ -49,7 +49,7 @@ class User {
 //that the request has a JSON body. 
 @app.Route('/services/users/add', methods: const[app.POST])
 addUser(@Decode() User user) {
-  ...
+  // ...
 }
 
 //The @Encode annotation specifies that a route
@@ -57,7 +57,7 @@ addUser(@Decode() User user) {
 @app.Route('/services/users/list')
 @Encode()
 List<User> listUsers() {
-  ...
+  // ...
 }
 
 ```
@@ -177,11 +177,11 @@ The `Validator` class provides a simple and flexible way to build a set of valid
                       ..add("username", const NotEmpty())
                       ..add("password", const Range(min: 6. required: true));
 
-  ...
+  // ...
   Map user = {"username": "user", "password": "pass"};
   ValidationError err = userValidator.execute(user);
   if (err != null) {
-    ...
+    // ...
   }
 ```
 
@@ -210,7 +210,7 @@ var user = new User()
               
 ValidationError err = userValidator.execute(user);
 if (err != null) {
-  ...
+  // ...
 }
 ```
 
@@ -255,7 +255,7 @@ User user = new User()
             
 var err = user.validate();
 if (err != null) {
-  ...
+  // ...
 }
 ```
 
@@ -318,7 +318,7 @@ import 'package:redstone_mapper/mapper_factory.dart';
 main() {
 
   bootstrapMapper();
-  ...
+  // ...
 }
 
 ```

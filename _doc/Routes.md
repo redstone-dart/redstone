@@ -35,7 +35,7 @@ getUser(int id) {
   if (id <= 0) {
     throw new app.ErrorResponse(400, {"error": "invalid id"});
   }
-  ...
+  // ...
 }
 ```
 You can also build a response using [Shelf](http://pub.dartlang.org/packages/shelf).
@@ -72,7 +72,7 @@ The argument doesn't need to be a String. If it's an int, for example, the frame
 ```dart
 @app.Route("/user/:username/:addressId")
 getAddress(String username, int addressId) {
-  ...
+  // ...
 };
 ```
 
@@ -85,7 +85,7 @@ Use the `@QueryParam` annotation to access a query parameter
 ```dart
 @app.Route("/user")
 getUser(@app.QueryParam("id") int userId) {
-  ...
+  // ...
 };
 ```
 
@@ -98,14 +98,14 @@ You can access the request body as a form, json or text
 ```dart
 @app.Route("/adduser", methods: const [app.POST])
 addUser(@app.Body(app.JSON) Map json) {
-  ...
+  // ...
 };
 ```
 
 ```dart
 @app.Route("/adduser", methods: const [app.POST])
 addUser(@app.Body(app.FORM) Map form) {
-  ...
+  // ...
 };
 ```
 
@@ -115,7 +115,7 @@ For json and form, you can request the body as a `DynamicMap`, which allows the 
 @app.Route("/adduser", methods: const [app.POST])
 addUser(@app.Body(app.JSON) QueryMap json) {
   var name = json.name;
-  ...
+  // ...
 };
 ```
 
@@ -153,7 +153,7 @@ addUser(@app.Body(app.FORM) Map form) {
   print(file.filename);
   print(file.contentType);
   print(file.content);
-  ...
+  // ...
 };
 ```
 
@@ -192,14 +192,14 @@ You can use the global `request` object to access the request's information and 
 @app.Route("/user", methods: const [app.GET, app.POST])
 user() {
   if (app.request.method == app.GET) {
-    ...
+    // ...
   } else if (app.request.method == app.POST) {
     
     if (app.request.bodyType == app.JSON) {
       var json = app.request.body;
-      ...
+      // ...
     } else {
-      ...
+      // ...
     }
   }
 };

@@ -26,7 +26,7 @@ import 'package:redstone/redstone.dart' as app;
 
 @app.Route("/user/find")
 findUser() {
-  ...
+  // ...
 }
 ```
 
@@ -117,7 +117,7 @@ import 'package:myapp/lib_c.dart';
 
 @app.Route(...)
 serviceA() {
-  ...
+  // ...
 }
 ```
 - lib_b.dart
@@ -129,7 +129,7 @@ import 'package:myapp/lib_c.dart';
 
 @app.Route(...)
 serviceB() {
-  ...
+  // ...
 }
 ```
 - lib_c.dart
@@ -141,6 +141,6 @@ import 'package:redstone/redstone.dart' as app;
 
 @app.Interceptor(...)
 interceptor() {
-  ...
+  // ...
 }
 ```

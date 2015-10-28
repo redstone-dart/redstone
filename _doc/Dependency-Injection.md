@@ -47,7 +47,7 @@ class Group {
   
   @app.Route('/service')
   service() {
-    ...
+    // ...
   }
 
 }
@@ -58,12 +58,12 @@ Interceptors and error handlers can also require dependencies:
 ```dart
 @app.Interceptor(r'/services/.+')
 interceptor(ClassA objA, ClassB objB) {
-  ...
+  // ...
 }
 
 
 @app.ErrorHandler(404)
 notFound(ClassB objB) {
-  ...
+  // ...
 }
 ```
