@@ -33,7 +33,7 @@ You can easily bind path segments and query parameters
 ```dart
 @app.Route("/user/find/:type")
 findUsers(String type, @app.QueryParam() String name) {
-  ...
+  // ...
 }
 ```
 
@@ -42,7 +42,7 @@ You can also bind the request body
 ```dart
 @app.Route("/user/add", methods: const [app.POST])
 addUser(@app.Body(app.JSON) Map user) {
-  ...
+  // ...
 }
 ```
 
@@ -52,14 +52,13 @@ It's also possible to access the current request object
 @app.Route("/service", methods: const [app.GET, app.POST])
 service() {
   if (app.request.method == app.GET) {
-    ...
+    // ...
   } else if (app.request.method == app.POST) {
-    
     if (app.request.bodyType == app.JSON) {
       var json = app.request.body;
-      ...
+      // ...
     } else {
-      ...
+      // ...
     }
   }
 };
@@ -73,25 +72,30 @@ Interceptors are useful when you need to apply a common behavior to a group of t
 @app.Interceptor(r'/admin/.*')
 adminFilter() {
   if (app.request.session["username"] != null) {
-    app.chain.next();
+    return app.chain.next();
   } else {
-    app.chain.interrupt(statusCode: HttpStatus.UNAUTHORIZED);
-    //or app.redirect("/login.html");
+    return app.chain.interrupt(statusCode: HttpStatus.UNAUTHORIZED);
+    //or app.chain.redirect("/login.html");
   }
 }
 ```
 
 ```dart
 @app.Interceptor(r'/services/.+')
-dbConnInterceptor() {
+dbConnInterceptor() async {
   var conn = new DbConn();
+  
   app.request.attributes["dbConn"] = conn;
-  app.chain.next(() => conn.close());
+  var response = await app.chain.next();
+  
+  await conn.close()
+  
+  return response;
 }
 
 @app.Route('/services/find')
 find(@app.Attr() dbConn) {
-  ...
+  // ...
 }
 ```
 
@@ -123,12 +127,12 @@ class UserService {
   @app.Route("/find")
   findUser(@app.QueryParam("n") String name,
            @app.QueryParam("c") String city) {
-    ...
+    // ...
   }
 
   @app.Route("/add", methods: const [app.POST])
   addUser(@app.Body(app.JSON) Map json) {
-    ...
+    // ...
   }
 }
 ```
@@ -138,7 +142,7 @@ class UserService {
 Register one or more modules before calling `app.start()`
 
 ```dart
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 import 'package:di/di.dart';
 
 main() {
@@ -149,7 +153,6 @@ main() {
   
   app.setupConsoleLog();
   app.start();
-
 }
 
 ```
@@ -159,14 +162,14 @@ Routes, interceptors, error handlers and groups can require dependencies
 ```dart
 @app.Route('/service')
 service(@app.Inject() ClassA objA) {
- ...
+ // ...
 }
 ```
 
 ```dart
 @app.Interceptor(r'/services/.+')
 interceptor(ClassA objA, ClassB objB) {
-  ...
+  // ...
 }
 ```
 
@@ -187,7 +190,7 @@ class Group {
   
   @app.Route('/service')
   service() {
-    ...
+    // ...
   }
 
 }
@@ -200,16 +203,16 @@ You can easily create mock requests to test your server
 ```dart
 library services;
 
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 
 @app.Route("/user/:username")
 helloUser(String username) => "hello, $username";
 ```
 
 ```dart
-import 'package:unittest/unittest.dart';
+import 'package:test/test.dart';
 
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 import 'package:redstone/mocks.dart';
 
 import 'package:your_package_name/services.dart';
@@ -217,10 +220,10 @@ import 'package:your_package_name/services.dart';
 main() {
 
   //load handlers in 'services' library
-  setUp(() => app.setUp([#services]));
+  setUp(() => app.redstoneSetUp([#services]));
   
   //remove all loaded handlers
-  tearDown(() => app.tearDown());
+  tearDown(() => app.redstoneTearDown());
   
   test("hello service", () {
     //create a mock request
