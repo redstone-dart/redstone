@@ -22,18 +22,18 @@ main() {
 
 #### Installation
 
-To install, set the `redstone: "^0.6.0-beta.1+4"` constraint to your pubspec.
+To install, set the `redstone: "^0.6.0+1"` constraint to your pubspec.
 
 ```yaml
 dependencies:
-  redstone: "^0.6.0-beta.1+4"
+  redstone: "^0.6.0+1"
 ```
 The following plugins are also available for this version:
 
 ```yaml
-redstone_mapper: 0.2.0-beta.1
+redstone_mapper: 0.2.0-beta.1+1
 redstone_mapper_mongo: 0.2.0-beta.1
-redstone_mapper_pg: 0.2.0-beta.1
+redstone_mapper_pg: 0.2.0-beta.2+2
 redstone_web_socket: 0.1.0-beta.1
 ```
 
