@@ -41,7 +41,7 @@ getUser(int id) {
 You can also build a response using [Shelf](http://pub.dartlang.org/packages/shelf).
 
 ```dart
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 import 'package:shelf/shelf.dart' as shelf;
 
 @app.Route("/")
@@ -109,7 +109,7 @@ addUser(@app.Body(app.FORM) Map form) {
 };
 ```
 
-For json and form, you can request the body as a `QueryMap`, which allows the use of the dot notation
+For json and form, you can request the body as a `DynamicMap`, which allows the use of the dot notation
 
 ```dart
 @app.Route("/adduser", methods: const [app.POST])

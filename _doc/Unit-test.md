@@ -7,11 +7,11 @@ next: Server-Configuration
 ---
 Basically, to create a test, you just need to:
 
-* Call `setUp()` to load your handlers
+* Call `redstoneSetUp()` to load your handlers
 * Create a `MockRequest`
 * Call `dispatch()` to send your request
 * Inspect the returned response
-* Call `tearDown()` to unload your handlers 
+* Call `redstoneTearDown()` to unload your handlers 
 
 Example:
 
