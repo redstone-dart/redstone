@@ -56,7 +56,7 @@ import 'package:myapp/services.dart';
 @app.Interceptor("/.+", chainIdx: 0)
 interceptor() {
   print("interceptor 1");
-  app.chain.next();
+  return app.chain.next();
 }
 
 main() {
@@ -72,13 +72,13 @@ import 'package:redstone/redstone.dart' as app;
 @app.Interceptor("/.+", chainIdx: 0)
 interceptor() {
   print("interceptor 2");
-  app.chain.next();
+  return app.chain.next();
 }
 
 @app.Interceptor("/.+", chainIdx: 1)
 interceptor2() {
   print("interceptor 3");
-  app.chain.next();
+  return app.chain.next();
 }
 ```
 

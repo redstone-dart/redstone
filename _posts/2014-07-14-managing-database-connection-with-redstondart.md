@@ -228,12 +228,10 @@ import 'package:mongo_dart/mongo_dart.dart';
 
 @app.ErrorHandler(500)
 onInternalError() {
-  
   if (app.chain.error is ConnectionException) {
     // ...
   } else {
     // ...
   }
-
 }
 ```
