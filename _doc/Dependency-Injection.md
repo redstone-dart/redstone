@@ -10,7 +10,7 @@ Redstone.dart uses the [di package](http://pub.dartlang.org/packages/di) to prov
 To register a module, use the `addModule()` method:
 
 ```dart
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 import 'package:di/di.dart';
 
 main() {

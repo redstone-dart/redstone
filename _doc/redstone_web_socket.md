@@ -64,7 +64,7 @@ can request injectable objects with a constructor (see [dependency injection](ht
 To install web socket handlers, you just have to import `redstone_web_socket.dart` and call `getWebSocketPlugin()`:
 
 ```dart
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 import 'package:redstone_web_socket/redstone_web_socket.dart';
 
 void main() {
@@ -82,7 +82,7 @@ void main() {
 This package also provides a simple mock client, which can be used in unit tests:
 
 ```dart
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 import 'package:redstone_web_socket/redstone_web_socket.dart';
 import 'package:unittest/unittest.dart';
 

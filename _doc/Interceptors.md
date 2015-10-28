@@ -35,6 +35,7 @@ handleCORS() async {
   if (app.request.method != "OPTIONS") {
     await app.chain.next();
   }
+  
   return app.response.change(headers: {"Access-Control-Allow-Origin": "*"});
 }
 ```
@@ -47,8 +48,11 @@ import 'package:redstone/redstone.dart' as app;
 dbConnInterceptor() async {
   var conn = new DbConn();
   app.request.attributes["dbConn"] = conn;
-  await app.chain.next();
+  
+  var response = await app.chain.next();
   await conn.close();
+  
+  return response;
 }
 
 @app.Route('/services/find')
@@ -132,7 +136,9 @@ inspect the request body, you must set `parseRequestBody = true`. Example:
 verifyRequest() async {
   //if parseRequestBody is not setted, request.body is null
   print(app.request.body);
-  await app.chain.next();
+  var response = await app.chain.next();
+  
+  return response;
 }
 
 ```

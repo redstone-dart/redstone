@@ -11,7 +11,7 @@ Redstone.dart allows you to easily publish your functions and classes through a 
 
 ```dart
 
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 
 @app.Route("/")
 helloWorld() => "Hello, World!";

@@ -29,7 +29,7 @@ main() {
 For example, you can use [shelf_static](http://pub.dartlang.org/packages/shelf_static) to serve static files:
 
 ```dart
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 import 'package:shelf_static/shelf_static.dart';
 
 main() {

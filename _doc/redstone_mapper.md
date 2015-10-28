@@ -18,7 +18,7 @@ Example: Using redstone_mapper with Redstone.dart
 
 ```dart
 
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 import 'package:redstone_mapper/mapper.dart';
 import 'package:redstone_mapper/plugin.dart';
 
@@ -283,10 +283,10 @@ call `getMapperPlugin()`:
 
 ```dart
 
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 import 'package:redstone_mapper/plugin.dart';
 
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 import 'package:redstone_mapper/mapper.dart';
 import 'package:redstone_mapper/plugin.dart';
 
@@ -312,7 +312,7 @@ and call `bootstrapMapper()` from the `main()` function:
 
 ```dart
 
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 import 'package:redstone_mapper/mapper_factory.dart';
 
 main() {

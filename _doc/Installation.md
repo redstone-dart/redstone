@@ -21,7 +21,7 @@ name: my_app
 - Create a `server.dart` file under the `bin` directory
 
 ```dart
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 
 @app.Route("/")
 helloWorld() => "Hello, World!";

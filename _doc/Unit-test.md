@@ -18,7 +18,7 @@ Example:
 ```dart
 library services;
 
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 
 @app.Route("/user/:username")
 helloUser(String username) => "hello, $username";
@@ -27,7 +27,7 @@ helloUser(String username) => "hello, $username";
 ```dart
 import 'package:unittest/unittest.dart';
 
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 import 'package:redstone/mocks.dart';
 
 import 'package:your_package_name/services.dart';

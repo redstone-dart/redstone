@@ -21,7 +21,7 @@ when calling the `start ()` method.
 The `secureOptions` is a `Map<Symbol, dynamic>` that will be forwarded to the [`HttpServer.bindSecure()`](https://api.dartlang.org/apidocs/channels/stable/dartdoc-viewer/dart-io.HttpServer#id_bindSecure) method:
 
 ```dart
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 
 main() {
   app.setupConsoleLog();
@@ -36,7 +36,7 @@ See the [`https.dart`](https://github.com/luizmineo/redstone.dart/blob/master/ex
 If you need to serve static files, you can use the [shelf_static](http://pub.dartlang.org/packages/shelf_static) package:
 
 ```dart
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 import 'package:shelf_static/shelf_static.dart';
 
 main() {

@@ -21,7 +21,7 @@ If you are using redstone_mapper as a Redstone.dart plugin, you can pass a `Mong
 so a database connection will be available for every request:
 
 ```dart
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 import 'package:redstone_mapper/plugin.dart';
 import 'package:redstone_mapper_mongo/manager.dart';
 
@@ -52,7 +52,7 @@ The `MongoDb` object is a wrapper that provides helper functions for encoding an
 
 ```dart
 import 'dart:async';
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 import 'package:redstone_mapper/mapper.dart';
 import 'package:redstone_mapper/plugin.dart';
 import 'package:redstone_mapper_mongo/manager.dart';

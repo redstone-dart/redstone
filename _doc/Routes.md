@@ -212,7 +212,7 @@ Each request is tied to its own [Zone](https://www.dartlang.org/articles/zones/)
 Sometimes, you need to directly build a HTTP response, or inspect and modify a response created by another handler (a route, interceptor or error handler). For those cases, you can rely on the `response` object, which points to the last response created for the current request. Example:
 
 ```dart
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 
 @app.Interceptor(r'/.*')
 interceptor() {
@@ -227,7 +227,7 @@ interceptor() {
 Also, if you are building a response inside a **chain callback**, **route** or **error handler**, you can just return it:
 
 ```dart
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 
 @app.Interceptor(r'/.*')
 interceptor() {

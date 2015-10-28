@@ -10,7 +10,7 @@ Redstone.dart recursively scans all libraries imported by your main script. Exam
 - server.dart
 
 ```dart
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 //all handlers in services.dart will be installed
 import 'package:myapp/services.dart';
 
@@ -22,7 +22,7 @@ main() {
 - services.dart
 
 ```dart
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 
 @app.Route("/user/find")
 findUser() {
@@ -33,7 +33,7 @@ findUser() {
 However, sometimes you need more control on how handlers from other libraries are installed. In these cases, you can use the `@Install` annotation:
 
 ```dart
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 //all handlers in services.dart will be installed under the '/services' path
 @app.Install(urlPrefix: '/services')
 import 'package:myapp/services.dart';
@@ -47,7 +47,7 @@ main() {
 If the library defines interceptors, you can control the execution order:
 
 ```dart
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 
 @app.Install(chainIdx: 1)
 import 'package:myapp/services.dart';
@@ -67,7 +67,7 @@ main() {
 - services.dart
 
 ```dart
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 
 @app.Interceptor("/.+", chainIdx: 0)
 interceptor() {
@@ -85,7 +85,7 @@ interceptor2() {
 If you want to import a library, but don't need its handlers, you can use the `@Ignore` annotation:
 
 ```dart
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 //handlers defined in services.dart won't be installed
 @app.Ignore()
 import 'package:myapp/services.dart';
@@ -99,7 +99,7 @@ main() {
 A library is installed only once. So, if you import the same library in different files, its handlers won't be installed twice:
 
 ```dart
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 import 'package:myapp/lib_a.dart';
 import 'package:myapp/lib_b.dart';
 
@@ -112,7 +112,7 @@ main() {
 
 ```dart
 library lib_a;
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 import 'package:myapp/lib_c.dart';
 
 @app.Route(...)
@@ -124,7 +124,7 @@ serviceA() {
 
 ```dart
 library lib_b;
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 import 'package:myapp/lib_c.dart';
 
 @app.Route(...)
@@ -137,7 +137,7 @@ serviceB() {
 ```dart
 //lib_c is imported by lib_a and lib_b, but its handlers are installed only once.
 library lib_c;
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 
 @app.Interceptor(...)
 interceptor() {

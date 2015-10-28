@@ -50,7 +50,7 @@ class ServerEndPoint {
 The plugin also provides a simple mock client, which can be used to test web socket handlers:
 
 ```dart
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 import 'package:redstone_web_socket/redstone_web_socket.dart';
 import 'package:unittest/unittest.dart';
 
