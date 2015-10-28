@@ -27,14 +27,12 @@ import 'package:redstone_mapper/plugin.dart';
 import 'package:redstone_mapper_pg/manager.dart';
 
 main() {
-  
   var uri = "postgres://testdb:password@localhost:5432/testdb";
   var dbManager = new PostgreSqlManager(uri, min: 1, max: 3);
   
   app.addPlugin(getMapperPlugin(dbManager));
   app.setupConsoleLog();
   app.start();
-  
 }
 
 //redstone_mapper will create a "dbConn" attribute
@@ -59,7 +57,6 @@ import 'package:redstone_mapper/plugin.dart';
 import 'package:redstone_mapper_pg/manager.dart';
 
 class User {
-  
   @Field()
   int id;
 
@@ -68,7 +65,6 @@ class User {
 
   @Field()
   String password;
-  
 }
 
 PostgreSql get postgreSql => app.request.attributes.dbConn;
@@ -85,7 +81,6 @@ Future addUser(@Decode() User user) =>
   //encode user, and insert it in the "user" table.
   postgreSql.execute("insert into users (name, password) "
                      "values (@username, @password)", user);
-
 ```
 
 However, the `PostgreSql` class doesn't hide the `postgresql` API. You can access 
@@ -105,7 +100,6 @@ Future<List<User>> listUsers() => userService.query("select * from user");
 Future addUser(@Decode() User user) => 
   postgreSql.execute("insert into users (name, password) "
                      "values (@username, @password)", user);
-
 ```
 
 It's also possible to inherit from `PostgreSqlService`:
@@ -113,7 +107,6 @@ It's also possible to inherit from `PostgreSqlService`:
 ```dart
 @app.Group("/services/users")
 Class UserService extends PostgreSqlService<User> {
-
   @app.Route("/list")
   @Encode()
   Future<List<User>> list() => query("select * from user");
@@ -122,7 +115,6 @@ Class UserService extends PostgreSqlService<User> {
   Future add(@Decode() User user) =>
     execute("insert into users (name, password) "
             "values (@username, @password)", user);
-
 }
 ```
 
