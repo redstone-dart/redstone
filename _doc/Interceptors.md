@@ -124,14 +124,15 @@ The `chain.redirect()` creates a new response with an 302 status code.
 
 ## The request body
 
-By default, Redstone.dart won't parse the request body until all interceptors are called. If your interceptor need to inspect the request body, you must set `parseRequestBody = true`. Example:
+By default, Redstone.dart won't parse the request body until all interceptors are called. If your interceptor needs to 
+inspect the request body, you must set `parseRequestBody = true`. Example:
 
 ```dart
 @app.Interceptor(r'/service/.+', parseRequestBody: true)
-verifyRequest() {
+verifyRequest() async {
   //if parseRequestBody is not setted, request.body is null
   print(app.request.body);
-  app.chain.next();
+  await app.chain.next();
 }
 
 ```
@@ -141,16 +142,15 @@ verifyRequest() {
 You can control what order interceptors get executed by specifying chainIdx
 
 ```dart
-
 @app.Interceptor("/.+", chainIdx: 0)
 interceptor() {
   print("interceptor 2");
-  app.chain.next();
+  return app.chain.next();
 }
 
 @app.Interceptor("/.+", chainIdx: 1)
 interceptor2() {
   print("interceptor 3");
-  app.chain.next();
+  return app.chain.next();
 }
 ```
