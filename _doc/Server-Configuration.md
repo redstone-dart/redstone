@@ -18,7 +18,8 @@ protocol       | http
 In order to start a secure server (https), you should specify the optional `secureOptions` argument
 when calling the `start ()` method.
 
-The `secureOptions` is a `Map<Symbol, dynamic>` that will be forwarded to the [`HttpServer.bindSecure()`](https://api.dartlang.org/apidocs/channels/stable/dartdoc-viewer/dart-io.HttpServer#id_bindSecure) method:
+The `secureOptions` is a `Map<Symbol, dynamic>` that will be forwarded to the 
+[`HttpServer.bindSecure()`](https://api.dartlang.org/apidocs/channels/stable/dartdoc-viewer/dart-io.HttpServer#id_bindSecure) method:
 
 ```dart
 import 'package:redstone/redstone.dart' as app;
@@ -59,7 +60,6 @@ By default, the log level is setted to INFO, which logs the startup process and 
 
 ```dart
 import 'package:logging/logging.dart';
-
 
 main() {
   app.setupConsoleLog(Level.ALL);
