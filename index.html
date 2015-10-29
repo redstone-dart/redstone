@@ -21,8 +21,8 @@ menu_item: index
         <div class="panel-heading">Simple and intuitive</div>
         <div class="panel-body">
           <b>Redstone.dart</b> allows you to easily publish your functions and classes through a web interface, by just adding some annotations to them.
-          
-          <div class="highlight"><pre><code class="dart"><span class="k">import</span> <span class="s1">&#39;package:redstone/server.dart&#39;</span> <span class="k">as</span> <span class="n">app</span><span class="p">;</span>
+
+          <div class="highlight"><pre><code class="dart"><span class="k">import</span> <span class="s1">&#39;package:redstone/redstone.dart&#39;</span> <span class="k">as</span> <span class="n">app</span><span class="p">;</span>
 
 <a href="#" class="dart-popover" data-toggle="popover" title="@Route" data-html="true" data-trigger="hover focus" data-content="Use the @Route annotation to bind a function with an URL.">@app.Route</a><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
 <span class="n">helloWorld</span><span class="p">()</span> <span class="o">=&gt;</span> <span class="s2">&quot;Hello, World!&quot;</span><span class="p">;</span>
@@ -61,9 +61,9 @@ menu_item: index
           Easily test your server, without the need of an external tool.
           <div class="highlight"><pre><code class="dart"><span class="n">main</span><span class="p">()</span> <span class="p">{</span>
 
-  <span class="n">setUp</span><span class="p">(</span><span class="n">app</span><span class="p">.</span><span class="n">setUp</span><span class="p">);</span>
+  <span class="n">redstoneSetUp</span><span class="p">(</span><span class="n">app</span><span class="p">.</span><span class="n">setUp</span><span class="p">);</span>
 
-  <span class="n">tearDown</span><span class="p">(</span><span class="n">app</span><span class="p">.</span><span class="n">tearDown</span><span class="p">);</span>
+  <span class="n">redstoneTearDown</span><span class="p">(</span><span class="n">app</span><span class="p">.</span><span class="n">tearDown</span><span class="p">);</span>
 
   <span class="n">test</span><span class="p">(</span><span class="s2">&quot;service&quot;</span><span class="p">,</span> <span class="p">()</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="n">req</span> <span class="o">=</span> <span class="k">new</span> <a href="#" class="dart-popover" data-toggle="popover" title="MockRequest" data-html="true" data-trigger="hover focus" data-content="To test your code, just create and dispatch a MockRequest.">MockRequest</a><span class="p">(</span><span class="s2">&quot;/service&quot;</span><span class="p">);</span>
