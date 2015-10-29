@@ -43,9 +43,9 @@ menu_item: index
           <div class="highlight"><pre><code class="dart"><a href="#" class="dart-popover" data-toggle="popover" title="@Interceptor" data-html="true" data-trigger="hover focus" data-content="Use the @Interceptor annotation to define a request interceptor.">@app.Interceptor</a><span class="p">(</span><span class="s1">r&#39;/admin/.*&#39;</span><span class="p">)</span>
 <span class="n">adminFilter</span><span class="p">()</span> <span class="p">{</span>
   <span class="k">if</span> <span class="p">(</span><span class="n">app</span><span class="p">.</span><span class="n">request</span><span class="p">.</span><span class="n">session</span><span class="p">[</span><span class="s2">&quot;username&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
-    <span class="n">app</span><span class="p">.</span><span class="n">chain</span><span class="p">.</span><span class="n">next</span><span class="p">();</span>
+    <span class="n">return app</span><span class="p">.</span><span class="n">chain</span><span class="p">.</span><span class="n">next</span><span class="p">();</span>
   <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-    <span class="n">app</span><span class="p">.</span><span class="n">chain</span><span class="p">.</span><span class="n">interrupt</span><span class="p">(</span><span class="nl">statusCode:</span> <span class="n">HttpStatus</span><span class="p">.</span><span class="n">UNAUTHORIZED</span><span class="p">);</span>
+    <span class="n">return app</span><span class="p">.</span><span class="n">chain</span><span class="p">.</span><span class="n">abort</span><span class="p">(<span class="n">HttpStatus</span><span class="p">.</span><span class="n">UNAUTHORIZED</span><span class="p">);</span>
     <span class="c1">//or app.redirect(&quot;/login.html&quot;);</span>
   <span class="p">}</span>
 <span class="p">}</span></code></pre></div>
@@ -60,9 +60,7 @@ menu_item: index
         <div class="panel-body">
           Easily test your server, without the need of an external tool.
           <div class="highlight"><pre><code class="dart"><span class="n">main</span><span class="p">()</span> <span class="p">{</span>
-
   <span class="n">setUp</span><span class="p">(</span><span class="n">app</span><span class="p">.</span><span class="n">redstoneSetUp</span><span class="p">);</span>
-
   <span class="n">tearDown</span><span class="p">(</span><span class="n">app</span><span class="p">.</span><span class="n">redstoneTearDown</span><span class="p">);</span>
 
   <span class="n">test</span><span class="p">(</span><span class="s2">&quot;service&quot;</span><span class="p">,</span> <span class="p">()</span> <span class="p">{</span>
@@ -72,7 +70,6 @@ menu_item: index
       <span class="n">expect</span><span class="p">(</span><span class="n">resp</span><span class="p">.</span><span class="n">mockContent</span><span class="p">,</span> <span class="n">equals</span><span class="p">(</span><span class="s2">&quot;ok&quot;</span><span class="p">));</span>
     <span class="p">});</span>
   <span class="p">})</span>
-
 <span class="p">}</span></code></pre></div>
         </div>
       </div>
