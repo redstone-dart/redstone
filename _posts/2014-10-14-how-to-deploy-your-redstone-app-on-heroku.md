@@ -12,7 +12,7 @@ Basically, to run on Heroku, your app must be configurable through environment v
 
 import "dart:io";
 
-import "package:redstone/server.dart" as app;
+import "package:redstone/redstone.dart" as app;
 
 //Import services here
 
@@ -42,7 +42,7 @@ If your app also has client code, it's a good idea to make the path to the web f
 ```dart
 import "dart:io";
 
-import "package:redstone/server.dart" as app;
+import "package:redstone/redstone.dart" as app;
 import "package:shelf_static/shelf_static.dart";
 
 //Import services here

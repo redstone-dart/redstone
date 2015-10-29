@@ -10,7 +10,7 @@ Let's start with a simple example:
 
 
 ```dart
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 import 'package:mongo_dart/mongo_dart.dart';
 
 final DB_URI = "mongodb://localhost/dbname";
@@ -45,7 +45,7 @@ However, if you plan to add new routes to your server (like `addUser()`, for exa
 So, let's see how we can improve our script:
 
 ```dart
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 import 'package:mongo_dart/mongo_dart.dart';
 
 final DB_URI = "mongodb://localhost/dbname";
@@ -98,7 +98,7 @@ Unfortunately, the MongoDB driver for Dart doesn't provide a connection pool yet
 
 
 ```dart
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 import 'package:mongo_dart/mongo_dart.dart';
 import 'package:connection_pool/connection_pool.dart';
 import 'package:di/di.dart';
@@ -169,7 +169,7 @@ The script above uses the dependency injection API (see the [di](http://pub.dart
 Moreover, if you don't want to create a connection pool and a database interceptor for every application, you can take a look at the [redstone_mapper](http://pub.dartlang.org/packages/redstone_mapper) plugin. When used with a database extension (see [redstone_mapper_pg](http://pub.dartlang.org/packages/redstone_mapper_pg) and [redstone_mapper_mongo](http://pub.dartlang.org/packages/redstone_mapper_mongo)) the plugin does this job for you. Example:
 
 ```dart
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 import 'package:redstone_mapper/plugin.dart';
 import 'package:redstone_mapper_mongo/manager.dart';
 
@@ -198,7 +198,7 @@ Just one more tip: Our application can guarantee that the database connections a
 You can change that behaivor with an error handler:
 
 ```dart
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 
 @app.ErrorHandler(500)
 onInternalError() => app.redirect("/internal_error.html");
@@ -208,7 +208,7 @@ onInternalError() => app.redirect("/internal_error.html");
 You can also define an error handler for static content, and other for services:
 
 ```dart
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 import 'package:shelf/shelf.dart as shelf';
 
 //redirect to the default error page
@@ -223,18 +223,15 @@ onServiceInternalError() => new shelf.Response.internalServerError({"ERROR": "IN
 It's also possible to inspect the exception, so you can build a specific error message for each error:
 
 ```dart
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 import 'package:mongo_dart/mongo_dart.dart';
 
 @app.ErrorHandler(500)
 onInternalError() {
-  
   if (app.chain.error is ConnectionException) {
-    ...
+    // ...
   } else {
-    ...
+    // ...
   }
-
 }
-
 ```

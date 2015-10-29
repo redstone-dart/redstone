@@ -10,7 +10,7 @@ Redstone.dart uses the [di package](http://pub.dartlang.org/packages/di) to prov
 To register a module, use the `addModule()` method:
 
 ```dart
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 import 'package:di/di.dart';
 
 main() {
@@ -47,7 +47,7 @@ class Group {
   
   @app.Route('/service')
   service() {
-    ...
+    // ...
   }
 
 }
@@ -58,12 +58,12 @@ Interceptors and error handlers can also require dependencies:
 ```dart
 @app.Interceptor(r'/services/.+')
 interceptor(ClassA objA, ClassB objB) {
-  ...
+  // ...
 }
 
 
 @app.ErrorHandler(404)
 notFound(ClassB objB) {
-  ...
+  // ...
 }
 ```

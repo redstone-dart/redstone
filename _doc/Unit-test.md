@@ -7,18 +7,18 @@ next: Server-Configuration
 ---
 Basically, to create a test, you just need to:
 
-* Call `setUp()` to load your handlers
+* Call `redstoneSetUp()` to load your handlers
 * Create a `MockRequest`
 * Call `dispatch()` to send your request
 * Inspect the returned response
-* Call `tearDown()` to unload your handlers 
+* Call `redstoneTearDown()` to unload your handlers 
 
 Example:
 
 ```dart
 library services;
 
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 
 @app.Route("/user/:username")
 helloUser(String username) => "hello, $username";
@@ -27,13 +27,12 @@ helloUser(String username) => "hello, $username";
 ```dart
 import 'package:unittest/unittest.dart';
 
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 import 'package:redstone/mocks.dart';
 
 import 'package:your_package_name/services.dart';
 
 main() {
-
   //load handlers in 'services' library
   setUp(() => app.setUp([#services]));
   
@@ -92,7 +91,7 @@ var req = new MockRequest("/service", method: app.POST, bodyType: app.FORM, body
 import "dart:convert";
 import "dart:io";
 
-...
+// ...
 
 var file = new app.HttpBodyFileUpload(ContentType.parse("text/plain"), 
                                       "test.txt", 

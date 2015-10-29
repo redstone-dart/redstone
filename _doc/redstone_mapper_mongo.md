@@ -5,7 +5,8 @@ title: redstone_mapper_mongo
 prev: redstone_mapper
 next: redstone_mapper_pg
 ---
-[redstone_mapper_mongo](http://pub.dartlang.org/packages/redstone_mapper_mongo) is a MongoDB extension for [redstone_mapper](http://pub.dartlang.org/packages/redstone_mapper).
+[redstone_mapper_mongo](http://pub.dartlang.org/packages/redstone_mapper_mongo) is a MongoDB extension for 
+[redstone_mapper](http://pub.dartlang.org/packages/redstone_mapper).
 
 This package is a wrapper for the [mongo_dart](https://github.com/vadimtsushko/mongo_dart) driver.
 
@@ -21,18 +22,16 @@ If you are using redstone_mapper as a Redstone.dart plugin, you can pass a `Mong
 so a database connection will be available for every request:
 
 ```dart
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 import 'package:redstone_mapper/plugin.dart';
 import 'package:redstone_mapper_mongo/manager.dart';
 
 main() {
-  
   var dbManager = new MongoDbManager("mongodb://localhost/dbname", poolSize: 3);
   
   app.addPlugin(getMapperPlugin(dbManager));
   app.setupConsoleLog();
   app.start();
-  
 }
 
 //redstone_mapper will create a "dbConn" attribute
@@ -45,21 +44,19 @@ listUsers(@app.Attr() MongoDb dbConn) =>
 //database connection of the current request, so
 //you don't need to add an extra parameter for every route.
 MongoDb get mongoDb => app.request.attributes.dbConn;
-
 ```
 
 The `MongoDb` object is a wrapper that provides helper functions for encoding and decoding objects:
 
 ```dart
 import 'dart:async';
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 import 'package:redstone_mapper/mapper.dart';
 import 'package:redstone_mapper/plugin.dart';
 import 'package:redstone_mapper_mongo/manager.dart';
 import 'package:redstone_mapper_mongo/metadata.dart';
 
 class User {
-  
   //@Id is a special annotation to handle the "_id" document field, 
   //it instructs redstone_mapper to convert ObjectId values to String, 
   //and vice versa.
@@ -71,7 +68,6 @@ class User {
 
   @Field()
   String password;
-  
 }
 
 MongoDb get mongoDb => app.request.attributes.dbConn;
@@ -90,13 +86,14 @@ Future addUser(@Decode() User user) =>
 
 ```
 
-However, the `MongoDb` class doesn't hide the `mongo_dart` API. You can access a `DbCollection` with the `MongoDb.collection()` method. 
+However, the `MongoDb` class doesn't hide the `mongo_dart` API. You can access a `DbCollection` with the 
+`MongoDb.collection()` method. 
+
 Also, you can access the original connection object with the `MongoDb.innerConn` property.
 
 Moreover, you can use a `MongoDbService` to handle operations that concerns the same document type:
 
 ```dart
-
 MongoDbService<User> userService = new MongoDbService<User>("users");
 
 @app.Route("/services/users/list")
@@ -122,7 +119,6 @@ Class UserService extends MongoDbService<User> {
 
   @app.Route("/add")
   Future add(@Decode() User user) => insert(user);
-
 }
 ```
 

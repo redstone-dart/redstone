@@ -22,19 +22,17 @@ If you are using redstone_mapper as a Redstone.dart plugin, you can pass a `Post
 so a database connection will be available for every request:
 
 ```dart
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 import 'package:redstone_mapper/plugin.dart';
 import 'package:redstone_mapper_pg/manager.dart';
 
 main() {
-  
   var uri = "postgres://testdb:password@localhost:5432/testdb";
   var dbManager = new PostgreSqlManager(uri, min: 1, max: 3);
   
   app.addPlugin(getMapperPlugin(dbManager));
   app.setupConsoleLog();
   app.start();
-  
 }
 
 //redstone_mapper will create a "dbConn" attribute
@@ -53,13 +51,12 @@ PostgreSql get postgreSql => app.request.attributes.dbConn;
 The `PostgreSql` object is a wrapper that provides helper functions for encoding and decoding objects:
 
 ```dart
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 import 'package:redstone_mapper/mapper.dart';
 import 'package:redstone_mapper/plugin.dart';
 import 'package:redstone_mapper_pg/manager.dart';
 
 class User {
-  
   @Field()
   int id;
 
@@ -68,7 +65,6 @@ class User {
 
   @Field()
   String password;
-  
 }
 
 PostgreSql get postgreSql => app.request.attributes.dbConn;
@@ -85,7 +81,6 @@ Future addUser(@Decode() User user) =>
   //encode user, and insert it in the "user" table.
   postgreSql.execute("insert into users (name, password) "
                      "values (@username, @password)", user);
-
 ```
 
 However, the `PostgreSql` class doesn't hide the `postgresql` API. You can access 
@@ -105,7 +100,6 @@ Future<List<User>> listUsers() => userService.query("select * from user");
 Future addUser(@Decode() User user) => 
   postgreSql.execute("insert into users (name, password) "
                      "values (@username, @password)", user);
-
 ```
 
 It's also possible to inherit from `PostgreSqlService`:
@@ -113,7 +107,6 @@ It's also possible to inherit from `PostgreSqlService`:
 ```dart
 @app.Group("/services/users")
 Class UserService extends PostgreSqlService<User> {
-
   @app.Route("/list")
   @Encode()
   Future<List<User>> list() => query("select * from user");
@@ -122,7 +115,6 @@ Class UserService extends PostgreSqlService<User> {
   Future add(@Decode() User user) =>
     execute("insert into users (name, password) "
             "values (@username, @password)", user);
-
 }
 ```
 

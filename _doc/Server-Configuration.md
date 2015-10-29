@@ -18,10 +18,11 @@ protocol       | http
 In order to start a secure server (https), you should specify the optional `secureOptions` argument
 when calling the `start ()` method.
 
-The `secureOptions` is a `Map<Symbol, dynamic>` that will be forwarded to the [`HttpServer.bindSecure()`](https://api.dartlang.org/apidocs/channels/stable/dartdoc-viewer/dart-io.HttpServer#id_bindSecure) method:
+The `secureOptions` is a `Map<Symbol, dynamic>` that will be forwarded to the 
+[`HttpServer.bindSecure()`](https://api.dartlang.org/apidocs/channels/stable/dartdoc-viewer/dart-io.HttpServer#id_bindSecure) method:
 
 ```dart
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 
 main() {
   app.setupConsoleLog();
@@ -36,7 +37,7 @@ See the [`https.dart`](https://github.com/luizmineo/redstone.dart/blob/master/ex
 If you need to serve static files, you can use the [shelf_static](http://pub.dartlang.org/packages/shelf_static) package:
 
 ```dart
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 import 'package:shelf_static/shelf_static.dart';
 
 main() {
@@ -60,10 +61,9 @@ By default, the log level is setted to INFO, which logs the startup process and 
 ```dart
 import 'package:logging/logging.dart';
 
-
 main() {
   app.setupConsoleLog(Level.ALL);
-  ...
+  // ...
 }
 ```
 
@@ -72,6 +72,6 @@ If you want to output the messages to a different place (for example, a file), y
 ```dart
 Logger.root.level = Level.ALL;
 Logger.root.onRecord.listen((LogRecord rec) {
-  ...
+  // ...
 });
 ```

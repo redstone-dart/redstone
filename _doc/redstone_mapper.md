@@ -18,12 +18,11 @@ Example: Using redstone_mapper with Redstone.dart
 
 ```dart
 
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 import 'package:redstone_mapper/mapper.dart';
 import 'package:redstone_mapper/plugin.dart';
 
 main() {
-
   //When using redstone_mapper as a Redstone.dart plugin,
   //you can use the @Decode and @Encode annotations.
   app.addPlugin(getMapperPlugin());
@@ -33,7 +32,6 @@ main() {
 }
 
 class User {
-
   //The @Field annotation is used to specify
   //the fields that can be serialized.
   @Field()
@@ -41,7 +39,6 @@ class User {
 
   @Field()
   String password;
-  
 }
 
 //The @Decode annotation specifies that a parameter value
@@ -49,7 +46,7 @@ class User {
 //that the request has a JSON body. 
 @app.Route('/services/users/add', methods: const[app.POST])
 addUser(@Decode() User user) {
-  ...
+  // ...
 }
 
 //The @Encode annotation specifies that a route
@@ -57,9 +54,8 @@ addUser(@Decode() User user) {
 @app.Route('/services/users/list')
 @Encode()
 List<User> listUsers() {
-  ...
+  // ...
 }
-
 ```
 
 ### The @Field annotation
@@ -68,7 +64,6 @@ To properly encode and decode an object, its class must have every serializable 
 annotated with `@Field`.
 
 ```dart
-
 class User {
 
   @Field()
@@ -76,7 +71,6 @@ class User {
 
   @Field()
   String password;
-  
 }
 
 ```
@@ -86,27 +80,21 @@ it can be properly encoded and decoded. If the field is a List
 or a Map, be sure to specify its parameters. Example:
 
 ```dart
-
 class User {
-  
   @Field()
   String name;
  
   @Field()
   List<Address> adresses;
-
 }
 
 class Address {
-
   @Field()
   String description;
-
+  
   @Field()
   int number;
-  
 }
-
 ```
 
 However, it's not recommended to use other classes that have
@@ -117,7 +105,6 @@ It's also possible to annotate getters and setters:
 
 ```dart
 class User {
-
   String _name;
   
   @Field()
@@ -125,9 +112,7 @@ class User {
 
   @Field()
   set name(String value) => _name = value;
-  
 }
-
 ```
 
 When encoding or decoding an object to JSON, you can use the `view` parameter
@@ -136,15 +121,12 @@ to map a class member to its corresponding JSON field:
 ```dart
 
 class User {
-  
   @Field(view: "user_name")
   String name;
   
   @Field()
   String pass;
-  
 }
-
 ```
 
 Also, if you are encoding or decoding an object to the database, you can use the `model`
@@ -153,7 +135,6 @@ parameter to map a class member to its corresponding database field:
 ```dart
 
 class User {
-  
   //JSON: 'user_name'  DATABASE: 'USERNAME'
   @Field(view: "user_name", model: "USERNAME")
   String name;
@@ -162,55 +143,52 @@ class User {
   @Field(model: "PASSWORD")
   String pass;
 }
-
 ```
 
 Besides, every class that can be encoded or decoded must provide
 a default constructor, with no required arguments. 
 
 ### Data validation
-
 The `Validator` class provides a simple and flexible way to build a set of validation rules.
 
 ```dart
-  var userValidator = new Validator()
-                      ..add("username", const NotEmpty())
-                      ..add("password", const Range(min: 6. required: true));
+var userValidator = new Validator()
+                  ..add("username", const NotEmpty())
+                  ..add("password", const Range(min: 6. required: true));
 
-  ...
-  Map user = {"username": "user", "password": "pass"};
-  ValidationError err = userValidator.execute(user);
-  if (err != null) {
-    ...
-  }
+// ...
+Map user = {"username": "user", "password": "pass"};
+ValidationError err = userValidator.execute(user);
+if (err != null) {
+// ...
+}
 ```
 
 To validate objects, you must provide the target class to the constructor. Also,
 you must annotate with `@Field` all members that can be validated.
 
 ```dart
-class User {
-     
+class User { 
   @Field()
   String username;
  
   @Field()
   String password;
-
 }
 
 var userValidator = new Validator(User)
                     ..add("username", const NotEmpty())
                     ..add("password", const Range(min: 6. required: true));
 
-...
+// ...
+
 var user = new User()
             ..username = "user"
             ..password = "pass";
               
 ValidationError err = userValidator.execute(user);
 if (err != null) {
-  ...
+  // ...
 }
 ```
 
@@ -218,7 +196,6 @@ Alternatively, you can set the rules directly in the class.
 
 ```dart
 class User {
-   
   @Field()
   @NotEmpty()
   String username;
@@ -226,7 +203,6 @@ class User {
   @Field()
   @Range(min: 6, required: true)
   String password;
-
 }
 
 var userValidator = new Validator(User, true);
@@ -237,7 +213,6 @@ for you.
 
 ```dart
 class User extends Schema {
- 
   @Field()
   @NotEmpty()
   String username;
@@ -245,7 +220,6 @@ class User extends Schema {
   @Field()
   @Range(min: 6, required: true)
   String password;
-
 }
 
 ...
@@ -255,11 +229,11 @@ User user = new User()
             
 var err = user.validate();
 if (err != null) {
-  ...
+  // ...
 }
 ```
 
-redstone_mapper already provides the following basic rules, that you can use
+`redstone_mapper` already provides the following basic rules, that you can use
 to build a `Validator`: 
 
 * `NotEmpty`:
@@ -282,16 +256,14 @@ To install redstone_mapper as a Redstone.dart plugin, you just have to import `p
 call `getMapperPlugin()`:
 
 ```dart
-
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 import 'package:redstone_mapper/plugin.dart';
 
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 import 'package:redstone_mapper/mapper.dart';
 import 'package:redstone_mapper/plugin.dart';
 
 main() {
-
   //When using redstone_mapper as a Redstone.dart plugin,
   //you can use the @Decode and @Encode annotations.
   app.addPlugin(getMapperPlugin());
@@ -299,7 +271,6 @@ main() {
   app.setupConsoleLog();
   app.start();
 }
-
 ```
 
 Also, if `getMapperPlugin()` receives an instance of `DatabaseManager`, then the plugin will manage
@@ -311,33 +282,27 @@ To use with other server-side frameworks, or on the client side, you just have t
 and call `bootstrapMapper()` from the `main()` function:
 
 ```dart
-
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 import 'package:redstone_mapper/mapper_factory.dart';
 
 main() {
-
   bootstrapMapper();
-  ...
+  // ...
 }
 
 ```
-
 To encode and decode objects, you can use the `encode()` and `decode()` top level function from `mapper.dart`:
 
 ```dart
-
 import 'dart:convert';
 import 'package:redstone_mapper/mapper.dart';
 
-class User {
-     
+class User {   
   @Field()
   String username;
  
   @Field()
   String password;
-
 }
 
 User user = new User()
@@ -345,7 +310,6 @@ User user = new User()
             ..password = "pass";
             
 String userJson = JSON.encode(encode(user));
-
 ```
 
 When using on the client side, be sure to set redstone_mapper's transformer to your pubspec.yaml
@@ -361,7 +325,6 @@ transformers:
 - redstone_mapper
 
 ```
-
 ### Integration with Polymer
 
 Polymer applications usually doesn't have an entry-point (a dart script with the `main` function), so
@@ -382,8 +345,10 @@ That means you can use the redstone_mapper functions only when it's useful for y
 
 #### What about other databases?
 
-Dart already has support for several databases, including: MongoDb, Redis, CouchDb, MySql, PostgreSql, and so on. I'll try to provide new extensions over
-time, but if you are interested, you can help me on this task.
+Dart already has support for several databases, including: MongoDb, Redis, CouchDb, MySql, PostgreSql, and so on. 
+I'll try to provide new extensions over time, but if you are interested, you can help me on this task.
 
-Building a redstone_mapper extension is really easy, and you can start by taking a look at the source code of [redstone_mapper_pg](https://github.com/luizmineo/redstone_mapper_pg) and [redstone_mapper_mongo](https://github.com/luizmineo/redstone_mapper_mongo).
-If you are willing to build a externsion, please let me know :)
+Building a redstone_mapper extension is really easy, and you can start by taking a look at the source code of 
+[redstone_mapper_pg](https://github.com/luizmineo/redstone_mapper_pg) and 
+[redstone_mapper_mongo](https://github.com/luizmineo/redstone_mapper_mongo).
+If you are willing to build a extension, please let me know :)

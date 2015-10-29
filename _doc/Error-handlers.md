@@ -28,13 +28,13 @@ class User {
   @app.ErrorHandler(500)
   onInternalServerError() {
     if (app.chain.error is UserException) {
-      ...
+      // ...
     } 
   }
 
   @app.Route('/find')
   find() {
-    ...
+    // ...
   }
 }
 ```

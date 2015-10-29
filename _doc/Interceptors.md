@@ -8,87 +8,97 @@ next: Error-handlers
 The `@Interceptor` annotation is used to define an interceptor:
 
 ```dart
-@app.Interceptor(r'/.*')
-handleResponseHeader() {
-  if (app.request.method == "OPTIONS") {
-    //overwrite the current response and interrupt the chain.
-    app.response = new shelf.Response.ok(null, headers: _createCorsHeader());
-    app.chain.interrupt();
-  } else {
-    //process the chain and wrap the response
-    app.chain.next(() => app.response.change(headers: _createCorsHeader()));
-  }
-}
+import 'package:redstone/redstone.dart';
+import "package:shelf/shelf.dart" as shelf;
 
-_createCorsHeader() => {"Access-Control-Allow-Origin": "*"};
+@Interceptor(r'/.*')
+handleCORS() async {
+  if (request.method != "OPTIONS") {
+    await chain.next();
+  }
+  return response.change(headers: {"Access-Control-Allow-Origin": "*"});
+}
 ```
 
 ## The chain object
 
-Each request is actually a chain, composed by 0 or more interceptors, and a route. An interceptor is a structure that allows you to apply a common behavior to a group of targets. For example, you can use an interceptor to apply a security constraint, or to manage a resource:
+Each request is actually a chain, composed by 0 or more interceptors, and a route. 
+An interceptor is a structure that allows you to apply a common behavior to a group of targets. 
+For example, you can use an interceptor to apply a security constraint, or to manage a resource.
+Here's an example of a CORS interceptor:
 
 ```dart
-@app.Interceptor(r'/admin/.*')
-adminFilter() {
-  if (app.request.session["username"] != null) {
-    app.chain.next();
-  } else {
-    app.chain.interrupt(statusCode: HttpStatus.UNAUTHORIZED);
-    //or app.redirect("/login.html");
+import 'package:redstone/redstone.dart' as app;
+
+@app.Interceptor(r'/.*')
+handleCORS() async {
+  if (app.request.method != "OPTIONS") {
+    await app.chain.next();
   }
+  
+  return app.response.change(headers: {"Access-Control-Allow-Origin": "*"});
 }
 ```
 
+
 ```dart
+import 'package:redstone/redstone.dart' as app;
+
 @app.Interceptor(r'/services/.+')
-dbConnInterceptor() {
+dbConnInterceptor() async {
   var conn = new DbConn();
   app.request.attributes["dbConn"] = conn;
-  app.chain.next(() => conn.close());
+  
+  var response = await app.chain.next();
+  await conn.close();
+  
+  return response;
 }
 
 @app.Route('/services/find')
 find(@app.Attr() dbConn) {
-  ...
+  // ...
 }
 ```
 
-When a request is received, the framework will execute all interceptors that matches the URL, and then will look for a valid route. If a route is found, it will be executed.
+When a request is received, the framework will execute all interceptors that matches the URL, 
+and then will look for a valid route. If a route is found, it will be executed.
 
-Each interceptor must call the `chain.next()` or `chain.interrupt()` methods, otherwise, the request will be stuck. The `chain.next()` method can receive a callback, that is executed when the target completes. All callbacks are executed in the reverse order they are created. If a callback returns a `Future`, then the next callback will execute only when the future completes.
+Each interceptor must call the `chain.next()` or `chain.abort()` methods, otherwise, the request will be stuck. 
+The `chain.next()` and `chain.abort()` functions now return a `Future<shelf.Response>`. It's necessary to wait for the 
+completion of the returned future when calling one of these functions, although, it's now possible to use them with 
+`async`/`await` expressions. 
 
 For example, consider this script:
 
 ```dart
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 import 'package:shelf/shelf.dart' as shelf;
 
 @app.Route("/")
 helloWorld() => "target\n";
 
 @app.Interceptor(r'/.*', chainIdx: 0)
-interceptor1() {
-  app.chain.next(() {
-    return app.response.readAsString().then((resp) =>
-        new shelf.Response.ok(
-          "interceptor 1 - before target\n$resp|interceptor 1 - after target\n"));
-  });
+interceptor1() async {
+  var response = await app.chain.next();
+
+  String responseText = await response.readAsString();
+  return new shelf.Response.ok(
+      "interceptor 1 - before target\n${responseText}interceptor 1 - after target\n");
 }
 
 @app.Interceptor(r'/.*', chainIdx: 1)
-interceptor2() {
-  app.chain.next(() {
-    return app.response.readAsString().then((resp) =>
-        new shelf.Response.ok(
-          "interceptor 2 - before target\n$resp|interceptor 2 - after target\n"));
-  });
+interceptor2() async {
+  var response = await app.chain.next();
+
+  String responseText = await response.readAsString();
+  return new shelf.Response.ok(
+      "interceptor 2 - before target\n${responseText}interceptor 2 - after target\n");
 }
 
 main() {
-
   app.setupConsoleLog();
   app.start();
-  
 }
 ```
 
@@ -106,25 +116,29 @@ It's also possible to verify if the target threw an error (if there is an error 
 
 ```dart
 @app.Interceptor(r'/.*')
-interceptor() {
-  app.chain.next(() {
-    if (app.chain.error != null) {
-      ...
-    }
-  });
+interceptor() async {
+  await app.chain.next();
+  if (app.chain.error != null) {
+    // Handle error
+  }
 }
 ```
 
+The `chain.redirect()` creates a new response with an 302 status code.
+
 ## The request body
 
-By default, Redstone.dart won't parse the request body until all interceptors are called. If your interceptor need to inspect the request body, you must set `parseRequestBody = true`. Example:
+By default, Redstone.dart won't parse the request body until all interceptors are called. If your interceptor needs to 
+inspect the request body, you must set `parseRequestBody = true`. Example:
 
 ```dart
 @app.Interceptor(r'/service/.+', parseRequestBody: true)
-verifyRequest() {
+verifyRequest() async {
   //if parseRequestBody is not setted, request.body is null
   print(app.request.body);
-  app.chain.next();
+  var response = await app.chain.next();
+  
+  return response;
 }
 
 ```
@@ -134,16 +148,15 @@ verifyRequest() {
 You can control what order interceptors get executed by specifying chainIdx
 
 ```dart
-
 @app.Interceptor("/.+", chainIdx: 0)
 interceptor() {
   print("interceptor 2");
-  app.chain.next();
+  return app.chain.next();
 }
 
 @app.Interceptor("/.+", chainIdx: 1)
 interceptor2() {
   print("interceptor 3");
-  app.chain.next();
+  return app.chain.next();
 }
 ```

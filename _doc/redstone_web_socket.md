@@ -27,10 +27,8 @@ If a class is annotated with `@WebSocketHandler`, the plugin will install a even
 with `@OnOpen`, `@OnMessage`, `@OnError` and `@OnClose`:
 
 ```dart
-
 @WebSocketHandler("/ws")
 class ServerEndPoint {
-
   @OnOpen()
   void onOpen(WebSocketSession session) {
     print("connection established");
@@ -51,9 +49,7 @@ class ServerEndPoint {
   void onClose(WebSocketSession session) {
     print("connection closed");
   }
-
 }
-
 ```
 
 Like redstone [groups](http://redstonedart.org/doc/Groups.html), the class will be instantiated only once, and it
@@ -64,7 +60,7 @@ can request injectable objects with a constructor (see [dependency injection](ht
 To install web socket handlers, you just have to import `redstone_web_socket.dart` and call `getWebSocketPlugin()`:
 
 ```dart
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 import 'package:redstone_web_socket/redstone_web_socket.dart';
 
 void main() {
@@ -82,7 +78,7 @@ void main() {
 This package also provides a simple mock client, which can be used in unit tests:
 
 ```dart
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 import 'package:redstone_web_socket/redstone_web_socket.dart';
 import 'package:unittest/unittest.dart';
 
@@ -94,7 +90,6 @@ main() {
     var socket = new MockWebSocket();
     
     socket.listen((message) {
-      
       expect(message, equals("echo message"));
       
       completer.complete();
@@ -105,8 +100,6 @@ main() {
     socket.add("message");
     
     return completer.future;
-  
   });
-
 }
 ```

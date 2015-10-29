@@ -16,7 +16,7 @@ For example, if your app often needs to convert from json data to Dart objects, 
 printUser(@app.Body() Map json) {
   User user = new User();
   user.fromJson(json);
-  ...
+  // ...
 }
 ```
 
@@ -24,25 +24,23 @@ You can build a plugin to do this job for you. Example:
 
 ```dart
 class FromJson {
-  
   const FromJson();
-  
 }
 
 FromJsonPlugin(app.Manager manager) {
-  
-  manager.addParameterProvider(FromJson, (metadata, type, handlerName, paramName, req, injector) {
+  manager.addParameterProvider(FromJson,
+      (metadata, type, handlerName, paramName, req, injector) {
     if (req.bodyType != app.JSON) {
-      throw new app.RequestException(
-          "FromJson plugin - $handlerName", "content-type must be 'application/json'");
+      return new shelf.Response(400,
+          body:
+              "FromJson plugin - $handlerName, content-type must be 'application/json'");
     }
-    
+
     ClassMirror clazz = reflectClass(type);
     InstanceMirror obj = clazz.newInstance(const Symbol(""), const []);
     obj.invoke(#fromJson, [req.body]);
     return obj.reflectee;
   });
-  
 }
 ```
 Now, if you install `FromJsonPlugin`, you can use the `@FromJson` annotation:
@@ -50,7 +48,7 @@ Now, if you install `FromJsonPlugin`, you can use the `@FromJson` annotation:
 ```dart
 @app.Route("/user", methods: const[app.POST])
 printUser(@FromJson() User user) {
-  ...
+  // ...
 }
 
 main() {
@@ -64,9 +62,7 @@ Besides, you can also build a plugin to convert from dart objects to json data:
 
 ```dart
 class ToJson {
-  
   const ToJson();
-  
 }
 
 ToJsonPlugin(app.Manager manager) {
@@ -74,7 +70,7 @@ ToJsonPlugin(app.Manager manager) {
     if (value == null) {
       return value;
     }
-    return value.toJson();
+    return JSON.encode(value);
   });
 }
 ```
@@ -84,7 +80,7 @@ ToJsonPlugin(app.Manager manager) {
 @ToJson()
 findUser() {
   return new Future(() {
-    ...
+    // ...
     return user;
   });
 }

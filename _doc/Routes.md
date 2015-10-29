@@ -35,13 +35,13 @@ getUser(int id) {
   if (id <= 0) {
     throw new app.ErrorResponse(400, {"error": "invalid id"});
   }
-  ...
+  // ...
 }
 ```
 You can also build a response using [Shelf](http://pub.dartlang.org/packages/shelf).
 
 ```dart
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 import 'package:shelf/shelf.dart' as shelf;
 
 @app.Route("/")
@@ -72,7 +72,7 @@ The argument doesn't need to be a String. If it's an int, for example, the frame
 ```dart
 @app.Route("/user/:username/:addressId")
 getAddress(String username, int addressId) {
-  ...
+  // ...
 };
 ```
 
@@ -85,7 +85,7 @@ Use the `@QueryParam` annotation to access a query parameter
 ```dart
 @app.Route("/user")
 getUser(@app.QueryParam("id") int userId) {
-  ...
+  // ...
 };
 ```
 
@@ -98,24 +98,24 @@ You can access the request body as a form, json or text
 ```dart
 @app.Route("/adduser", methods: const [app.POST])
 addUser(@app.Body(app.JSON) Map json) {
-  ...
+  // ...
 };
 ```
 
 ```dart
 @app.Route("/adduser", methods: const [app.POST])
 addUser(@app.Body(app.FORM) Map form) {
-  ...
+  // ...
 };
 ```
 
-For json and form, you can request the body as a `QueryMap`, which allows the use of the dot notation
+For json and form, you can request the body as a `DynamicMap`, which allows the use of the dot notation
 
 ```dart
 @app.Route("/adduser", methods: const [app.POST])
 addUser(@app.Body(app.JSON) QueryMap json) {
   var name = json.name;
-  ...
+  // ...
 };
 ```
 
@@ -153,7 +153,7 @@ addUser(@app.Body(app.FORM) Map form) {
   print(file.filename);
   print(file.contentType);
   print(file.content);
-  ...
+  // ...
 };
 ```
 
@@ -192,14 +192,14 @@ You can use the global `request` object to access the request's information and 
 @app.Route("/user", methods: const [app.GET, app.POST])
 user() {
   if (app.request.method == app.GET) {
-    ...
+    // ...
   } else if (app.request.method == app.POST) {
     
     if (app.request.bodyType == app.JSON) {
       var json = app.request.body;
-      ...
+      // ...
     } else {
-      ...
+      // ...
     }
   }
 };
@@ -212,7 +212,7 @@ Each request is tied to its own [Zone](https://www.dartlang.org/articles/zones/)
 Sometimes, you need to directly build a HTTP response, or inspect and modify a response created by another handler (a route, interceptor or error handler). For those cases, you can rely on the `response` object, which points to the last response created for the current request. Example:
 
 ```dart
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 
 @app.Interceptor(r'/.*')
 interceptor() {
@@ -227,7 +227,7 @@ interceptor() {
 Also, if you are building a response inside a **chain callback**, **route** or **error handler**, you can just return it:
 
 ```dart
-import 'package:redstone/server.dart' as app;
+import 'package:redstone/redstone.dart' as app;
 
 @app.Interceptor(r'/.*')
 interceptor() {
