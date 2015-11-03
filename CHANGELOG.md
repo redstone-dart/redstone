@@ -1,3 +1,11 @@
+##v0.6.0-beta.2
+
+**NOTE: this is a pre-release version!**
+
+* Updated test package dependency
+* Updated the https example with the new BoringSSL stuff. That means the `secureOptions` in the server.start() function
+takes a `#context` which is a `SecurityContext`. See `example/https.dart` for more usage example.
+
 ##v0.6.0-beta.1
 
 **NOTE: this is a pre-release version!**

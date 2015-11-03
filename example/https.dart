@@ -30,6 +30,8 @@ class ServicesGroup {
 main() {
   String localFile(path) => Platform.script.resolve(path).toFilePath();
 
+  // Using certificates generated in
+  // https://github.com/dart-lang/sdk/tree/master/tests/standalone/io/certificates
   SecurityContext serverContext = new SecurityContext()
     ..useCertificateChain(localFile('certificates/server_chain.pem'))
     ..usePrivateKey(localFile('certificates/server_key.pem'),
