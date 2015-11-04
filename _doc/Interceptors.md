@@ -40,6 +40,9 @@ handleCORS() async {
 }
 ```
 
+Here's another interceptor example. This one injects a new database connection object during the request, and closes it after
+the chain finishes.
+
 
 ```dart
 import 'package:redstone/redstone.dart' as app;
