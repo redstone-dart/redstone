@@ -1,3 +1,12 @@
+##v0.6.1
+
+### BREAKING CHANGE
+In this version, the minimum SDK version was bumped to 1.13.0 because of the [Boring SSL update.](http://news.dartlang.org/2015/09/dart-adopts-boringssl.html)
+
+* Updated dependencies
+* Upgraded tests with SSL to the new Boring SSL stuff.
+* Converted the documentation to 0.6.x
+
 ##v0.6.0-beta.2
 
 **NOTE: this is a pre-release version!**
