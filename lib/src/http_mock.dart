@@ -26,7 +26,7 @@ class MockHttpHeaders implements HttpHeaders {
     if (values != null) {
       try {
         return HttpDate.parse(values[0]);
-      } on Exception catch (e) {
+      } on Exception {
         return null;
       }
     }
@@ -44,7 +44,7 @@ class MockHttpHeaders implements HttpHeaders {
     if (values != null) {
       try {
         return HttpDate.parse(values[0]);
-      } on Exception catch (e) {
+      } on Exception {
         return null;
       }
     }
