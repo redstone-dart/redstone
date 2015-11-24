@@ -26,7 +26,7 @@ To install, set the `redstone: "^0.6.0+1"` constraint to your pubspec.
 
 ```yaml
 dependencies:
-  redstone: "^0.6.0+1"
+  redstone: "^0.6.1"
 ```
 The following plugins are also available for this version:
 
