@@ -1,24 +1,25 @@
 name: redstone
-version: 0.6.0+1
+version: 0.6.0+2
 authors:
   - Luiz Mineo <luiz.mineo@gmail.com>
   - Kenneth Endfinger <kaendfinger@gmail.com>
   - Austin Cummings <austincummings95@gmail.com>
   - Cristian Garcia <cgarcia.e88@gmail.com>
+  - Joel Trottier-Hebert <iamquebecois@gmail.com>
 description: A metadata driven microframework for Dart
 homepage: http://redstonedart.org
 environment:
-  sdk: '>=1.9.0-dev.9.1 <2.0.0'
+  sdk: '>=1.13.0-dev.7.4 <2.0.0'
 dependencies:
   collection: '>=0.9.4 <2.0.0'
   crypto: '>=0.9.0 <0.10.0'
   grinder: '>=0.7.0-dev <0.8.0'
   route_hierarchical: '>=0.6.1 <0.7.0'
   di: ">=3.3.1 <4.0.0"
-  shelf: ">=0.6.0 <0.7.0"
+  shelf: "^0.6.4"
   mime: ">=0.9.0+1 <0.10.0"
   http: ">=0.11.1+1 <0.12.0"
   stack_trace: ">=1.2.4 <2.0.0"
   http_server: ">=0.9.5+1 <0.10.0"
 dev_dependencies:
-  test: '^0.12.3'
+  test: '^0.12.5'

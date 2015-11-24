@@ -114,8 +114,11 @@ Future<HttpServer> start({address: _DEFAULT_ADDRESS, int port: _DEFAULT_PORT,
     redstoneLogger
         .info("Using a secure connection with options: $secureOptions");
     secureOptions[#shared] = shared;
+    SecurityContext context = secureOptions[#context];
+    secureOptions.remove(#context);
+
     server = await Function.apply(
-        HttpServer.bindSecure, [address, port], secureOptions);
+        HttpServer.bindSecure, [address, port, context], secureOptions);
   }
 
   server.autoCompress = autoCompress;
