@@ -1,3 +1,6 @@
+##v0.6.2
+Updated dependencies in order to update plugins.
+
 ##v0.6.1
 
 ### BREAKING CHANGE
