@@ -1,4 +1,3 @@
-
 # Redstone
 
 [![Join the chat at https://gitter.im/redstone-dart/redstone](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/redstone-dart/redstone?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Build Status](https://travis-ci.org/redstone-dart/redstone.svg?branch=v0.5)](https://travis-ci.org/redstone-dart/redstone)
@@ -22,11 +21,11 @@ main() {
 
 #### Installation
 
-To install, set the `redstone: "^0.6.0+1"` constraint to your pubspec.
+To install, set the `redstone: "^0.6.2"` constraint to your pubspec.
 
 ```yaml
 dependencies:
-  redstone: "^0.6.1"
+  redstone: "^0.6.2"
 ```
 The following plugins are also available for this version:
 
