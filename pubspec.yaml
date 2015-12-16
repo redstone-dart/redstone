@@ -1,5 +1,5 @@
 name: redstone
-version: 0.6.2
+version: 0.6.3
 authors:
   - Luiz Mineo <luiz.mineo@gmail.com>
   - Kenneth Endfinger <kaendfinger@gmail.com>
@@ -15,11 +15,13 @@ dependencies:
   crypto: "^0.9.1"
   grinder: "^0.8.0+1"
   route_hierarchical: "^0.6.2"
-  di: "^3.3.5+1"
   shelf: "^0.6.4+3"
   mime: "^0.9.3"
   http: "^0.11.3+3"
   stack_trace: "^1.5.0"
   http_server: "^0.9.5+1"
+dependency_overrides:
+  di:
+    git: https://github.com/Pacane/di.dart
 dev_dependencies:
   test: "^0.12.6+1"
