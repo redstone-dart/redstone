@@ -34,10 +34,10 @@ import 'package:your_package_name/services.dart';
 
 main() {
   //load handlers in 'services' library
-  setUp(() => app.setUp([#services]));
+  setUp(() => app.redstoneSetUp([#services]));
   
   //remove all loaded handlers
-  tearDown(() => app.tearDown());
+  tearDown(() => app.redstoneTearDown());
   
   test("hello service", () {
     //create a mock request
@@ -48,7 +48,7 @@ main() {
       expect(resp.statusCode, equals(200));
       expect(resp.mockContent, equals("hello, luiz"));
     });
-  })
+  });
   
 }
 ```
