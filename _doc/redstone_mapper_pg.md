@@ -106,7 +106,7 @@ It's also possible to inherit from `PostgreSqlService`:
 
 ```dart
 @app.Group("/services/users")
-Class UserService extends PostgreSqlService<User> {
+class UserService extends PostgreSqlService<User> {
   @app.Route("/list")
   @Encode()
   Future<List<User>> list() => query("select * from user");
