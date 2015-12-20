@@ -109,7 +109,7 @@ It's also possible to inherit from `MongoDbService`:
 
 ```dart
 @app.Group("/services/users")
-Class UserService extends MongoDbService<User> {
+class UserService extends MongoDbService<User> {
 
   UserService() : super("users");
 

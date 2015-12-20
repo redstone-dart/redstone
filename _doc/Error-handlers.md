@@ -9,7 +9,7 @@ Since the version 0.6, Redstone generates an error page whenever a response with
 or equal than 300, is returned. To prevent this behavior, set the `showErrorPage` flag to false.
 
 ```dart
-@app.showErrorPage = false;
+app.showErrorPage = false;
 ```
 
 The `@ErrorHandler` annotation is used to define an error handler:
