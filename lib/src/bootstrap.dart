@@ -118,7 +118,7 @@ Future<HttpServer> start({address: _DEFAULT_ADDRESS, int port: _DEFAULT_PORT,
     secureOptions.remove(#context);
 
     server = await Function.apply(
-        HttpServer.bindSecure, [address, port, context], secureOptions);
+        HttpServer.bindSecure, [address, port, context]);
   }
 
   server.autoCompress = autoCompress;
