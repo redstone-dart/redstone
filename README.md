@@ -22,11 +22,11 @@ main() {
 
 #### Installation
 
-To install, set the `redstone: "^0.6.2"` constraint to your pubspec.
+To install, set the `redstone: "^0.6.4"` constraint to your pubspec.
 
 ```yaml
 dependencies:
-  redstone: "^0.6.2"
+  redstone: "^0.6.4"
 ```
 The following plugins are also available for this version:
 
