@@ -1,3 +1,6 @@
+##v0.6.4
+Fixed a bug with HTTPS, where one could not start the server when using HTTPS.
+
 ##v0.6.3
 Updated dependencies in order to update plugins.
 
