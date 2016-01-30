@@ -102,8 +102,12 @@ void setShelfHandler(shelf.Handler handler) {
 ///
 /// When [secureOptions] is specified the server will use a secure https connection.
 /// [secureOptions] is a map of named arguments forwarded to [HttpServer.bindSecure].
-Future<HttpServer> start({String address: defaultAddress, int port: defaultPort,
-    bool autoCompress: false, bool shared: false, bool logSetUp: true,
+Future<HttpServer> start(
+    {String address: defaultAddress,
+    int port: defaultPort,
+    bool autoCompress: false,
+    bool shared: false,
+    bool logSetUp: true,
     Map<Symbol, dynamic> secureOptions}) async {
   await redstoneSetUp();
 
@@ -117,8 +121,8 @@ Future<HttpServer> start({String address: defaultAddress, int port: defaultPort,
     SecurityContext context = secureOptions[#context];
     secureOptions.remove(#context);
 
-    server = await Function.apply(
-        HttpServer.bindSecure, [address, port, context]);
+    server =
+        await Function.apply(HttpServer.bindSecure, [address, port, context]);
   }
 
   server.autoCompress = autoCompress;

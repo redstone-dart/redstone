@@ -45,8 +45,11 @@ class Route implements RequestTarget {
 
   final conv.Encoding encoding;
 
-  const Route(this.urlTemplate, {this.methods: const [GET], this.responseType,
-      this.statusCode: 200, this.allowMultipartRequest: false,
+  const Route(this.urlTemplate,
+      {this.methods: const [GET],
+      this.responseType,
+      this.statusCode: 200,
+      this.allowMultipartRequest: false,
       this.encoding: conv.UTF8});
 }
 
@@ -210,9 +213,13 @@ class DefaultRoute implements RequestTarget {
 
   final conv.Encoding encoding;
 
-  const DefaultRoute({this.pathSuffix, this.methods: const [GET],
-      this.responseType, this.statusCode: 200,
-      this.allowMultipartRequest: false, this.encoding: conv.UTF8});
+  const DefaultRoute(
+      {this.pathSuffix,
+      this.methods: const [GET],
+      this.responseType,
+      this.statusCode: 200,
+      this.allowMultipartRequest: false,
+      this.encoding: conv.UTF8});
 }
 
 /// An annotation to include handlers from other libraries

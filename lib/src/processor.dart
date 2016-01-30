@@ -331,7 +331,7 @@ class Processor implements Manager {
 
     return (RequestParser request) async {
       var positionalArgs = [];
-      var namedArgs = <Symbol, dynamic> {};
+      var namedArgs = <Symbol, dynamic>{};
 
       await paramsProcessor(request, positionalArgs, namedArgs);
 

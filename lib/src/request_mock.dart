@@ -27,11 +27,18 @@ import 'constants.dart';
 ///     });
 ///
 class MockRequest extends RequestParser {
-  factory MockRequest(String path, {String method: GET, String scheme: "http",
-      String host: "localhost", int port: 8080,
-      Map<String, dynamic> queryParameters, BodyType bodyType: BINARY,
-      dynamic body, String contentType, bool isMultipart: false,
-      Map<String, String> headers, Credentials basicAuth,
+  factory MockRequest(String path,
+      {String method: GET,
+      String scheme: "http",
+      String host: "localhost",
+      int port: 8080,
+      Map<String, dynamic> queryParameters,
+      BodyType bodyType: BINARY,
+      dynamic body,
+      String contentType,
+      bool isMultipart: false,
+      Map<String, String> headers,
+      Credentials basicAuth,
       HttpSession session}) {
     if (headers == null) {
       headers = <String, String>{};
@@ -67,7 +74,8 @@ class MockRequest extends RequestParser {
         scheme: scheme, host: host, port: port, path: path, query: query);
     Uri uri = new Uri(path: path);
     var httpRequest = new MockHttpRequest(
-        requestedUri, uri, method, _httpHeaders, bodyStream, session: session);
+        requestedUri, uri, method, _httpHeaders, bodyStream,
+        session: session);
 
     return new MockRequest.fromMockRequest(httpRequest);
   }

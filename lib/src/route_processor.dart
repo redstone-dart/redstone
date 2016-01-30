@@ -34,9 +34,12 @@ class RouteProcessor implements Function {
       owner = routeMetadata.library.mirror;
     }
 
-    _paramsProcessor = new ParametersProcessor(routeMetadata.name,
-        routeMetadata.mirror.parameters, injector,
-        routeMetadata.parameterProviders, _urlHandler);
+    _paramsProcessor = new ParametersProcessor(
+        routeMetadata.name,
+        routeMetadata.mirror.parameters,
+        injector,
+        routeMetadata.parameterProviders,
+        _urlHandler);
 
     _paramsProcessor
       ..addDefaultMetadataHandlers()
@@ -77,13 +80,14 @@ class RouteProcessor implements Function {
   void _createInvoker() {
     _invoker = (Injector injector, Request req) async {
       var positionalArgs = [];
-      var namedArgs = <Symbol, dynamic> {};
+      var namedArgs = <Symbol, dynamic>{};
 
       await _paramsProcessor(req, positionalArgs, namedArgs);
 
       try {
-        return await owner.invoke(routeMetadata.mirror.simpleName,
-            positionalArgs, namedArgs).reflectee;
+        return await owner
+            .invoke(routeMetadata.mirror.simpleName, positionalArgs, namedArgs)
+            .reflectee;
       } on ErrorResponse catch (e) {
         return e;
       }
@@ -97,7 +101,6 @@ class RouteProcessor implements Function {
   }
 
   void _verifyRequest(Request req) {
-
     //verify method
     if (!routeMetadata.conf.methods.contains(req.method)) {
       throw new RequestException(routeMetadata.name,

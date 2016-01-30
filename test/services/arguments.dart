@@ -10,41 +10,47 @@ Map pathArgs(String arg1, int arg2,
     {"arg1": arg1, "arg2": arg2, "arg3": arg3, "arg4": arg4, "arg5": arg5};
 
 @Route("/named_args/:arg1/:arg2")
-Map namedPathArgs(String arg1, {String arg2, String arg3, String arg4: "arg4"}) =>
+Map namedPathArgs(String arg1,
+        {String arg2, String arg3, String arg4: "arg4"}) =>
     {"arg1": arg1, "arg2": arg2, "arg3": arg3, "arg4": arg4};
 
 @Route("/query_args")
 Map queryArgs(@QueryParam("arg1") String arg1, @QueryParam("arg2") int arg2,
-    [@QueryParam() double arg3, @QueryParam("arg4") String arg4,
-    @QueryParam("arg5") String arg5 = "arg5", String arg6,
-    String arg7 = "arg7"]) => {
-  "arg1": arg1,
-  "arg2": arg2,
-  "arg3": arg3,
-  "arg4": arg4,
-  "arg5": arg5,
-  "arg6": arg6,
-  "arg7": arg7
-};
+        [@QueryParam() double arg3,
+        @QueryParam("arg4") String arg4,
+        @QueryParam("arg5") String arg5 = "arg5",
+        String arg6,
+        String arg7 = "arg7"]) =>
+    {
+      "arg1": arg1,
+      "arg2": arg2,
+      "arg3": arg3,
+      "arg4": arg4,
+      "arg5": arg5,
+      "arg6": arg6,
+      "arg7": arg7
+    };
 
 @Route("/query_args_with_num")
-Map queryArgsWithNum(@QueryParam("arg1") num arg1,
-                 @QueryParam("arg2") num arg2) => {
-  "arg1": arg1,
-  "arg2": arg2
-};
+Map queryArgsWithNum(
+        @QueryParam("arg1") num arg1, @QueryParam("arg2") num arg2) =>
+    {"arg1": arg1, "arg2": arg2};
 
 @Route("/named_query_args")
-Map namedQueryArgs(@QueryParam() String arg1, {@QueryParam() String arg2,
-    @QueryParam("arg3") String arg3, @QueryParam("arg4") String arg4: "arg4",
-    String arg5, String arg6: "arg6"}) => {
-  "arg1": arg1,
-  "arg2": arg2,
-  "arg3": arg3,
-  "arg4": arg4,
-  "arg5": arg5,
-  "arg6": arg6
-};
+Map namedQueryArgs(@QueryParam() String arg1,
+        {@QueryParam() String arg2,
+        @QueryParam("arg3") String arg3,
+        @QueryParam("arg4") String arg4: "arg4",
+        String arg5,
+        String arg6: "arg6"}) =>
+    {
+      "arg1": arg1,
+      "arg2": arg2,
+      "arg3": arg3,
+      "arg4": arg4,
+      "arg5": arg5,
+      "arg6": arg6
+    };
 
 @Route("/path_query_args/:arg")
 Map pathAndQueryArgs(String arg, @QueryParam("arg") String qArg) =>

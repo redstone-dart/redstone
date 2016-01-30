@@ -21,8 +21,12 @@ class ServerContext {
   final ShelfContext shelfContext;
   final Injector injector;
 
-  ServerContext(this.serverMetadata, this.routeInvokers,
-      this.interceptorInvokers, this.errorHandlerInvokers, this.shelfContext,
+  ServerContext(
+      this.serverMetadata,
+      this.routeInvokers,
+      this.interceptorInvokers,
+      this.errorHandlerInvokers,
+      this.shelfContext,
       this.injector);
 }
 
