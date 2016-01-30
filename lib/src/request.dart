@@ -9,7 +9,6 @@ import 'constants.dart';
 
 /// The request information and content.
 abstract class Request {
-
   /// The original [Uri] for the request.
   Uri get requestedUri;
 
@@ -67,7 +66,6 @@ abstract class Request {
 /// A handler can be a route, interceptor, error handler, shelf middleware
 /// or shelf handler.
 abstract class Chain {
-
   /// Returns the last error thrown by a handler
   /// (an interceptor, route, error handler or shelf handler)
   dynamic get error;

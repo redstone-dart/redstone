@@ -9,7 +9,8 @@ import 'package:shelf/shelf.dart' as shelf;
 String wrongMethod() => "this route accepts only POST requests";
 
 @Route("/wrong_type", methods: const [POST])
-String wrongType(@Body(JSON) Map json) => "This route accepts only JSON content";
+String wrongType(@Body(JSON) Map json) =>
+    "This route accepts only JSON content";
 
 @Route("/wrong_value/:value")
 int wrongParam(int value) => value;

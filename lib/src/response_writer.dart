@@ -14,7 +14,9 @@ import 'request.dart';
 import 'request_context.dart';
 
 Future<shelf.Response> writeResponse(String handlerName, dynamic response,
-    {int statusCode: 200, String responseType, Injector injector,
+    {int statusCode: 200,
+    String responseType,
+    Injector injector,
     List<ResponseProcessorMetadata> responseProcessors: const []}) async {
   if (statusCode == null) {
     statusCode = 200;
@@ -31,8 +33,10 @@ Future<shelf.Response> writeResponse(String handlerName, dynamic response,
     response = response.error;
   }
 
-  await Future.forEach(responseProcessors, (p) async => response =
-      await p.processor(p.metadata, handlerName, response, injector));
+  await Future.forEach(
+      responseProcessors,
+      (p) async => response =
+          await p.processor(p.metadata, handlerName, response, injector));
 
   if (response == null) {
     return new shelf.Response(statusCode);

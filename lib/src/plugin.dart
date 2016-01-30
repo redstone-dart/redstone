@@ -17,7 +17,6 @@ typedef dynamic RedstonePlugin(Manager manager);
 ///
 /// To access a [Manager] instance, you need to create and register a [RedstonePlugin].
 abstract class Manager {
-
   /// The server metadata, which contains all routes, interceptors,
   /// error handlers and groups that composes this application.
   ServerMetadata get serverMetadata;

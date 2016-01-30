@@ -53,7 +53,8 @@ class Scanner {
   LibraryMetadata _scanLibrary(LibraryMirror mirror, [Install conf]) {
     var dependencies = [];
     mirror.libraryDependencies
-        .where((d) => d.isImport &&
+        .where((d) =>
+            d.isImport &&
             _libCache.add(d.targetLibrary.simpleName) &&
             !blacklistSet.contains(d.targetLibrary.simpleName))
         .forEach((d) {
@@ -75,7 +76,9 @@ class Scanner {
       }
     });
 
-    LibraryMetadata lib = new LibraryMetadata(conf, mirror,
+    LibraryMetadata lib = new LibraryMetadata(
+        conf,
+        mirror,
         mirror.metadata.map((m) => m.reflectee).toList(growable: false),
         dependencies);
 

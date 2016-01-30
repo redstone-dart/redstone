@@ -104,8 +104,8 @@ class ParametersProcessor implements Function {
         }
       }
 
-      var processor = (Request request, List positionalArgs,
-          Map namedArgs) async {
+      var processor =
+          (Request request, List positionalArgs, Map namedArgs) async {
         var value = await argHandler(request, converter);
         if (value == null) {
           value = defaultValue;

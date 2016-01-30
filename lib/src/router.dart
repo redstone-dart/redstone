@@ -110,8 +110,8 @@ class Router {
       return completer.future.then((shelf.Response response) {
         redstoneLogger.fine(
             "Request for ${req.url} returned status ${response.statusCode}");
-        return response.change(
-            headers: const {HttpHeaders.SERVER: serverSignature});
+        return response
+            .change(headers: const {HttpHeaders.SERVER: serverSignature});
       });
     };
   }
@@ -190,10 +190,13 @@ class Router {
 
     _serverCtx.serverMetadata.errorHandlers
         .where((e) => e.library == null)
-        .forEach((e) => _errorHandlerMapBuilder.add(e.conf.statusCode,
-            new _ErrorHandler(e.conf.urlPattern != null
-                ? new RegExp(e.conf.urlPattern)
-                : null, _serverCtx.errorHandlerInvokers[e])));
+        .forEach((e) => _errorHandlerMapBuilder.add(
+            e.conf.statusCode,
+            new _ErrorHandler(
+                e.conf.urlPattern != null
+                    ? new RegExp(e.conf.urlPattern)
+                    : null,
+                _serverCtx.errorHandlerInvokers[e])));
   }
 
   void _getTargets(String pathPrefix, LibraryMetadata lib) {
@@ -277,9 +280,12 @@ class Router {
       if (logSetUp) {
         redstoneLogger.info("Configured interceptor for $url : ${i.name}");
       }
-      return new _Interceptor(new RegExp(url), []
-        ..addAll(chainIdxByLevel)
-        ..add(i.conf.chainIdx), _serverCtx.interceptorInvokers[i]);
+      return new _Interceptor(
+          new RegExp(url),
+          []
+            ..addAll(chainIdxByLevel)
+            ..add(i.conf.chainIdx),
+          _serverCtx.interceptorInvokers[i]);
     }).toList();
 
     lib.groups.forEach((g) {
@@ -290,9 +296,12 @@ class Router {
           redstoneLogger.info("Configured interceptor for $url : ${i.name}"
               " (group: ${g.name})");
         }
-        return new _Interceptor(new RegExp(url), []
-          ..addAll(chainIdxByLevel)
-          ..add(i.conf.chainIdx), _serverCtx.interceptorInvokers[i]);
+        return new _Interceptor(
+            new RegExp(url),
+            []
+              ..addAll(chainIdxByLevel)
+              ..add(i.conf.chainIdx),
+            _serverCtx.interceptorInvokers[i]);
       }));
     });
 
@@ -313,9 +322,10 @@ class Router {
             "${e.name}");
       }
 
-      _errorHandlerMapBuilder.add(e.conf.statusCode, new _ErrorHandler(
-          pattern != null ? new RegExp(pattern) : null,
-          _serverCtx.errorHandlerInvokers[e]));
+      _errorHandlerMapBuilder.add(
+          e.conf.statusCode,
+          new _ErrorHandler(pattern != null ? new RegExp(pattern) : null,
+              _serverCtx.errorHandlerInvokers[e]));
     });
 
     lib.groups.forEach((g) {
@@ -325,12 +335,14 @@ class Router {
             e.conf.urlPattern == null ? r"/.*" : e.conf.urlPattern;
         handlerPattern = _joinUrl(pattern, handlerPattern);
         if (logSetUp) {
-          redstoneLogger.info(
-              "Configured error handler for status ${e.conf.statusCode} "
-              "$handlerPattern : ${e.name} (group: ${g.name})");
+          redstoneLogger
+              .info("Configured error handler for status ${e.conf.statusCode} "
+                  "$handlerPattern : ${e.name} (group: ${g.name})");
         }
-        _errorHandlerMapBuilder.add(e.conf.statusCode, new _ErrorHandler(
-            new RegExp(handlerPattern), _serverCtx.errorHandlerInvokers[e]));
+        _errorHandlerMapBuilder.add(
+            e.conf.statusCode,
+            new _ErrorHandler(new RegExp(handlerPattern),
+                _serverCtx.errorHandlerInvokers[e]));
       });
     });
   }
@@ -447,10 +459,12 @@ class _ChainImpl implements Chain {
   Future<shelf.Response> forward(String url,
       {Map<String, String> headers}) async {
     var req = currentContext.request;
-    var newUrl = url.startsWith('/') ? req.requestedUri.resolve(url) : Uri.parse(_joinUrl(req.requestedUri.toString(), url));
+    var newUrl = url.startsWith('/')
+        ? req.requestedUri.resolve(url)
+        : Uri.parse(_joinUrl(req.requestedUri.toString(), url));
     var shelfReqCtx = new Map.from(req.attributes);
-    var newReq = new shelf.Request("GET", newUrl
-      ,headers: headers, context: shelfReqCtx);
+    var newReq = new shelf.Request("GET", newUrl,
+        headers: headers, context: shelfReqCtx);
 
     return _forwardShelfHandler(newReq);
   }
@@ -460,8 +474,11 @@ class _ChainImpl implements Chain {
     return next();
   }
 
-  Future<shelf.Response> _handleError([Object err, StackTrace stack,
-      int statusCode = 500, bool generatePage = false]) async {
+  Future<shelf.Response> _handleError(
+      [Object err,
+      StackTrace stack,
+      int statusCode = 500,
+      bool generatePage = false]) async {
     statusCode = statusCode != null ? statusCode : 500;
 
     if (stack != null) {
@@ -502,7 +519,9 @@ class _ChainImpl implements Chain {
           stack = currentContext.lastStackTrace;
         }
         shelf.Response resp = await writeErrorPage(
-            currentContext.request.shelfRequest.requestedUri.path, err, stack,
+            currentContext.request.shelfRequest.requestedUri.path,
+            err,
+            stack,
             statusCode);
         currentContext.response = resp;
       }
@@ -524,8 +543,8 @@ class _ChainImpl implements Chain {
 
   void _findTarget() {
     for (_Target target in _targets) {
-      UrlMatch match =
-          target.template.match(currentContext.request.shelfRequest.requestedUri.path);
+      UrlMatch match = target.template
+          .match(currentContext.request.shelfRequest.requestedUri.path);
       if (match != null && match.tail.isEmpty) {
         var urlParameters = {};
         match.parameters.forEach((String key, String value) {
