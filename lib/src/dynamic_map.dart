@@ -12,11 +12,11 @@ import 'package:collection/collection.dart' show DelegatingMap, DelegatingList;
 ///      DynamicMap map = new DynamicMap({"key": "value"});
 ///      print(map.key); //prints 'value'
 @proxy
-class DynamicMap<K, V> extends DelegatingMap {
-  DynamicMap(Map<K, V> map) : super(map);
+class DynamicMap<String, V> extends DelegatingMap {
+  DynamicMap(Map<String, V> map) : super(map);
 
   ///Retrieve a value from this map
-  V get(K key, [V defaultValue]) {
+  V get(String key, [V defaultValue]) {
     if (containsKey(key)) {
       var value = this[key];
       if (value is! DynamicMap && value is Map) {

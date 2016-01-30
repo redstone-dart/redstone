@@ -6,47 +6,48 @@ import 'package:redstone/redstone.dart';
 import 'package:shelf/shelf.dart' as shelf;
 
 @Route("/target")
-target() => "target_executed";
+String target() => "target_executed";
 
 @Interceptor("/target", chainIdx: 0)
-interceptor1() async {
-  await chain.next();
-  return response.readAsString().then((resp) =>
-      new shelf.Response.ok("before_interceptor1|$resp|after_interceptor1"));
+Future<shelf.Response> interceptor1() async {
+  var response = await chain.next();
+  var responseString = await response.readAsString();
+  return new shelf.Response.ok(
+      "before_interceptor1|$responseString|after_interceptor1");
 }
 
 @Interceptor("/target", chainIdx: 1)
-interceptor2() async {
-  await chain.next();
-  return response.readAsString().then((resp) =>
-      new shelf.Response.ok("before_interceptor2|$resp|after_interceptor2"));
+Future<shelf.Response> interceptor2() async {
+  var response = await chain.next();
+  var responseString = await response.readAsString();
+  return new shelf.Response.ok(
+      "before_interceptor2|$responseString|after_interceptor2");
 }
 
 @Route("/interrupt")
-target2() => "not_reached";
+String target2() => "not_reached";
 
 @Interceptor("/interrupt")
-interceptor3() {
-  return chain.createResponse(401, responseValue: "chain_interrupted");
-}
+Future<shelf.Response> interceptor3() =>
+    chain.createResponse(401, responseValue: "chain_interrupted");
 
 @Route("/redirect")
-target3() => "not_reached";
+String target3() => "not_reached";
 
 @Interceptor("/redirect")
-interceptor4() => redirect("/new_path");
+shelf.Response interceptor4() => redirect("/new_path");
 
 @Route("/abort")
-target4() => "not_reached";
+String target4() => "not_reached";
 
 @Interceptor("/abort")
-interceptor5() => abort(401);
+Future<shelf.Response> interceptor5() => abort(401);
 
 @Route("/basicauth_data")
-target6() => "basic_auth";
+String target6() => "basic_auth";
 
 @Interceptor("/basicauth_data")
-interceptor7() {
+Future<shelf.Response> interceptor7() {
   var authInfo = request.parseAuthorizationHeader();
   if (authInfo.username == "Aladdin" && authInfo.password == "open sesame") {
     return chain.next();
@@ -56,9 +57,9 @@ interceptor7() {
 }
 
 @Interceptor("/parse_body", parseRequestBody: true)
-interceptor8() {
+Future<shelf.Response> interceptor8() {
   return chain.next();
 }
 
 @Route("/parse_body")
-target8() => "target_executed";
+String target8() => "target_executed";

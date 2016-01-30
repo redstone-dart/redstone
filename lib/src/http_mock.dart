@@ -57,7 +57,7 @@ class MockHttpHeaders implements HttpHeaders {
     _set("date", formatted);
   }
 
-  set contentType(ContentType type) {
+  void set contentType(ContentType type) {
     if (_contentType == null && _headers["content-type"] == null) {
       _contentType = type;
       set("content-type", type.value);
@@ -195,7 +195,7 @@ class MockHttpResponse implements HttpResponse {
     return completer.future;
   }
 
-  void addError(error, [StackTrace stackTrace]) {
+  void addError(dynamic error, [StackTrace stackTrace]) {
     // doesn't seem to be hit...hmm...
   }
 
@@ -256,7 +256,7 @@ class MockHttpRequest extends Stream<List<int>> implements HttpRequest {
   }
 
   @override
-  StreamSubscription listen(void onData(event),
+  StreamSubscription<List<int>> listen(void onData(List<int> event),
       {Function onError, void onDone(), bool cancelOnError}) {
     return body.listen(onData,
         onError: onError, onDone: onDone, cancelOnError: cancelOnError);

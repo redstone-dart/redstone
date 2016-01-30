@@ -1,18 +1,18 @@
 library https_test;
 
 import "dart:io";
-import "package:path/path.dart";
 import "package:redstone/redstone.dart";
 import "package:shelf/shelf.dart" as shelf;
+import 'dart:async';
 
 @Route("/")
-helloWorld() => "Hello, World!";
+String helloWorld() => "Hello, World!";
 
 @Route("/user/:username")
-getUsername(String username) => ">> $username";
+String getUsername(String username) => ">> $username";
 
 @Interceptor(r"/user/.+")
-doge() async {
+Future<shelf.Response> doge() async {
   await chain.next();
   String user = await response.readAsString();
   return new shelf.Response.ok("wow! such user!\n\n$user\n\nso smart!");
@@ -21,14 +21,14 @@ doge() async {
 @Group("/group")
 class ServicesGroup {
   @Route("/json", methods: const [POST])
-  echoJson(@Body(JSON) Map json) => json;
+  Map echoJson(@Body(JSON) Map json) => json;
 
   @Route("/form", methods: const [POST])
-  echoFormAsJson(@Body(FORM) Map form) => form;
+  Map echoFormAsJson(@Body(FORM) Map form) => form;
 }
 
-main() {
-  String localFile(path) => Platform.script.resolve(path).toFilePath();
+void main() {
+  String localFile(String path) => Platform.script.resolve(path).toFilePath();
 
   // Using certificates generated in
   // https://github.com/dart-lang/sdk/tree/master/tests/standalone/io/certificates
@@ -37,7 +37,10 @@ main() {
     ..usePrivateKey(localFile('certificates/server_key.pem'),
         password: 'dartdart');
 
-  var secureOptions = {#certificateName: "CN=RedStone", #context: serverContext};
+  var secureOptions = <Symbol, dynamic>{
+    #certificateName: "CN=RedStone",
+    #context: serverContext
+  };
 
   setupConsoleLog();
   // Start a secure server (https) on default host / port using the RedStone certificate

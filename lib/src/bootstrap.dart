@@ -17,8 +17,8 @@ import 'logger.dart';
 import 'request_mock.dart';
 import 'http_mock.dart';
 
-const String _DEFAULT_ADDRESS = "0.0.0.0";
-const int _DEFAULT_PORT = 8080;
+const String defaultAddress = "0.0.0.0";
+const int defaultPort = 8080;
 
 List<Module> _modules = [];
 List<RedstonePlugin> _plugins = [];
@@ -102,7 +102,7 @@ void setShelfHandler(shelf.Handler handler) {
 ///
 /// When [secureOptions] is specified the server will use a secure https connection.
 /// [secureOptions] is a map of named arguments forwarded to [HttpServer.bindSecure].
-Future<HttpServer> start({address: _DEFAULT_ADDRESS, int port: _DEFAULT_PORT,
+Future<HttpServer> start({String address: defaultAddress, int port: defaultPort,
     bool autoCompress: false, bool shared: false, bool logSetUp: true,
     Map<Symbol, dynamic> secureOptions}) async {
   await redstoneSetUp();

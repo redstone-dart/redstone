@@ -34,7 +34,7 @@ class Scanner {
     Iterable<LibraryMirror> mirrors;
 
     if (libraries != null) {
-      mirrors = libraries.map((s) => mirrorSystem.findLibrary(s));
+      mirrors = libraries.map((Symbol s) => mirrorSystem.findLibrary(s));
     } else {
       mirrors = [mirrorSystem.isolate.rootLibrary];
     }
@@ -177,7 +177,7 @@ class Scanner {
 }
 
 //do not scan the following libraries
-const BLACKLIST = const [
+const List<Symbol> blacklist = const [
   #dart.core,
   #dart.async,
   #dart.collection,
@@ -196,4 +196,4 @@ const BLACKLIST = const [
   #dart.web_sql
 ];
 
-Set<Symbol> blacklistSet = new Set<Symbol>.from(BLACKLIST);
+Set<Symbol> blacklistSet = new Set<Symbol>.from(blacklist);

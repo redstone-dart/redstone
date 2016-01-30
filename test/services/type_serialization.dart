@@ -8,28 +8,28 @@ import 'package:redstone/redstone.dart';
 import 'package:shelf/shelf.dart' as shelf;
 
 @Route("/types/string")
-stringType() => "string";
+String stringType() => "string";
 
 @Route("/types/map")
-mapType() => {"key1": "value1", "key2": "value2"};
+Map mapType() => {"key1": "value1", "key2": "value2"};
 
 @Route("/types/list")
-listType() => ["value1", "value2", "value3"];
+List<String> listType() => ["value1", "value2", "value3"];
 
 @Route("/types/null")
-nullType() => null;
+Null nullType() => null;
 
 @Route("/types/future")
-futureType() => new Future(() => mapType());
+Future futureType() => new Future(() => mapType());
 
 @Route("/types/other")
-otherType() => new _OtherType();
+_OtherType otherType() => new _OtherType();
 
 @Route("/types/file")
-fileType() => new _MockFile();
+File fileType() => new _MockFile();
 
 @Route("/types/shelf_response")
-shelfResponse() => new shelf.Response.ok("target_executed");
+shelf.Response shelfResponse() => new shelf.Response.ok("target_executed");
 
 class _OtherType {
   String toString() => "other_type";

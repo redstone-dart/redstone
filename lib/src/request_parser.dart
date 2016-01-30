@@ -53,7 +53,7 @@ class RequestParser implements Request {
   conv.Encoding encoding = conv.UTF8;
 
   @override
-  get body => _body;
+  dynamic get body => _body;
 
   @override
   BodyType get bodyType {
@@ -126,7 +126,7 @@ class RequestParser implements Request {
   @override
   shelf.Request get shelfRequest => _shelfRequest;
 
-  set shelfRequest(shelf.Request shelfRequest) {
+  void set shelfRequest(shelf.Request shelfRequest) {
     if (this.shelfRequest == null) {
       _attributes = new DynamicMap({}..addAll(shelfRequest.context));
     }
@@ -248,5 +248,5 @@ class _HttpHeaders implements HttpHeaders {
     return headers[name];
   }
 
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
