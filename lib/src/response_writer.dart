@@ -123,7 +123,7 @@ shelf.Response writeErrorPage(String resource, Object error,
     <p><b>Resource: </b> $resource</p>
 
     <div class="info" style="display:${error != null ? "block" : "none"}">
-      <pre>${error}${formattedStack != null ? "\n\n" + formattedStack : ""}</pre>
+      <pre>$error - ${formattedStack != null ? "\n\n" + formattedStack : ""}</pre>
     </div>
   </div>
   <div class="footer">Redstone Server - 2015 - <a href="https://github.com/redstone-dart">https://github.com/redstone-dart</a></div>

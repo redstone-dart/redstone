@@ -31,7 +31,7 @@ typedef dynamic ResponseProcessor(
     dynamic metadata, String handlerName, Object response, Injector injector);
 
 /// Handler types
-enum HandlerType { ROUTE, INTERCEPTOR, ERROR_HANDLER }
+enum HandlerType { route, interceptor, errorHandler }
 
 /// The base metadata class for handlers
 class HandlerMetadata<T, M> {
@@ -58,7 +58,8 @@ class HandlerMetadata<T, M> {
     }
   }
 
-  operator ==(other) => other is HandlerMetadata && other.id == id;
+  bool operator ==(HandlerMetadata other) =>
+      other is HandlerMetadata && other.id == id;
 
   int get hashCode => id;
 }
@@ -84,7 +85,6 @@ class LibraryMetadata extends HandlerMetadata<Install, LibraryMirror>
 /// Provides access for installed routes, interceptors,
 /// error handlers and groups that composes an application.
 class ApplicationMetadata {
-
   /// Returns the installed routes.
   ///
   /// This list contains routes which are bound to top level
@@ -118,16 +118,19 @@ class ApplicationMetadata {
 
 /// Metadata of the current application
 class ServerMetadata extends ApplicationMetadata {
-
   /// Returns the metadata of loaded libraries
   final List<LibraryMetadata> rootLibraries;
 
   /// Returns all libraries loaded by Redstone
   final List<LibraryMirror> loadedLibraries;
 
-  ServerMetadata(this.rootLibraries, this.loadedLibraries,
-      List<RouteMetadata> routes, List<InterceptorMetadata> interceptors,
-      List<ErrorHandlerMetadata> errorHandlers, List<GroupMetadata> groups)
+  ServerMetadata(
+      this.rootLibraries,
+      this.loadedLibraries,
+      List<RouteMetadata> routes,
+      List<InterceptorMetadata> interceptors,
+      List<ErrorHandlerMetadata> errorHandlers,
+      List<GroupMetadata> groups)
       : super(routes, interceptors, errorHandlers, groups);
 }
 

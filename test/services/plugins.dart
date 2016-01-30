@@ -4,6 +4,7 @@ import 'dart:mirrors';
 
 import 'package:redstone/redstone.dart';
 import 'package:shelf/shelf.dart' as shelf;
+import 'dart:async';
 
 //plugin - parameter provider
 
@@ -11,7 +12,7 @@ class FromJson {
   const FromJson();
 }
 
-FromJsonPlugin(Manager manager) {
+void fromJsonPlugin(Manager manager) {
   manager.addParameterProvider(FromJson,
       (metadata, type, handlerName, paramName, req, injector) {
     if (req.bodyType != JSON) {
@@ -31,20 +32,20 @@ class User {
   String name;
   String username;
 
-  fromJson(Map json) {
+  void fromJson(Map json) {
     name = json["name"];
     username = json["username"];
   }
 
-  toJson() {
+  Map toJson() {
     return {"name": name, "username": username};
   }
 
-  toString() => "name: $name username: $username";
+  String toString() => "name: $name username: $username";
 }
 
 @Route("/user", methods: const [POST])
-printUser(@FromJson() User user) => user.toString();
+String printUser(@FromJson() User user) => user.toString();
 
 //plugin - response processor
 
@@ -52,7 +53,7 @@ class ToJson {
   const ToJson();
 }
 
-ToJsonPlugin(Manager manager) {
+void toJsonPlugin(Manager manager) {
   manager.addResponseProcessor(ToJson,
       (metadata, handlerName, value, injector) {
     if (value == null) {
@@ -66,7 +67,7 @@ ToJsonPlugin(Manager manager) {
 
 @Route("/user/find")
 @ToJson()
-returnUser() {
+User returnUser() {
   var user = new User();
   user.name = "name";
   user.username = "username";
@@ -75,7 +76,7 @@ returnUser() {
 
 //plugin - add routes, interceptors and error handlers
 
-TestPlugin(Manager manager) {
+void testPlugin(Manager manager) {
   Route route = new Route("/route/:arg");
   Interceptor interceptor = new Interceptor("/route/.+");
 
@@ -111,7 +112,7 @@ class Wrap {
   const Wrap([this.msg = "response"]);
 }
 
-WrapperPlugin(Manager manager) {
+void wrapperPlugin(Manager manager) {
   manager.addRouteWrapper(Wrap, (Wrap wrap, injector, request, route) async {
     var resp = await route(injector, request);
 
@@ -123,35 +124,33 @@ WrapperPlugin(Manager manager) {
 
 @Route("/test_wrapper")
 @Wrap()
-testWrapper() => "target executed";
+String testWrapper() => "target executed";
 
 @Group("/test_group_wrapper")
 @Wrap()
 class TestGroupWrapper {
   @Route("/test_wrapper")
-  testWrapper() => "target executed";
+  String testWrapper() => "target executed";
 }
 
 @Group("/test_method_wrapper")
 class TestMethodWrapper {
   @Route("/test_wrapper")
   @Wrap()
-  testWrapper() => "target executed";
+  String testWrapper() => "target executed";
 }
 
 @Group('/test_wrapper')
 class TestRedirectWrapper {
   @Route("/redirect")
   @Wrap("REDIRECT")
-  testWrapperRedirect() => chain.forward('/test_wrapper/b');
+  Future<shelf.Response> testWrapperRedirect() =>
+      chain.forward('/test_wrapper/b');
 
   @Route("/b")
   @Wrap("response")
-  testWrapperB() => "target executed";
+  String testWrapperB() => "target executed";
 }
-
-
-
 
 //test scanning
 
@@ -180,11 +179,11 @@ class CapturedType {
 
   CapturedType.fromValues(this.typeName, this.metadata);
 
-  operator ==(other) {
+  bool operator ==(CapturedType other) {
     return other is CapturedType &&
         other.typeName == typeName &&
         other.metadata == metadata;
   }
 
-  toString() => "@${metadata} $typeName";
+  String toString() => "@$metadata $typeName";
 }

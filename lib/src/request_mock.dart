@@ -34,12 +34,12 @@ class MockRequest extends RequestParser {
       Map<String, String> headers, Credentials basicAuth,
       HttpSession session}) {
     if (headers == null) {
-      headers = {};
+      headers = <String, String>{};
     }
     var bodyStream =
         _handleBody(bodyType, body, contentType, isMultipart, headers);
 
-    var hValues = {};
+    var hValues = <String, List<String>>{};
     headers.forEach((k, v) => hValues[k] = [v]);
 
     if (basicAuth != null) {
@@ -109,7 +109,9 @@ class MockHttpSession extends DelegatingMap implements HttpSession {
 
   bool get isNew => false;
 
-  set isNew(bool value) => isNew = value;
+  void set isNew(bool value) {
+    isNew = value;
+  }
 }
 
 Stream<List<int>> _handleBody(BodyType bodyType, dynamic body,

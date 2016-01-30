@@ -1,5 +1,6 @@
 library install_lib;
 
+import 'dart:async';
 import 'package:redstone/redstone.dart';
 import 'package:shelf/shelf.dart' as shelf;
 
@@ -11,12 +12,11 @@ import 'install/install_interceptors.dart';
 import 'install/ignore.dart';
 
 @Interceptor("/chain/.+")
-interceptorRoot() async {
-  await chain.next();
-  return response
-      .readAsString()
-      .then((resp) => new shelf.Response.ok("root $resp"));
+Future<shelf.Response> interceptorRoot() async {
+  var response = await chain.next();
+  String responseString = await response.readAsString();
+  return new shelf.Response.ok("root $responseString");
 }
 
 @Route("/chain/route")
-route() => "target ";
+String route() => "target ";

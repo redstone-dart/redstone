@@ -77,7 +77,7 @@ class RouteProcessor implements Function {
   void _createInvoker() {
     _invoker = (Injector injector, Request req) async {
       var positionalArgs = [];
-      var namedArgs = {};
+      var namedArgs = <Symbol, dynamic> {};
 
       await _paramsProcessor(req, positionalArgs, namedArgs);
 

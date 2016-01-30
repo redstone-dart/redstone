@@ -15,17 +15,17 @@ typedef dynamic ArgHandler(Request request, Converter converter);
 typedef ArgHandler ParamHandler(String handlerName, Injector injector,
     Object metadata, ParameterMirror mirror);
 
-const ParamHandler ATTRIBUTE_HANDLER = const AttributeHandler();
-const ParamHandler DI_HANDLER = const DiHandler();
+const ParamHandler attributeHandler = const AttributeHandler();
+const ParamHandler diHandler = const DiHandler();
 
-final intType = reflectClass(int);
-final doubleType = reflectClass(double);
-final numType = reflectClass(num);
-final boolType = reflectClass(bool);
-final stringType = reflectClass(String);
-final listType = reflectClass(List);
-final dynamicType = reflectType(dynamic);
-final voidType = currentMirrorSystem().voidType;
+final ClassMirror intType = reflectClass(int);
+final ClassMirror doubleType = reflectClass(double);
+final ClassMirror numType = reflectClass(num);
+final ClassMirror boolType = reflectClass(bool);
+final ClassMirror stringType = reflectClass(String);
+final ClassMirror listType = reflectClass(List);
+final dynamic dynamicType = reflectType(dynamic);
+final ClassMirror voidType = currentMirrorSystem().voidType;
 
 /// A [ParametersProcessor] is responsible for
 /// mapping request information (such as query parameters,
@@ -51,8 +51,8 @@ class ParametersProcessor implements Function {
   }
 
   void addDefaultMetadataHandlers() {
-    _metadataHandlers[Attr] = ATTRIBUTE_HANDLER;
-    _metadataHandlers[Inject] = DI_HANDLER;
+    _metadataHandlers[Attr] = attributeHandler;
+    _metadataHandlers[Inject] = diHandler;
   }
 
   void addMetadataHandler(Type type, ParamHandler handler) {
@@ -77,7 +77,7 @@ class ParametersProcessor implements Function {
 
       var metadata = null;
       var argHandler = null;
-      if (!param.metadata.isEmpty) {
+      if (param.metadata.isNotEmpty) {
         metadata = param.metadata[0].reflectee;
         var metadataProcessor = _metadataHandlers[metadata.runtimeType];
 

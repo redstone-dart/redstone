@@ -40,7 +40,7 @@ abstract class Manager {
   /// the parameter's value. [handlerTypes] are the handler types that can use
   /// this provider, and defaults to ROUTE.
   void addParameterProvider(Type metadataType, ParamProvider parameterProvider,
-      {List<HandlerType> handlerTypes: const [HandlerType.ROUTE]});
+      {List<HandlerType> handlerTypes: const [HandlerType.route]});
 
   /// Create a new response processor.
   ///

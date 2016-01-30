@@ -11,7 +11,7 @@ import 'package:redstone/redstone.dart';
 import 'package:shelf/shelf.dart' as shelf;
 import 'package:logging/logging.dart';
 
-import 'services/routes.dart';
+import 'services/routes.dart' as yo;
 import 'services/type_serialization.dart';
 import 'services/arguments.dart';
 import 'services/errors.dart';
@@ -21,7 +21,7 @@ import 'services/install_lib.dart';
 import 'services/plugins.dart';
 import 'services/inspect.dart';
 
-main() {
+void main() {
   showErrorPage = false;
   //setupConsoleLog(Level.ALL);
 
@@ -156,59 +156,65 @@ main() {
     test("path parameters", () async {
       var req = new MockRequest("/args/arg/1/1.2");
       var resp = await dispatch(req);
-      expect(conv.JSON.decode(resp.mockContent), equals({
-        "arg1": "arg",
-        "arg2": 1,
-        "arg3": 1.2,
-        "arg4": null,
-        "arg5": "arg5"
-      }));
+      expect(
+          conv.JSON.decode(resp.mockContent),
+          equals({
+            "arg1": "arg",
+            "arg2": 1,
+            "arg3": 1.2,
+            "arg4": null,
+            "arg5": "arg5"
+          }));
     });
 
     test("path parameters with named arguments", () async {
       var req = new MockRequest("/named_args/arg1/arg2");
       var resp = await dispatch(req);
-      expect(conv.JSON.decode(resp.mockContent), equals(
-          {"arg1": "arg1", "arg2": "arg2", "arg3": null, "arg4": "arg4"}));
+      expect(
+          conv.JSON.decode(resp.mockContent),
+          equals(
+              {"arg1": "arg1", "arg2": "arg2", "arg3": null, "arg4": "arg4"}));
     });
 
     test("query parameters", () async {
       var req = new MockRequest("/query_args",
           queryParameters: {"arg1": "arg1", "arg2": "1", "arg3": "1.2"});
       var resp = await dispatch(req);
-      expect(conv.JSON.decode(resp.mockContent), equals({
-        "arg1": "arg1",
-        "arg2": 1,
-        "arg3": 1.2,
-        "arg4": null,
-        "arg5": "arg5",
-        "arg6": null,
-        "arg7": "arg7"
-      }));
+      expect(
+          conv.JSON.decode(resp.mockContent),
+          equals({
+            "arg1": "arg1",
+            "arg2": 1,
+            "arg3": 1.2,
+            "arg4": null,
+            "arg5": "arg5",
+            "arg6": null,
+            "arg7": "arg7"
+          }));
     });
 
     test("query parameters with num type", () async {
       var req = new MockRequest("/query_args_with_num",
           queryParameters: {"arg1": "1", "arg2": "1.5"});
       var resp = await dispatch(req);
-      expect(conv.JSON.decode(resp.mockContent), equals({
-        "arg1": 1,
-        "arg2": 1.5,
-      }));
+      expect(conv.JSON.decode(resp.mockContent),
+          equals({"arg1": 1, "arg2": 1.5,}));
     });
 
     test("query parameters with named arguments", () async {
       var req = new MockRequest("/named_query_args",
           queryParameters: {"arg1": "arg1", "arg2": "arg2"});
       var resp = await dispatch(req);
-      expect(conv.JSON.decode(resp.mockContent), equals({
-        "arg1": "arg1",
-        "arg2": "arg2",
-        "arg3": null,
-        "arg4": "arg4",
-        "arg5": null,
-        "arg6": "arg6"
-      }));
+      expect(
+          conv.JSON.decode(resp.mockContent),
+          equals({
+            "arg1": "arg1",
+            "arg2": "arg2",
+            "arg3": null,
+            "arg4": "arg4",
+            "arg5": null,
+            "arg6": "arg6"
+          }));
     });
 
     test("path and query parameters", () async {
@@ -223,16 +229,24 @@ main() {
       var req = new MockRequest("/json/arg1",
           method: POST, bodyType: JSON, body: {"key": "value"});
       var resp = await dispatch(req);
-      expect(conv.JSON.decode(resp.mockContent),
-          equals({"arg": "arg1", "json": {"key": "value"}}));
+      expect(
+          conv.JSON.decode(resp.mockContent),
+          equals({
+            "arg": "arg1",
+            "json": {"key": "value"}
+          }));
     });
 
     test("request content as FORM", () async {
       var req = new MockRequest("/form/arg1",
           method: POST, bodyType: FORM, body: {"key": "value"});
       var resp = await dispatch(req);
-      expect(conv.JSON.decode(resp.mockContent),
-          equals({"arg": "arg1", "form": {"key": "value"}}));
+      expect(
+          conv.JSON.decode(resp.mockContent),
+          equals({
+            "arg": "arg1",
+            "form": {"key": "value"}
+          }));
     });
 
     test("request content as TEXT", () async {
@@ -245,7 +259,11 @@ main() {
 
     test("request content as JSON using DynamicMap", () async {
       var req = new MockRequest("/jsonDynamicMap",
-          method: POST, bodyType: JSON, body: {"key": {"innerKey": "value"}});
+          method: POST,
+          bodyType: JSON,
+          body: {
+            "key": {"innerKey": "value"}
+          });
       var resp = await dispatch(req);
       expect(conv.JSON.decode(resp.mockContent), equals({"key": "value"}));
     });
@@ -339,8 +357,10 @@ main() {
       var req2 = new MockRequest("/parse_body");
 
       var resp = await dispatch(req);
-      expect(resp.mockContent, equals(
-          "before_interceptor1|before_interceptor2|target_executed|after_interceptor2|after_interceptor1"));
+      expect(
+          resp.mockContent,
+          equals(
+              "before_interceptor1|before_interceptor2|target_executed|after_interceptor2|after_interceptor1"));
       resp = await dispatch(req2);
       expect(resp.mockContent, equals("target_executed"));
       expect(resp.statusCode, equals(200));
@@ -376,10 +396,7 @@ main() {
 
   group("dependency injection:", () {
     setUp(() {
-      addModule(new Module()
-        ..bind(A)
-        ..bind(B)
-        ..bind(C));
+      addModule(new Module()..bind(A)..bind(B)..bind(C));
       return redstoneSetUp([#dependency_injection]);
     });
     tearDown(redstoneTearDown);
@@ -424,8 +441,10 @@ main() {
     test("Chain", () async {
       var req = new MockRequest("/chain/route");
       var resp = await dispatch(req);
-      expect(resp.mockContent, equals(
-          "root interceptor_1 interceptor_2 interceptor_3 interceptor_4 target "));
+      expect(
+          resp.mockContent,
+          equals(
+              "root interceptor_1 interceptor_2 interceptor_3 interceptor_4 target "));
     });
 
     test("@Ignore", () async {
@@ -437,10 +456,10 @@ main() {
 
   group("Plugins:", () {
     setUp(() {
-      addPlugin(FromJsonPlugin);
-      addPlugin(ToJsonPlugin);
-      addPlugin(TestPlugin);
-      addPlugin(WrapperPlugin);
+      addPlugin(fromJsonPlugin);
+      addPlugin(toJsonPlugin);
+      addPlugin(testPlugin);
+      addPlugin(wrapperPlugin);
       return redstoneSetUp([#plugins]);
     });
     tearDown(redstoneTearDown);
@@ -483,7 +502,8 @@ main() {
     test("Route wrapper", () async {
       var reqFunctionWrapper = new MockRequest("/test_wrapper");
       var reqGroupWrapper = new MockRequest("/test_group_wrapper/test_wrapper");
-      var reqMethodWrapper = new MockRequest("/test_method_wrapper/test_wrapper");
+      var reqMethodWrapper =
+          new MockRequest("/test_method_wrapper/test_wrapper");
       var reqRedirectWrapper = new MockRequest("/test_wrapper/redirect");
 
       var resp = await dispatch(reqFunctionWrapper);
@@ -549,7 +569,7 @@ main() {
       var setInterceptors;
       var setErrorHandlers;
 
-      void extractMetadata(serverMetadata) {
+      void extractMetadata(ServerMetadata serverMetadata) {
         setRoutes = new Set();
         setInterceptors = new Set();
         setErrorHandlers = new Set();
@@ -565,9 +585,23 @@ main() {
         });
       }
 
-      var expectedRoutes = new Set()
-        ..add("/route1")
-        ..add("/route2");
+      void extractGroupMetadata(GroupMetadata groupMetadata) {
+        setRoutes = new Set();
+        setInterceptors = new Set();
+        setErrorHandlers = new Set();
+
+        groupMetadata.routes.forEach((r) {
+          setRoutes.add(r.conf.urlTemplate);
+        });
+        groupMetadata.interceptors.forEach((i) {
+          setInterceptors.add(i.conf.urlPattern);
+        });
+        groupMetadata.errorHandlers.forEach((e) {
+          setErrorHandlers.add(e.conf.statusCode);
+        });
+      }
+
+      var expectedRoutes = new Set()..add("/route1")..add("/route2");
       var expectedInterceptors = new Set()..add("/interceptor");
       var expectedErrorHandlers = new Set()..add(333);
 
@@ -582,7 +616,7 @@ main() {
           expect(manager.serverMetadata.groups.length, equals(1));
 
           var groupMetadata = manager.serverMetadata.groups[0];
-          extractMetadata(groupMetadata);
+          extractGroupMetadata(groupMetadata);
 
           expect(setRoutes, equals(expectedRoutes));
           expect(setInterceptors, equals(expectedInterceptors));
@@ -602,14 +636,14 @@ main() {
     tearDown(redstoneTearDown);
 
     test("Middlewares", () async {
-      addShelfMiddleware(shelf.createMiddleware(
-          responseHandler: (shelf.Response resp) {
+      addShelfMiddleware(
+          shelf.createMiddleware(responseHandler: (shelf.Response resp) {
         return resp
             .readAsString()
             .then((value) => new shelf.Response.ok("middleware_1 $value"));
       }));
-      addShelfMiddleware(shelf.createMiddleware(
-          responseHandler: (shelf.Response resp) {
+      addShelfMiddleware(
+          shelf.createMiddleware(responseHandler: (shelf.Response resp) {
         return resp
             .readAsString()
             .then((value) => new shelf.Response.ok("middleware_2 $value"));

@@ -5,7 +5,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:shelf/shelf.dart' as shelf;
-import 'package:shelf/shelf_io.dart' as shelfIo;
+import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:route_hierarchical/url_template.dart';
 import 'package:route_hierarchical/url_matcher.dart';
 import 'package:stack_trace/stack_trace.dart' as st;
@@ -56,7 +56,7 @@ class Router {
   Future dispatchRequest(RequestParser request) async {
     var ctx = new RequestContext(request);
     return runZoned(
-        () => shelfIo.handleRequest(request.httpRequest, _shelfHandler),
+        () => shelf_io.handleRequest(request.httpRequest, _shelfHandler),
         zoneValues: {REQUEST_CONTEXT_KEY: ctx});
   }
 
@@ -211,7 +211,7 @@ class Router {
 
       if (logSetUp) {
         redstoneLogger.info(
-            "Configured target for ${url} ${route.conf.methods}: ${route.name}");
+            "Configured target for $url ${route.conf.methods}: ${route.name}");
       }
       _targetListBuilder.add(_getContextUrl(pathPrefix), urlTemplate,
           route.conf.methods, _serverCtx.routeInvokers[route]);
@@ -237,7 +237,7 @@ class Router {
         urlTemplate = new UrlTemplate(url);
         if (logSetUp) {
           redstoneLogger.info(
-              "Configured target for ${url} ${route.conf.methods}: ${route.name}"
+              "Configured target for $url ${route.conf.methods}: ${route.name}"
               " (group: ${group.name})");
         }
         _targetListBuilder.add(contextUrl, urlTemplate, route.conf.methods,
@@ -261,7 +261,7 @@ class Router {
 
         if (logSetUp) {
           redstoneLogger.info(
-              "Configured target for ${url} ${route.conf.methods}: ${route.name}"
+              "Configured target for $url ${route.conf.methods}: ${route.name}"
               " (group: ${group.name})");
         }
         _targetListBuilder.add(_getContextUrl(contextUrl), urlTemplate,

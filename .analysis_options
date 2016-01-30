@@ -6,9 +6,9 @@ linter:
     - camel_case_types
     - empty_constructor_bodies
     - always_declare_return_types
-    - avoid_as
+#    - avoid_as
     - camel_case_types
-    - constant_identifier_names
+#    - constant_identifier_names
     - empty_constructor_bodies
     - implementation_imports
     - library_names
