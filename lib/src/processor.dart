@@ -16,7 +16,7 @@ import 'response_writer.dart';
 import 'parameters_processor.dart';
 import 'request_parser.dart';
 
-/// An processor is responsible for creating
+/// A processor is responsible for creating
 /// and managing handlers (routes, interceptors, error handlers
 /// and groups). It's also responsible for plugins execution.
 class Processor implements Manager {
@@ -218,7 +218,7 @@ class Processor implements Manager {
 
   @override
   Iterable<AnnotatedType<MethodMirror>> findFunctions(Type annotation) {
-    var functions = [];
+    var functions = <AnnotatedType>[];
     _findDeclaredFunctions().forEach((MethodMirror f) {
       var metadata = f.metadata.firstWhere(
           (m) => m.reflectee.runtimeType == annotation,

@@ -4,7 +4,6 @@ import 'dart:async';
 import 'dart:io';
 import 'package:shelf/shelf.dart' as shelf;
 
-import 'dynamic_map.dart';
 import 'constants.dart';
 
 /// The request information and content.
@@ -22,14 +21,14 @@ abstract class Request {
   String get method;
 
   /// Returns a list of query parameters
-  DynamicMap<String, List<String>> get queryParameters;
+  Map<String, List<String>> get queryParameters;
 
   /// Returns a map of parameters in the URL
   ///
   /// This map is populated only when a route is called.
   /// The map's keys are the named paremeters defined in the
   /// URL template of the route.
-  DynamicMap<String, String> get urlParameters;
+  Map<String, String> get urlParameters;
 
   /// The body type, such as 'JSON', 'TEXT' or 'FORM'
   BodyType get bodyType;
@@ -43,7 +42,7 @@ abstract class Request {
   dynamic get body;
 
   /// The headers of the request
-  DynamicMap get headers;
+  Map get headers;
 
   /// The session for the given request (read-only).
   HttpSession get session;
@@ -52,7 +51,7 @@ abstract class Request {
   ///
   /// Attributes are objects that can be shared between
   /// interceptors and routes
-  DynamicMap get attributes;
+  Map get attributes;
 
   /// The original Shelf request
   shelf.Request get shelfRequest;

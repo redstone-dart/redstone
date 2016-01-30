@@ -1,5 +1,3 @@
-library server_tests;
-
 import 'dart:convert' as conv;
 import 'dart:async';
 import 'dart:mirrors';

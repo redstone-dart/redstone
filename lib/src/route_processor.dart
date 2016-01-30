@@ -14,7 +14,6 @@ import 'server_metadata.dart';
 import 'parameters_processor.dart';
 import 'metadata.dart';
 import 'response_writer.dart';
-import 'dynamic_map.dart';
 import 'constants.dart';
 
 class RouteProcessor implements Function {
@@ -134,8 +133,8 @@ class RouteProcessor implements Function {
     }
     _bodyType = body.type;
 
-    if (mirror.type.reflectedType == DynamicMap) {
-      return (Request req, _) => new DynamicMap({}..addAll(req.body));
+    if (mirror.type.reflectedType == Map) {
+      return (Request req, _) => new Map.from({}..addAll(req.body));
     } else {
       return (Request req, _) => req.body;
     }

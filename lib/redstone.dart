@@ -1,7 +1,6 @@
 library redstone;
 
 export 'src/bootstrap.dart';
-export 'src/dynamic_map.dart';
 export 'src/logger.dart';
 export 'src/metadata.dart';
 export 'src/constants.dart';

@@ -16,7 +16,6 @@ import 'request_context.dart';
 import 'request.dart';
 import 'request_parser.dart';
 import 'response_writer.dart';
-import 'dynamic_map.dart';
 import 'logger.dart';
 import 'bootstrap.dart';
 
@@ -553,7 +552,7 @@ class _ChainImpl implements Chain {
           }
           urlParameters[key] = value;
         });
-        currentContext.request.urlParameters = new DynamicMap(urlParameters);
+        currentContext.request.urlParameters = new Map.from(urlParameters);
         _reqTarget = target;
         return;
       }

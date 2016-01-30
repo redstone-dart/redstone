@@ -1,3 +1,8 @@
+##v0.7
+Cleaned up much of the code.
+### BREAKING CHANGES:
+- `DynamicMap` is gone in favor of a regular `Map`.
+
 ##v0.6.4
 Fixed a bug with HTTPS, where one could not start the server when using HTTPS.
 Updated dependencies

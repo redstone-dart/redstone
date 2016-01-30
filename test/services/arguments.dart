@@ -70,8 +70,8 @@ String attr(@Attr() String name, String arg, {@Attr() int value: 0}) =>
     "$name $arg $value";
 
 @Route("/jsonDynamicMap", methods: const [POST])
-DynamicMap jsonBodyDynamicMap(@Body(JSON) DynamicMap json) =>
-    new DynamicMap({"key": json.key.innerKey});
+Map jsonBodyMap(@Body(JSON) Map json) =>
+    new Map.from({"key": json['key']['innerKey']});
 
 @Interceptor("/attr/.+")
 Future<shelf.Response> interceptorAttr() {
