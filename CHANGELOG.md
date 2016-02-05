@@ -1,14 +1,17 @@
-##v0.6.4
-Fixed a bug with HTTPS, where one could not start the server when using HTTPS.
-Updated dependencies
+## v0.6.4
 
-##v0.6.3
-Updated dependencies in order to update plugins.
+* Fixed a bug with HTTPS, where one could not start the server when using HTTPS.
+* Updated dependencies
 
-##v0.6.2
-Updated dependencies in order to update plugins.
+## v0.6.3
 
-##v0.6.1
+* Updated dependencies in order to update plugins.
+
+## v0.6.2
+
+* Updated dependencies in order to update plugins.
+
+## v0.6.1
 
 ### BREAKING CHANGE
 In this version, the minimum SDK version was bumped to 1.13.0 because of the [Boring SSL update.](http://news.dartlang.org/2015/09/dart-adopts-boringssl.html)
@@ -17,7 +20,7 @@ In this version, the minimum SDK version was bumped to 1.13.0 because of the [Bo
 * Upgraded tests with SSL to the new Boring SSL stuff.
 * Converted the documentation to 0.6.x
 
-##v0.6.0-beta.2
+## v0.6.0-beta.2
 
 **NOTE: this is a pre-release version!**
 
@@ -25,7 +28,7 @@ In this version, the minimum SDK version was bumped to 1.13.0 because of the [Bo
 * Updated the https example with the new BoringSSL stuff. That means the `secureOptions` in the server.start() function
 takes a `#context` which is a `SecurityContext`. See `example/https.dart` for more usage example.
 
-##v0.6.0-beta.1
+## v0.6.0-beta.1
 
 **NOTE: this is a pre-release version!**
 
@@ -34,14 +37,14 @@ takes a `#context` which is a `SecurityContext`. See `example/https.dart` for mo
 * Added the `request.handlerPath` property (see [shelf.Request.handlerPath](http://www.dartdocs.org/documentation/shelf/0.6.0/index.html#shelf/shelf.Request@id_handlerPath))
 * Bug fixes. 
 
-##v0.6.0-alpha.3
+## v0.6.0-alpha.3
 
 **NOTE: this is a pre-release version!**
 
 * Added new constants for the commons http methods. [#80](https://github.com/luizmineo/redstone.dart/issues/80)
 * Added the `shared` and `logSetUp` optional parameters to the `start()` function
 
-##v0.6.0-alpha.2
+## v0.6.0-alpha.2
 
 **NOTE: this is a pre-release version!**
 
@@ -50,11 +53,12 @@ takes a `#context` which is a `SecurityContext`. See `example/https.dart` for mo
 * Fix support for websocket connections
 * Fix code comments to match the new API
 
-##v0.6.0-alpha.1
+## v0.6.0-alpha.1
 
 **NOTE: this is a pre-release version!**
 
 * **Version highlights:**
+
     * Fully rewritten from scratch! (The code base now has a better library layout, which is easier to maintain and evolve)
     * Polished API (see breaking changes)
     * Added the `chain.forward()` function, which allows routes, interceptors and error handlers to internally dispatch a request to another resource
@@ -62,6 +66,7 @@ takes a `#context` which is a `SecurityContext`. See `example/https.dart` for mo
     * Better support for `async/await` (see breaking changes)
 
 * **BREAKING CHANGES:**
+
     * Renamed `redstone/server.dart` to `redstone/redstone.dart`
     * Renamed `QueryMap` to `DynamicMap`
     * Removed `Route.matchSubPaths` property (`route_hierarchical` supports this by default now)
@@ -100,7 +105,7 @@ handleCORS() async {
     * Update plugins (redstone_mapper and redstone_web_socket aren't compatible with this version yet)
     * Improve documentation and website
 
-##v0.5.19
+## v0.5.19
 * Fix: Error when setting `Intereptor.parseRequestBody = true` (Thanks to [platelk](https://github.com/platelk). See PR [#46](https://github.com/luizmineo/redstone.dart/pull/46)).
 
 ## v0.5.18
