@@ -30,7 +30,7 @@ main() {
 }
 ```
 
-See the [`https.dart`](https://github.com/luizmineo/redstone.dart/blob/master/example/https.dart) for a working example.
+See the [`https.dart`](https://github.com/redstone-dart/redstone/blob/v0.6/example/https.dart) for a working example.
 
 ## Static Files
 
