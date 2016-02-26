@@ -27,6 +27,8 @@ class RequestParser implements Request {
 
   Credentials _credentials = null;
 
+  final List<String> _skipParseOnMethods = ['GET'];
+
   RequestParser(this.httpRequest);
 
   Future parseBody() async {
@@ -34,7 +36,7 @@ class RequestParser implements Request {
       _parseBodyType();
     }
 
-    if (_body == null) {
+    if (_body == null && !_skipParseOnMethods.contains(this.httpRequest.method)) {
       var httpBody = await HttpBodyHandlerImpl.process(_shelfRequest.read(),
           new _HttpHeaders(headers, _contentType), encoding);
 
