@@ -1,3 +1,6 @@
+## v0.6.5
+Bug fix: http_body_parser tries to parse body of GET Requests
+
 ## v0.6.4
 
 * Fixed a bug with HTTPS, where one could not start the server when using HTTPS.
