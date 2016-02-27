@@ -355,6 +355,7 @@ void main() {
     test("interceptors", () async {
       var req = new MockRequest("/target");
       var req2 = new MockRequest("/parse_body");
+      var parsebodyget = new MockRequest("/parse_body", contentType: 'application/json', body: null );
 
       var resp = await dispatch(req);
       expect(
@@ -364,6 +365,9 @@ void main() {
       resp = await dispatch(req2);
       expect(resp.mockContent, equals("target_executed"));
       expect(resp.statusCode, equals(200));
+
+      resp = await dispatch(parsebodyget);
+      expect(resp.mockContent, equals("target_executed"));
     });
 
     test("interrupt", () async {

@@ -57,7 +57,7 @@ Future<shelf.Response> interceptor7() {
 }
 
 @Interceptor("/parse_body", parseRequestBody: true)
-Future<shelf.Response> interceptor8() {
+Future<shelf.Response> interceptor8(@Body(JSON) Map form) {
   return chain.next();
 }
 
