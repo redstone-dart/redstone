@@ -74,7 +74,7 @@ adminFilter() {
   if (app.request.session["username"] != null) {
     return app.chain.next();
   } else {
-    return app.chain.interrupt(statusCode: HttpStatus.UNAUTHORIZED);
+    return app.chain.abort(HttpStatus.UNAUTHORIZED);
     //or app.chain.redirect("/login.html");
   }
 }
