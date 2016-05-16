@@ -18,7 +18,6 @@ import 'request_parser.dart';
 import 'response_writer.dart';
 import 'dynamic_map.dart';
 import 'logger.dart';
-import 'bootstrap.dart';
 
 const String serverSignature = "dart:io with Redstone.dart/Shelf";
 
@@ -664,7 +663,7 @@ class _ErrorHandlerMapBuilder {
   }
 
   Map<int, List<_ErrorHandler>> build() {
-    var map = {};
+    var map = <int, List<_ErrorHandler>>{};
     errorHandlers.forEach((status, errorHandlerList) {
       map[status] = errorHandlerList
         ..sort((e1, e2) {

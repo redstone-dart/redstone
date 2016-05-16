@@ -6,7 +6,6 @@ import 'dart:convert' as conv;
 
 import 'package:shelf/shelf.dart' as shelf;
 import 'package:http_server/src/http_body_impl.dart';
-import 'package:crypto/crypto.dart';
 
 import 'constants.dart';
 import 'dynamic_map.dart';
@@ -93,7 +92,7 @@ class RequestParser implements Request {
       List<String> tokens = authorization.split(" ");
       if ("Basic" == tokens[0]) {
         String auth =
-            conv.UTF8.decode(CryptoUtils.base64StringToBytes(tokens[1]));
+            conv.UTF8.decode(conv.BASE64.decode(tokens[1]));
         int idx = auth.indexOf(":");
         if (idx > 0) {
           String username = auth.substring(0, idx);
@@ -195,7 +194,8 @@ class RequestParser implements Request {
   }
 
   void _splitQueryString() {
-    var params = url.query.split("&").fold({}, (map, element) {
+    Map<String,List<String>> params = url.query.split("&").fold({}, (map,
+        element) {
       int index = element.indexOf("=");
       if (index == -1) {
         if (element != "") {

@@ -58,7 +58,7 @@ class HandlerMetadata<T, M> {
     }
   }
 
-  bool operator ==(HandlerMetadata other) =>
+  bool operator ==(dynamic other) =>
       other is HandlerMetadata && other.id == id;
 
   int get hashCode => id;
