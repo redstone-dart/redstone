@@ -1,3 +1,7 @@
+## v0.6.6
+Drop package:crypto. Update other package dependencies and fix some strong-mode issues.
+Also fixes definitions of == and hashCode.
+
 ## v0.6.5
 Bug fix: http_body_parser tries to parse body of GET Requests
 
