@@ -4,8 +4,6 @@ import 'dart:io';
 import 'dart:convert' as conv;
 import 'dart:async';
 
-import 'package:crypto/crypto.dart';
-
 import 'package:collection/collection.dart' show DelegatingMap;
 import 'package:http/http.dart' as http;
 import 'package:http/src/utils.dart';
@@ -50,7 +48,7 @@ class MockRequest extends RequestParser {
     headers.forEach((k, v) => hValues[k] = [v]);
 
     if (basicAuth != null) {
-      String auth = CryptoUtils.bytesToBase64(
+      String auth = conv.BASE64.encode(
           conv.UTF8.encode("${basicAuth.username}:${basicAuth.password}"));
       hValues[HttpHeaders.AUTHORIZATION] = ["Basic $auth"];
     }

@@ -51,7 +51,7 @@ class Scanner {
   }
 
   LibraryMetadata _scanLibrary(LibraryMirror mirror, [Install conf]) {
-    var dependencies = [];
+    var dependencies = <LibraryMetadata>[];
     mirror.libraryDependencies
         .where((d) =>
             d.isImport &&
@@ -145,10 +145,10 @@ class Scanner {
     var metadata =
         mirror.metadata.map((m) => m.reflectee).toList(growable: false);
 
-    var defaultRoutes = [];
-    var routes = [];
-    var interceptors = [];
-    var errorHandlers = [];
+    var defaultRoutes = <DefaultRouteMetadata>[];
+    var routes = <RouteMetadata>[];
+    var interceptors = <InterceptorMetadata>[];
+    var errorHandlers = <ErrorHandlerMetadata>[];
 
     for (DeclarationMirror declaration in mirror.declarations.values) {
       if (declaration is MethodMirror) {

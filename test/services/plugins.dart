@@ -59,7 +59,7 @@ void toJsonPlugin(Manager manager) {
     if (value == null) {
       return value;
     }
-    return value.toJson();
+    return (value as dynamic).toJson();
   });
 }
 
@@ -179,10 +179,16 @@ class CapturedType {
 
   CapturedType.fromValues(this.typeName, this.metadata);
 
-  bool operator ==(CapturedType other) {
+  bool operator ==(dynamic other) {
     return other is CapturedType &&
         other.typeName == typeName &&
         other.metadata == metadata;
+  }
+
+  int get hashCode {
+    int a = typeName == null ? 0 : typeName.hashCode;
+    int b = metadata == null ? 0 : metadata.hashCode;
+    return (a & 0x1fffffff) + (b & 0x1fffffff);
   }
 
   String toString() => "@$metadata $typeName";

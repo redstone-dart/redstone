@@ -33,15 +33,16 @@ class DynamicMap<String, V> extends DelegatingMap {
     return null;
   }
 
-  noSuchMethod(Invocation invocation) {
+  dynamic noSuchMethod(Invocation invocation) {
     var key = MirrorSystem.getName(invocation.memberName);
     if (invocation.isGetter) {
       return get(key);
     } else if (invocation.isSetter) {
       this[key.substring(0, key.length - 1)] =
           invocation.positionalArguments.first;
+      return null;
     } else {
-      super.noSuchMethod(invocation);
+      return super.noSuchMethod(invocation);
     }
   }
 }

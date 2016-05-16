@@ -186,7 +186,7 @@ class Processor implements Manager {
   @override
   Iterable<AnnotatedType<MethodMirror>> findMethods(
       ClassMirror clazz, Type annotation) {
-    var methods = [];
+    var methods = <AnnotatedType<MethodMirror>>[];
     clazz.instanceMembers.values.forEach((MethodMirror method) {
       var metadata = method.metadata.firstWhere(
           (m) => m.reflectee.runtimeType == annotation,
@@ -202,7 +202,7 @@ class Processor implements Manager {
 
   @override
   Iterable<AnnotatedType<ClassMirror>> findClasses(Type annotation) {
-    var classes = [];
+    var classes = <AnnotatedType<ClassMirror>>[];
     _findDeclaredClasses().forEach((ClassMirror c) {
       var metadata = c.metadata.firstWhere(
           (m) => m.reflectee.runtimeType == annotation,
@@ -218,7 +218,7 @@ class Processor implements Manager {
 
   @override
   Iterable<AnnotatedType<MethodMirror>> findFunctions(Type annotation) {
-    var functions = [];
+    var functions = <AnnotatedType<MethodMirror>>[];
     _findDeclaredFunctions().forEach((MethodMirror f) {
       var metadata = f.metadata.firstWhere(
           (m) => m.reflectee.runtimeType == annotation,
