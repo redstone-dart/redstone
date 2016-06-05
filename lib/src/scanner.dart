@@ -151,7 +151,7 @@ class Scanner {
     var errorHandlers = <ErrorHandlerMetadata>[];
 
     var current = mirror;
-    var visited = [];
+    var visited = <Symbol>[];
     while (current != null) {
       for (DeclarationMirror declaration in current.declarations.values) {
         if (declaration is MethodMirror && !visited.contains(declaration.simpleName)) {
