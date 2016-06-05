@@ -150,20 +150,26 @@ class Scanner {
     var interceptors = <InterceptorMetadata>[];
     var errorHandlers = <ErrorHandlerMetadata>[];
 
-    for (DeclarationMirror declaration in mirror.declarations.values) {
-      if (declaration is MethodMirror) {
-        declaration.metadata.map((m) => m.reflectee).forEach((conf) {
-          if (conf is DefaultRoute) {
-            defaultRoutes.add(_loadDefaultRoutes(lib, declaration, conf));
-          } else if (conf is Route) {
-            routes.add(_loadRoute(lib, declaration, conf));
-          } else if (conf is Interceptor) {
-            interceptors.add(_loadInterceptor(lib, declaration, conf));
-          } else if (conf is ErrorHandler) {
-            errorHandlers.add(_loadErrorHandlers(lib, declaration, conf));
-          }
-        });
+    var current = mirror;
+    var visited = [];
+    while (current != null) {
+      for (DeclarationMirror declaration in current.declarations.values) {
+        if (declaration is MethodMirror && !visited.contains(declaration.simpleName)) {
+          visited.add(declaration.simpleName);
+          declaration.metadata.map((m) => m.reflectee).forEach((conf) {
+            if (conf is DefaultRoute) {
+              defaultRoutes.add(_loadDefaultRoutes(lib, declaration, conf));
+            } else if (conf is Route) {
+              routes.add(_loadRoute(lib, declaration, conf));
+            } else if (conf is Interceptor) {
+              interceptors.add(_loadInterceptor(lib, declaration, conf));
+            } else if (conf is ErrorHandler) {
+              errorHandlers.add(_loadErrorHandlers(lib, declaration, conf));
+            }
+          });
+        }
       }
+      current = current.superclass;
     }
 
     return new GroupMetadata(lib, conf, mirror, metadata, defaultRoutes, routes,
