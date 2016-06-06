@@ -79,7 +79,7 @@ $ export DART_SDK=(path to dart-sdk)
 $ dart tool/grind.dart all
 ```
 
-##DartVoid
+## DartVoid
 
 If you plan to deploy your app at [DartVoid](http://www.dartvoid.com/), you won't need a build script, since DartVoid will manage the deploy for you.
 
@@ -89,7 +89,7 @@ DartVoid already provides a set of app templates built with several frameworks, 
 * [Guestbook](https://github.com/DartVoid/Redstone-Guestbook)
 * [Todo List](https://github.com/DartVoid/Redstone-Angular-Todo)
 
-##Heroku
+## Heroku
 
 You can easily deploy Dart applications to [Heroku](https://www.heroku.com/), using the new 
 [cedar-14](https://blog.heroku.com/archives/2014/8/19/cedar-14-public-beta) stack, 

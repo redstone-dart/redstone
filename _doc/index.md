@@ -6,7 +6,7 @@ next: Installation
 ---
 Redstone.dart is a server-side, metadata driven microframework for [Dart](https://www.dartlang.org/). 
 
-####How does it work?
+#### How does it work?
 Redstone.dart allows you to easily publish your functions and classes through a web interface, by just adding some annotations to them. 
 
 ```dart
