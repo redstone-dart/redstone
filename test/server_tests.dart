@@ -37,16 +37,16 @@ void main() {
       var req5 = new MockRequest("/change_status_code");
 
       var resp = await dispatch(req);
-      expect(resp.mockContent, equals("sub_route"));
+      expect(resp.mockContent, "sub_route");
       resp = await dispatch(req2);
-      expect(resp.mockContent, equals("main_route"));
+      expect(resp.mockContent, "main_route");
       resp = await dispatch(req3);
-      expect(resp.statusCode, equals(404));
+      expect(resp.statusCode, 404);
       resp = await dispatch(req4);
-      expect(resp.mockContent, equals("sub/path"));
+      expect(resp.mockContent, "sub/path");
       resp = await dispatch(req5);
-      expect(resp.statusCode, equals(201));
-      expect(resp.mockContent, equals("response"));
+      expect(resp.statusCode, 201);
+      expect(resp.mockContent, "response");
     });
 
     test("group path matching", () async {
@@ -59,20 +59,52 @@ void main() {
       var req7 = new MockRequest("/group/change_status_code");
 
       var resp = await dispatch(req);
-      expect(resp.mockContent, equals("interceptor sub_route"));
+      expect(resp.mockContent, "interceptor sub_route");
       resp = await dispatch(req2);
-      expect(resp.mockContent, equals("interceptor main_route"));
+      expect(resp.mockContent, "interceptor main_route");
       resp = await dispatch(req3);
-      expect(resp.statusCode, equals(404));
+      expect(resp.statusCode, 404);
       resp = await dispatch(req4);
-      expect(resp.mockContent, equals("default_route"));
+      expect(resp.mockContent, "default_route");
       resp = await dispatch(req5);
-      expect(resp.mockContent, equals("default_route_json"));
+      expect(resp.mockContent, "default_route_json");
       resp = await dispatch(req6);
-      expect(resp.mockContent, equals("default_route_post"));
+      expect(resp.mockContent, "default_route_post");
       resp = await dispatch(req7);
-      expect(resp.statusCode, equals(201));
-      expect(resp.mockContent, equals("response"));
+      expect(resp.statusCode, 201);
+      expect(resp.mockContent, "response");
+    });
+
+    test("compound group path matching", () async {
+      var req = new MockRequest("/mixed/path/subpath");
+      var req2 = new MockRequest("/mixed/path/anotherpath");
+      var req3 = new MockRequest("/mixed/paths");
+      var req4 = new MockRequest("/mixed");
+      var req5 = new MockRequest("/mixed.json");
+      var req6 = new MockRequest("/mixed", method: POST);
+      var req7 = new MockRequest("/mixed/change_status_code");
+      var req8 = new MockRequest("/mixed/info");
+      var req9 = new MockRequest("/mixed/version");
+
+      var resp = await dispatch(req);
+      expect(resp.mockContent, "interceptor sub_route");
+      resp = await dispatch(req2);
+      expect(resp.mockContent, "interceptor main_route");
+      resp = await dispatch(req3);
+      expect(resp.statusCode, 404);
+      resp = await dispatch(req4);
+      expect(resp.mockContent, "default_route");
+      resp = await dispatch(req5);
+      expect(resp.mockContent, "default_route_json");
+      resp = await dispatch(req6);
+      expect(resp.mockContent, "default_route_post");
+      resp = await dispatch(req7);
+      expect(resp.statusCode, 202);
+      expect(resp.mockContent, "mixed response");
+      resp = await dispatch(req8);
+      expect(resp.mockContent, "info");
+      resp = await dispatch(req9);
+      expect(resp.mockContent, "version");
     });
 
     test("multiple handlers", () async {
@@ -80,9 +112,9 @@ void main() {
       var req2 = new MockRequest("/handler_by_method", method: POST);
 
       var resp = await dispatch(req);
-      expect(resp.mockContent, equals("get_handler"));
+      expect(resp.mockContent, "get_handler");
       resp = await dispatch(req2);
-      expect(resp.mockContent, equals("post_handler"));
+      expect(resp.mockContent, "post_handler");
     });
   });
 
@@ -94,7 +126,7 @@ void main() {
       var req = new MockRequest("/types/string");
       var resp = await dispatch(req);
       expect(resp.headers.value("content-type"), contains("text/plain"));
-      expect(resp.mockContent, equals("string"));
+      expect(resp.mockContent, "string");
     });
 
     test("Map -> application/json", () async {
@@ -102,7 +134,7 @@ void main() {
       var resp = await dispatch(req);
       expect(resp.headers.value("content-type"), contains("application/json"));
       expect(conv.JSON.decode(resp.mockContent),
-          equals({"key1": "value1", "key2": "value2"}));
+          {"key1": "value1", "key2": "value2"});
     });
 
     test("List -> application/json", () async {
@@ -110,7 +142,7 @@ void main() {
       var resp = await dispatch(req);
       expect(resp.headers.value("content-type"), contains("application/json"));
       expect(conv.JSON.decode(resp.mockContent),
-          equals(["value1", "value2", "value3"]));
+          ["value1", "value2", "value3"]);
     });
 
     test("null -> empty response", () async {
@@ -125,27 +157,27 @@ void main() {
       var resp = await dispatch(req);
       expect(resp.headers.value("content-type"), contains("application/json"));
       expect(conv.JSON.decode(resp.mockContent),
-          equals({"key1": "value1", "key2": "value2"}));
+          {"key1": "value1", "key2": "value2"});
     });
 
     test("other types -> text/plain", () async {
       var req = new MockRequest("/types/other");
       var resp = await dispatch(req);
       expect(resp.headers.value("content-type"), contains("text/plain"));
-      expect(resp.mockContent, equals("other_type"));
+      expect(resp.mockContent, "other_type");
     });
 
     test("File -> (MimeType of the file)", () async {
       var req = new MockRequest("/types/file");
       var resp = await dispatch(req);
       expect(resp.headers.value("content-type"), contains("application/json"));
-      expect(conv.JSON.decode(resp.mockContent), equals({"key": "value"}));
+      expect(conv.JSON.decode(resp.mockContent), {"key": "value"});
     });
 
     test("Shelf Response", () async {
       var req = new MockRequest("/types/shelf_response");
       var resp = await dispatch(req);
-      expect(resp.mockContent, equals("target_executed"));
+      expect(resp.mockContent, "target_executed");
     });
   });
 
@@ -158,13 +190,13 @@ void main() {
       var resp = await dispatch(req);
       expect(
           conv.JSON.decode(resp.mockContent),
-          equals({
+          {
             "arg1": "arg",
             "arg2": 1,
             "arg3": 1.2,
             "arg4": null,
             "arg5": "arg5"
-          }));
+          });
     });
 
     test("path parameters with named arguments", () async {
@@ -172,8 +204,8 @@ void main() {
       var resp = await dispatch(req);
       expect(
           conv.JSON.decode(resp.mockContent),
-          equals(
-              {"arg1": "arg1", "arg2": "arg2", "arg3": null, "arg4": "arg4"}));
+          
+              {"arg1": "arg1", "arg2": "arg2", "arg3": null, "arg4": "arg4"});
     });
 
     test("query parameters", () async {
@@ -182,7 +214,7 @@ void main() {
       var resp = await dispatch(req);
       expect(
           conv.JSON.decode(resp.mockContent),
-          equals({
+          {
             "arg1": "arg1",
             "arg2": 1,
             "arg3": 1.2,
@@ -190,7 +222,7 @@ void main() {
             "arg5": "arg5",
             "arg6": null,
             "arg7": "arg7"
-          }));
+          });
     });
 
     test("query parameters with list", () async {
@@ -205,13 +237,13 @@ void main() {
       var resp = await dispatch(req);
       expect(
           conv.JSON.decode(resp.mockContent),
-          equals({
+          {
             "arg1": ["a", "b", "c"],
             "arg2": [1, 2, 3],
             "arg3": [1.1, 2.2, 3.3],
             "arg4": [1, 2.22, 3.33],
             "arg5": [false, false, true]
-          }));
+          });
     });
 
     test("path and query parameters", () async {
@@ -219,7 +251,7 @@ void main() {
           queryParameters: {"arg": "arg2"});
       var resp = await dispatch(req);
       expect(conv.JSON.decode(resp.mockContent),
-          equals({"arg": "arg1", "qArg": "arg2"}));
+          {"arg": "arg1", "qArg": "arg2"});
     });
 
     test("query parameters with num type", () async {
@@ -227,7 +259,7 @@ void main() {
           queryParameters: {"arg1": "1", "arg2": "1.5"});
       var resp = await dispatch(req);
       expect(conv.JSON.decode(resp.mockContent),
-          equals({"arg1": 1, "arg2": 1.5,}));
+          {"arg1": 1, "arg2": 1.5,});
     });
 
     test("query parameters with named arguments", () async {
@@ -236,14 +268,14 @@ void main() {
       var resp = await dispatch(req);
       expect(
           conv.JSON.decode(resp.mockContent),
-          equals({
+          {
             "arg1": "arg1",
             "arg2": "arg2",
             "arg3": null,
             "arg4": "arg4",
             "arg5": null,
             "arg6": "arg6"
-          }));
+          });
     });
 
     test("path and query parameters", () async {
@@ -251,7 +283,7 @@ void main() {
           queryParameters: {"arg": "arg2"});
       var resp = await dispatch(req);
       expect(conv.JSON.decode(resp.mockContent),
-          equals({"arg": "arg1", "qArg": "arg2"}));
+          {"arg": "arg1", "qArg": "arg2"});
     });
 
     test("request content as JSON", () async {
@@ -260,10 +292,10 @@ void main() {
       var resp = await dispatch(req);
       expect(
           conv.JSON.decode(resp.mockContent),
-          equals({
+          {
             "arg": "arg1",
             "json": {"key": "value"}
-          }));
+          });
     });
 
     test("request content as FORM", () async {
@@ -272,10 +304,10 @@ void main() {
       var resp = await dispatch(req);
       expect(
           conv.JSON.decode(resp.mockContent),
-          equals({
+          {
             "arg": "arg1",
             "form": {"key": "value"}
-          }));
+          });
     });
 
     test("request content as TEXT", () async {
@@ -283,7 +315,7 @@ void main() {
           method: POST, bodyType: TEXT, body: "plain text");
       var resp = await dispatch(req);
       expect(conv.JSON.decode(resp.mockContent),
-          equals({"arg": "arg1", "text": "plain text"}));
+          {"arg": "arg1", "text": "plain text"});
     });
 
     test("request content as JSON using DynamicMap", () async {
@@ -294,13 +326,13 @@ void main() {
             "key": {"innerKey": "value"}
           });
       var resp = await dispatch(req);
-      expect(conv.JSON.decode(resp.mockContent), equals({"key": "value"}));
+      expect(conv.JSON.decode(resp.mockContent), {"key": "value"});
     });
 
     test("request attributes", () async {
       var req = new MockRequest("/attr/arg1");
       var resp = await dispatch(req);
-      expect(resp.mockContent, equals("name_attr arg1 1"));
+      expect(resp.mockContent, "name_attr arg1 1");
     });
   });
 
@@ -311,69 +343,69 @@ void main() {
     test("wrong method", () async {
       var req = new MockRequest("/wrong_method");
       var resp = await dispatch(req);
-      expect(resp.statusCode, equals(405));
+      expect(resp.statusCode, 405);
     });
 
     test("wrong type", () async {
       var req = new MockRequest("/wrong_type",
           method: POST, bodyType: FORM, body: {"key": "value"});
       var resp = await dispatch(req);
-      expect(resp.statusCode, equals(400));
+      expect(resp.statusCode, 400);
     });
 
     test("wrong value", () async {
       var req = new MockRequest("/wrong_value/not_int");
       var resp = await dispatch(req);
-      expect(resp.statusCode, equals(400));
+      expect(resp.statusCode, 400);
     });
 
     test("route error", () async {
       var req = new MockRequest("/route_error");
       var resp = await dispatch(req);
-      expect(resp.statusCode, equals(500));
-      expect(resp.mockContent, equals("server_error"));
+      expect(resp.statusCode, 500);
+      expect(resp.mockContent, "server_error");
     });
 
     test("async route error", () async {
       var req = new MockRequest("/async_route_error");
       var resp = await dispatch(req);
-      expect(resp.statusCode, equals(500));
-      expect(resp.mockContent, equals("server_error"));
+      expect(resp.statusCode, 500);
+      expect(resp.mockContent, "server_error");
     });
 
     test("interceptor error", () async {
       var req = new MockRequest("/interceptor_error");
       var resp = await dispatch(req);
-      expect(resp.statusCode, equals(500));
-      expect(resp.mockContent, equals("server_error"));
+      expect(resp.statusCode, 500);
+      expect(resp.mockContent, "server_error");
     });
 
     test("async interceptor error", () async {
       var req = new MockRequest("/async_interceptor_error");
       var resp = await dispatch(req);
-      expect(resp.statusCode, equals(500));
-      expect(resp.mockContent, equals("server_error"));
+      expect(resp.statusCode, 500);
+      expect(resp.mockContent, "server_error");
     });
 
     test("resource not found", () async {
       var req = new MockRequest("/not_found");
       var resp = await dispatch(req);
-      expect(resp.statusCode, equals(404));
-      expect(resp.mockContent, equals("not_found"));
+      expect(resp.statusCode, 404);
+      expect(resp.mockContent, "not_found");
     });
 
     test("Find error handler by path", () async {
       var req = new MockRequest("/sub_handler");
       var resp = await dispatch(req);
-      expect(resp.statusCode, equals(500));
-      expect(resp.mockContent, equals("server_error sub_error_handler"));
+      expect(resp.statusCode, 500);
+      expect(resp.mockContent, "server_error sub_error_handler");
     });
 
     test("Error response", () async {
       var req = new MockRequest("/error_response");
       var resp = await dispatch(req);
-      expect(resp.statusCode, equals(400));
-      expect(resp.mockContent, equals("handling: error_response"));
+      expect(resp.statusCode, 400);
+      expect(resp.mockContent, "handling: error_response");
     });
   });
 
@@ -389,41 +421,41 @@ void main() {
       var resp = await dispatch(req);
       expect(
           resp.mockContent,
-          equals(
-              "before_interceptor1|before_interceptor2|target_executed|after_interceptor2|after_interceptor1"));
+          
+              "before_interceptor1|before_interceptor2|target_executed|after_interceptor2|after_interceptor1");
       resp = await dispatch(req2);
-      expect(resp.mockContent, equals("target_executed"));
-      expect(resp.statusCode, equals(200));
+      expect(resp.mockContent, "target_executed");
+      expect(resp.statusCode, 200);
 
       resp = await dispatch(parsebodyget);
-      expect(resp.mockContent, equals("target_executed"));
+      expect(resp.mockContent, "target_executed");
     });
 
     test("interrupt", () async {
       var req = new MockRequest("/interrupt");
       var resp = await dispatch(req);
-      expect(resp.statusCode, equals(401));
-      expect(resp.mockContent, equals("chain_interrupted"));
+      expect(resp.statusCode, 401);
+      expect(resp.mockContent, "chain_interrupted");
     });
 
     test("redirect", () async {
       var req = new MockRequest("/redirect");
       var resp = await dispatch(req);
-      expect(resp.statusCode, equals(302));
+      expect(resp.statusCode, 302);
     });
 
     test("abort", () async {
       var req = new MockRequest("/abort");
       var resp = await dispatch(req);
-      expect(resp.statusCode, equals(401));
+      expect(resp.statusCode, 401);
     });
 
     test("basic auth parse", () async {
       var req = new MockRequest("/basicauth_data",
           basicAuth: new Credentials("Aladdin", "open sesame"));
       var resp = await dispatch(req);
-      expect(resp.statusCode, equals(200));
-      expect(resp.mockContent, equals("basic_auth"));
+      expect(resp.statusCode, 200);
+      expect(resp.mockContent, "basic_auth");
     });
   });
 
@@ -437,20 +469,20 @@ void main() {
     test("Routes and interceptors", () async {
       var req = new MockRequest("/di");
       var resp = await dispatch(req);
-      expect(resp.mockContent, equals("value_a value_b value_a value_b"));
+      expect(resp.mockContent, "value_a value_b value_a value_b");
     });
 
     test("Groups", () async {
       var req = new MockRequest("/group/di");
       var resp = await dispatch(req);
-      expect(resp.mockContent, equals("value_a value_b"));
+      expect(resp.mockContent, "value_a value_b");
     });
 
     test("Error handlers", () async {
       var req = new MockRequest("/invalid_path");
       var resp = await dispatch(req);
-      expect(resp.statusCode, equals(404));
-      expect(resp.mockContent, equals("value_a value_b"));
+      expect(resp.statusCode, 404);
+      expect(resp.mockContent, "value_a value_b");
     });
   });
 
@@ -464,11 +496,11 @@ void main() {
       var req3 = new MockRequest("/prefix/error");
 
       var resp = await dispatch(req);
-      expect(resp.mockContent, equals("interceptor_executed target_executed"));
+      expect(resp.mockContent, "interceptor_executed target_executed");
       resp = await dispatch(req2);
-      expect(resp.mockContent, equals("interceptor_executed target_executed"));
+      expect(resp.mockContent, "interceptor_executed target_executed");
       resp = await dispatch(req3);
-      expect(resp.mockContent, equals("error_handler_executed"));
+      expect(resp.mockContent, "error_handler_executed");
     });
 
     test("Chain", () async {
@@ -476,14 +508,14 @@ void main() {
       var resp = await dispatch(req);
       expect(
           resp.mockContent,
-          equals(
-              "root interceptor_1 interceptor_2 interceptor_3 interceptor_4 target "));
+          
+              "root interceptor_1 interceptor_2 interceptor_3 interceptor_4 target ");
     });
 
     test("@Ignore", () async {
       var req = new MockRequest("/ignore");
       var resp = await dispatch(req);
-      expect(resp.statusCode, equals(404));
+      expect(resp.statusCode, 404);
     });
   });
 
@@ -503,7 +535,7 @@ void main() {
           bodyType: JSON,
           body: {"name": "name", "username": "username"});
       var resp = await dispatch(req);
-      expect(resp.mockContent, equals("name: name username: username"));
+      expect(resp.mockContent, "name: name username: username");
     });
 
     test("Parameter provider - exception", () async {
@@ -512,14 +544,14 @@ void main() {
           bodyType: FORM,
           body: {"name": "name", "username": "username"});
       var resp = await dispatch(req);
-      expect(resp.statusCode, equals(400));
+      expect(resp.statusCode, 400);
     });
 
     test("Response processor", () async {
       var req = new MockRequest("/user/find");
       var resp = await dispatch(req);
       expect(conv.JSON.decode(resp.mockContent),
-          equals({"name": "name", "username": "username"}));
+          {"name": "name", "username": "username"});
     });
 
     test("Routes", () async {
@@ -527,9 +559,9 @@ void main() {
       var req2 = new MockRequest("/error");
 
       var resp = await dispatch(req);
-      expect(resp.mockContent, equals("interceptor value"));
+      expect(resp.mockContent, "interceptor value");
       resp = await dispatch(req2);
-      expect(resp.mockContent, equals("error_handler"));
+      expect(resp.mockContent, "error_handler");
     });
 
     test("Route wrapper", () async {
@@ -540,13 +572,13 @@ void main() {
       var reqRedirectWrapper = new MockRequest("/test_wrapper/redirect");
 
       var resp = await dispatch(reqFunctionWrapper);
-      expect(resp.mockContent, equals("response: target executed"));
+      expect(resp.mockContent, "response: target executed");
       resp = await dispatch(reqGroupWrapper);
-      expect(resp.mockContent, equals("response: target executed"));
+      expect(resp.mockContent, "response: target executed");
       resp = await dispatch(reqMethodWrapper);
-      expect(resp.mockContent, equals("response: target executed"));
+      expect(resp.mockContent, "response: target executed");
       resp = await dispatch(reqRedirectWrapper);
-      expect(resp.mockContent, equals("response: target executed"));
+      expect(resp.mockContent, "response: target executed");
     });
   });
 
@@ -581,9 +613,9 @@ void main() {
             .map((t) => new CapturedType(t))
             .toSet();
 
-        expect(functions, equals(expectedFunctions));
-        expect(classes, equals(expectedClasses));
-        expect(methods, equals(expectedMethods));
+        expect(functions, expectedFunctions);
+        expect(classes, expectedClasses);
+        expect(methods, expectedMethods);
 
         completer.complete();
       });
@@ -642,18 +674,18 @@ void main() {
         try {
           extractMetadata(manager.serverMetadata);
 
-          expect(setRoutes, equals(expectedRoutes));
-          expect(setInterceptors, equals(expectedInterceptors));
-          expect(setErrorHandlers, equals(expectedErrorHandlers));
+          expect(setRoutes, expectedRoutes);
+          expect(setInterceptors, expectedInterceptors);
+          expect(setErrorHandlers, expectedErrorHandlers);
 
-          expect(manager.serverMetadata.groups.length, equals(1));
+          expect(manager.serverMetadata.groups.length, 1);
 
           var groupMetadata = manager.serverMetadata.groups[0];
           extractGroupMetadata(groupMetadata);
 
-          expect(setRoutes, equals(expectedRoutes));
-          expect(setInterceptors, equals(expectedInterceptors));
-          expect(setErrorHandlers, equals(expectedErrorHandlers));
+          expect(setRoutes, expectedRoutes);
+          expect(setInterceptors, expectedInterceptors);
+          expect(setErrorHandlers, expectedErrorHandlers);
 
           completer.complete();
         } catch (e) {
@@ -685,7 +717,7 @@ void main() {
 
       MockRequest req = new MockRequest("/path/arg");
       var resp = await dispatch(req);
-      expect(resp.mockContent, equals("middleware_1 middleware_2 main_route"));
+      expect(resp.mockContent, "middleware_1 middleware_2 main_route");
     });
 
     test("Handler", () async {
@@ -696,8 +728,8 @@ void main() {
 
       MockRequest req = new MockRequest("/invalid_path");
       var resp = await dispatch(req);
-      expect(resp.mockContent, equals("handler_executed"));
-      expect(resp.statusCode, equals(200));
+      expect(resp.mockContent, "handler_executed");
+      expect(resp.statusCode, 200);
     });
   });
 }

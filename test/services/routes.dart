@@ -49,3 +49,22 @@ class ServiceGroup {
   @Route("/change_status_code", statusCode: 201)
   String changeStatusCode() => "response";
 }
+
+abstract class Info {
+  @Route("/info")
+  String info();
+}
+
+abstract class Version {
+  @Route("/version")
+  String version();
+}
+
+@Group("/mixed")
+class MixedServiceGroup extends ServiceGroup with Info, Version {
+  String info() => "info";
+  String version() => "version";
+
+  @Route("/change_status_code", statusCode: 202)
+  String changeStatusCode() => "mixed response";
+}
