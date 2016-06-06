@@ -146,8 +146,10 @@ class RouteProcessor implements Function {
     var name = MirrorSystem.getName(mirror.simpleName);
     var queryParam = (metadata as QueryParam);
     var key = queryParam.name != null ? queryParam.name : name;
-    if (mirror.type == listType) {
-      return (Request req, Converter converter) {
+
+    if (mirror.type.simpleName == listType.simpleName) {
+      var converter = getValueConverter(mirror.type.typeArguments[0]);
+      return (Request req, _) {
         List<String> args = req.queryParameters[key];
         if (args == null) {
           return null;

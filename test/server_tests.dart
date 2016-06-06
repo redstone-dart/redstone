@@ -193,6 +193,35 @@ void main() {
           }));
     });
 
+    test("query parameters with list", () async {
+      var req = new MockRequest("/query_args_with_list",
+          queryParameters: {
+            "arg1": ["a", "b", "c"],
+            "arg2": ["1", "2", "3"],
+            "arg3": ["1.1", "2.2", "3.3"],
+            "arg4": ["1", "2.22", "3.33"],
+            "arg5": ["0", "1", "true"],
+          });
+      var resp = await dispatch(req);
+      expect(
+          conv.JSON.decode(resp.mockContent),
+          equals({
+            "arg1": ["a", "b", "c"],
+            "arg2": [1, 2, 3],
+            "arg3": [1.1, 2.2, 3.3],
+            "arg4": [1, 2.22, 3.33],
+            "arg5": [false, false, true]
+          }));
+    });
+
+    test("path and query parameters", () async {
+      var req = new MockRequest("/path_query_args/arg1",
+          queryParameters: {"arg": "arg2"});
+      var resp = await dispatch(req);
+      expect(conv.JSON.decode(resp.mockContent),
+          equals({"arg": "arg1", "qArg": "arg2"}));
+    });
+
     test("query parameters with num type", () async {
       var req = new MockRequest("/query_args_with_num",
           queryParameters: {"arg1": "1", "arg2": "1.5"});
