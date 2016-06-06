@@ -9,22 +9,7 @@ Redstone.dart uses the [di package](http://pub.dartlang.org/packages/di) to prov
 
 To register a module, use the `addModule()` method:
 
-```dart
-import 'package:redstone/redstone.dart' as app;
-import 'package:di/di.dart';
-
-main() {
-
-  app.addModule(new Module()
-       ..bind(ClassA)
-       ..bind(ClassB));
-  
-  app.setupConsoleLog();
-  app.start();
-
-}
-
-```
+{% include code.func code="di.dart" %}
 
 For methods annotated with `@Route`, you can inject objects using the `@Inject` annotation:
 
@@ -40,7 +25,6 @@ Groups can require objects using a constructor:
 ```dart
 @app.Group('/group')
 class Group {
-
   ClassA objA;
   
   Group(ClassA this.objA);
@@ -49,7 +33,6 @@ class Group {
   service() {
     // ...
   }
-
 }
 ```
 

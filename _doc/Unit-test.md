@@ -15,43 +15,9 @@ Basically, to create a test, you just need to:
 
 Example:
 
-```dart
-library services;
+{% include code.func code="services.dart" %}
 
-import 'package:redstone/redstone.dart' as app;
-
-@app.Route("/user/:username")
-helloUser(String username) => "hello, $username";
-```
-
-```dart
-import 'package:unittest/unittest.dart';
-
-import 'package:redstone/redstone.dart' as app;
-import 'package:redstone/mocks.dart';
-
-import 'package:your_package_name/services.dart';
-
-main() {
-  //load handlers in 'services' library
-  setUp(() => app.redstoneSetUp([#services]));
-  
-  //remove all loaded handlers
-  tearDown(() => app.redstoneTearDown());
-  
-  test("hello service", () {
-    //create a mock request
-    var req = new MockRequest("/user/luiz");
-    //dispatch the request
-    return app.dispatch(req).then((resp) {
-      //verify the response
-      expect(resp.statusCode, equals(200));
-      expect(resp.mockContent, equals("hello, luiz"));
-    });
-  });
-  
-}
-```
+{% include code.func code="services_test.dart" %}
 
 ## MockRequest Examples
 

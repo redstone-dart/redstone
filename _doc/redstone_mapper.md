@@ -17,7 +17,6 @@ Encoding and decoding of objects and data validation can also be used on the cli
 Example: Using redstone_mapper with Redstone.dart
 
 ```dart
-
 import 'package:redstone/redstone.dart' as app;
 import 'package:redstone_mapper/mapper.dart';
 import 'package:redstone_mapper/plugin.dart';
@@ -65,7 +64,6 @@ annotated with `@Field`.
 
 ```dart
 class User {
-
   @Field()
   String username;
 
@@ -119,7 +117,6 @@ When encoding or decoding an object to JSON, you can use the `view` parameter
 to map a class member to its corresponding JSON field:
 
 ```dart
-
 class User {
   @Field(view: "user_name")
   String name;
@@ -133,7 +130,6 @@ Also, if you are encoding or decoding an object to the database, you can use the
 parameter to map a class member to its corresponding database field:
 
 ```dart
-
 class User {
   //JSON: 'user_name'  DATABASE: 'USERNAME'
   @Field(view: "user_name", model: "USERNAME")

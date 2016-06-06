@@ -81,7 +81,6 @@ The `dbManager()` interceptor creates a new connection, save it in the `request.
 To access a database connection in a route, you can annotate a paratemer with `@Attr`. Also, if you don't want to create an extra parameter for every route, you can define a getter that retrieves the connection of the current request:
 
 ```dart
-
 Db get conn => app.request.attributes.conn;
 
 @app.Route('/services/users/list')

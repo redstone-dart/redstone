@@ -10,7 +10,6 @@ The `@app.Group` annotation is used to define a group of routes, interceptors an
 ```dart
 @app.Group("/user")
 class UserService {
-  
   @app.Route("/find")
   findUser(@app.QueryParam("n") String name,
            @app.QueryParam("c") String city) {
@@ -29,7 +28,6 @@ The prefix defined with the `@app.Group` annotation, will be prepended in every 
 ```dart
 @app.Group("/user")
 class UserService {
-  
   @app.DefaultRoute()
   getUser() {
     // ...

@@ -80,10 +80,9 @@ This package also provides a simple mock client, which can be used in unit tests
 ```dart
 import 'package:redstone/redstone.dart' as app;
 import 'package:redstone_web_socket/redstone_web_socket.dart';
-import 'package:unittest/unittest.dart';
+import 'package:test/test.dart';
 
 main() {
-  
   test("Test echo service", () {
   
     var completer = new Completer();
