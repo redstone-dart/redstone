@@ -89,7 +89,6 @@ the original connection object with the `PostgreSql.innerConn` property.
 Moreover, you can use a `PostgreSqlService` to handle operations that concerns the same entity type:
 
 ```dart
-
 PostgreSqlService<User> userService = new PostgreSqlService<User>();
 
 @app.Route("/services/users/list")

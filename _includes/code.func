@@ -1,0 +1,4 @@
+```dart
+{% include_relative code/{{include.code}} %}
+```
+<a href="/{{page.collection}}/code/{{include.code}}">Source code</a>

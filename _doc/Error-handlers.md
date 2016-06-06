@@ -31,7 +31,6 @@ If you define an error handler inside a group, then the handler will be restrict
 ```dart
 @app.Group('/user')
 class User {
-
   @app.ErrorHandler(500)
   onInternalServerError() {
     if (app.chain.error is UserException) {

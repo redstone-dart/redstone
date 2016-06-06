@@ -9,7 +9,6 @@ Today I've got some time to play with the new [cedar-14](https://blog.heroku.com
 Basically, to run on Heroku, your app must be configurable through environment variables. The minimal configuration that every heroku application must handle is the port number, where the server is allowed to bind to. Let's see an example:
 
 ```dart
-
 import "dart:io";
 
 import "package:redstone/redstone.dart" as app;

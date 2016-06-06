@@ -20,17 +20,7 @@ name: my_app
 - Create a `bin` directory
 - Create a `server.dart` file under the `bin` directory
 
-```dart
-import 'package:redstone/redstone.dart' as app;
-
-@app.Route("/")
-helloWorld() => "Hello, World!";
-
-main() {
-  app.setupConsoleLog();
-  app.start();
-}
-```
+{% include code.func code="hello_world.dart" %}
 
 - To run the server, create a launch configuration in WebStorm, or use the `dart` command:
 

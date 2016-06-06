@@ -141,21 +141,7 @@ class UserService {
 
 Register one or more modules before calling `app.start()`
 
-```dart
-import 'package:redstone/redstone.dart' as app;
-import 'package:di/di.dart';
-
-main() {
-
-  app.addModule(new Module()
-       ..bind(ClassA)
-       ..bind(ClassB));
-  
-  app.setupConsoleLog();
-  app.start();
-}
-
-```
+{% include code.func code="di.dart" %}
 
 Routes, interceptors, error handlers and groups can require dependencies
 
@@ -183,7 +169,6 @@ notFound(ClassB objB) {
 ```dart
 @app.Group('/group')
 class Group {
-
   ClassA objA;
   
   Group(ClassA this.objA);
@@ -192,7 +177,6 @@ class Group {
   service() {
     // ...
   }
-
 }
 ```
 
@@ -200,41 +184,6 @@ class Group {
 
 You can easily create mock requests to test your server
 
-```dart
-library services;
+{% include code.func code="services.dart" %}
 
-import 'package:redstone/redstone.dart' as app;
-
-@app.Route("/user/:username")
-helloUser(String username) => "hello, $username";
-```
-
-```dart
-import 'package:test/test.dart';
-
-import 'package:redstone/redstone.dart' as app;
-import 'package:redstone/mocks.dart';
-
-import 'package:your_package_name/services.dart';
-
-main() {
-
-  //load handlers in 'services' library
-  setUp(() => app.redstoneSetUp([#services]));
-  
-  //remove all loaded handlers
-  tearDown(() => app.redstoneTearDown());
-  
-  test("hello service", () {
-    //create a mock request
-    var req = new MockRequest("/user/luiz");
-    //dispatch the request
-    return app.dispatch(req).then((resp) {
-      //verify the response
-      expect(resp.statusCode, equals(200));
-      expect(resp.mockContent, equals("hello, luiz"));
-    });
-  })
-  
-}
-```
+{% include code.func code="services_test.dart" %}
