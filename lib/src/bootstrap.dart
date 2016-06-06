@@ -27,10 +27,10 @@ ShelfContext _shelfContext = new ShelfContext();
 Router _router;
 Router get router => _router;
 
-///By default, redstone generates an error page whenever
-///a response with status code less than 200, or greater
-///or equal than 300, is returned. To prevent this
-///behavior, set this flag to false.
+/// By default, redstone generates an error page whenever
+/// a response with status code less than 200, or greater
+/// or equal than 400, is returned. To prevent this
+/// behavior, set this flag to false.
 bool showErrorPage = true;
 
 /// Returns the current request
