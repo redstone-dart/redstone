@@ -5,7 +5,7 @@ title: Feature Tour
 prev: Installation
 next: Routes
 ---
-##Routes
+## Routes
 
 To bind a function with an URL, just use the `@Route` annotation
 
@@ -64,7 +64,7 @@ service() {
 };
 ```
 
-##Interceptors
+## Interceptors
 
 Interceptors are useful when you need to apply a common behavior to a group of targets (functions or static content). For example, you can create an interceptor to apply a security constraint or to manage a resource
 
@@ -99,7 +99,7 @@ find(@app.Attr() dbConn) {
 }
 ```
 
-##Error Handlers
+## Error Handlers
 
 Use the `@ErrorHandler` annotation to register error handlers.
 
@@ -116,7 +116,7 @@ handleServerError() {
 }
 ```
 
-##Groups
+## Groups
 
 You can use classes to group routes, interceptors and error handlers
 
