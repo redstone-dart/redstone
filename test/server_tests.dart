@@ -75,6 +75,38 @@ void main() {
       expect(resp.mockContent, equals("response"));
     });
 
+    test("compound group path matching", () async {
+      var req = new MockRequest("/mixed/path/subpath");
+      var req2 = new MockRequest("/mixed/path/anotherpath");
+      var req3 = new MockRequest("/mixed/paths");
+      var req4 = new MockRequest("/mixed");
+      var req5 = new MockRequest("/mixed.json");
+      var req6 = new MockRequest("/mixed", method: POST);
+      var req7 = new MockRequest("/mixed/change_status_code");
+      var req8 = new MockRequest("/mixed/info");
+      var req9 = new MockRequest("/mixed/version");
+
+      var resp = await dispatch(req);
+      expect(resp.mockContent, equals("interceptor sub_route"));
+      resp = await dispatch(req2);
+      expect(resp.mockContent, equals("interceptor main_route"));
+      resp = await dispatch(req3);
+      expect(resp.statusCode, equals(404));
+      resp = await dispatch(req4);
+      expect(resp.mockContent, equals("default_route"));
+      resp = await dispatch(req5);
+      expect(resp.mockContent, equals("default_route_json"));
+      resp = await dispatch(req6);
+      expect(resp.mockContent, equals("default_route_post"));
+      resp = await dispatch(req7);
+      expect(resp.statusCode, equals(202));
+      expect(resp.mockContent, equals("mixed response"));
+      resp = await dispatch(req8);
+      expect(resp.mockContent, equals("info"));
+      resp = await dispatch(req9);
+      expect(resp.mockContent, equals("version"));
+    });
+
     test("multiple handlers", () async {
       var req = new MockRequest("/handler_by_method");
       var req2 = new MockRequest("/handler_by_method", method: POST);
