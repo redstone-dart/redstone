@@ -127,7 +127,7 @@ class Processor implements Manager {
   void addResponseProcessor(Type metadataType, ResponseProcessor processor,
       {bool includeGroups: false}) {
     _findHandlers(_getRoutes, metadataType, includeGroups).forEach((_Match m) =>
-        m.handler.responseProcessors
+        (m.handler as RequestTargetMetadata).responseProcessors
             .add(new ResponseProcessorMetadata(processor, m.metadata)));
   }
 
