@@ -31,6 +31,20 @@ Map queryArgs(@QueryParam("arg1") String arg1, @QueryParam("arg2") int arg2,
       "arg7": arg7
     };
 
+@Route("/query_args_with_list")
+Map queryArgsWithList(@QueryParam("arg1") List<String> arg1,
+    @QueryParam("arg2") List<int> arg2,
+    @QueryParam("arg3") List<double> arg3,
+    @QueryParam("arg4") List<num> arg4,
+    @QueryParam("arg5") List<bool> arg5) =>
+    {
+      "arg1": arg1,
+      "arg2": arg2,
+      "arg3": arg3,
+      "arg4": arg4,
+      "arg5": arg5
+    };
+
 @Route("/query_args_with_num")
 Map queryArgsWithNum(
         @QueryParam("arg1") num arg1, @QueryParam("arg2") num arg2) =>
