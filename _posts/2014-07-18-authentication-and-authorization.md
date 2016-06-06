@@ -58,7 +58,6 @@ Open up the `lib/authentication.dart` file. You'll find our `authenticationFilte
 
 
 ```dart
-
 @app.Interceptor(r'/services/private/.+')
 authenticationFilter() {
   if (app.request.session["username"] == null) {
@@ -75,7 +74,6 @@ This interceptor is applied to any request which path starts with `/services/pri
 In the same script, you'll find the login and logout services:
 
 ```dart
-
 @app.Route("/services/login", methods: const[app.POST])
 login(@app.Attr() Db conn, @app.Body(app.JSON) Map body) {
   var userCollection = conn.collection("user");
@@ -119,7 +117,6 @@ The login service verifies if the provided user exists in the database. If it do
 To create a private service, which can be executed only by authenticated users, we can just put it under the `/services/private` path. If you open the `lib/services.dart` file, you'll see the echo service implementation:
 
 ```dart
-
 //A private service. Any authenticated user can execute 'echo'
 @app.Route("/services/private/echo/:arg")
 echo(String arg) => arg;
@@ -131,7 +128,6 @@ Now we need a way to define services that can be executed only by admin users. W
 Open up the `lib/authorization.dart` file:
 
 ```dart
-
 const String ADMIN = "ADMIN";
 
 class Secure {

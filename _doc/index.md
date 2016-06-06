@@ -10,7 +10,6 @@ Redstone.dart is a server-side, metadata driven microframework for [Dart](https:
 Redstone.dart allows you to easily publish your functions and classes through a web interface, by just adding some annotations to them. 
 
 ```dart
-
 import 'package:redstone/redstone.dart' as app;
 
 @app.Route("/")
