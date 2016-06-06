@@ -9,15 +9,6 @@ Redstone.dart is a server-side, metadata driven microframework for [Dart](https:
 #### How does it work?
 Redstone.dart allows you to easily publish your functions and classes through a web interface, by just adding some annotations to them. 
 
-```dart
-import 'package:redstone/redstone.dart' as app;
+{% include code.func code="hello_world.dart" %}
 
-@app.Route("/")
-helloWorld() => "Hello, World!";
-
-main() {
-  app.setupConsoleLog();
-  app.start();
-}
-``` 
 Does this example look familiar? Redstone.dart took a lot of ideas and concepts from the Python's [Flask](http://flask.pocoo.org/) microframework.
