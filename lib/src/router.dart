@@ -87,7 +87,7 @@ class Router {
       st.Chain.capture(() async {
         try {
           shelf.Response resp = await innerHandler(req);
-          if (resp.statusCode < 200 || resp.statusCode >= 300) {
+          if (resp.statusCode < 200 || resp.statusCode >= 400) {
             currentContext.response = resp;
             resp = await chain._handleError(null, null, resp.statusCode, true);
           }
@@ -124,7 +124,7 @@ class Router {
       currentContext.chain = chain;
       try {
         shelf.Response resp = await innerHandler(req);
-        if (resp.statusCode < 200 || resp.statusCode >= 300) {
+        if (resp.statusCode < 200 || resp.statusCode >= 400) {
           currentContext.response = resp;
           resp = await chain._handleError();
         }
