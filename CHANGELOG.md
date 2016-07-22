@@ -1,3 +1,13 @@
+## v0.6.7
+* Fixed issue with query parameters not being managed correctly when the type is `List`.
+* Redirections are not considered as error anymore. When `showError: true`, it won't be an error anymore.
+* Fixed analyzer warnings.
+* Cleaned the Group Scanner.
+* Refactored some tests
+* Added more tests
+
+A big thanks to @sestegra for all those very welcomed changes.
+
 ## v0.6.6
 Drop package:crypto. Update other package dependencies and fix some strong-mode issues.
 Also fixes definitions of == and hashCode.
