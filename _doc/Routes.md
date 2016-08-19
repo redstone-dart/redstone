@@ -78,6 +78,16 @@ getAddress(String username, int addressId) {
 
 The supported types are: int, double and bool
 
+### Optional Path segments
+
+To create an optional Path Segment, simply bind two routes to the method:
+
+```dart
+@app.Route("/")
+@app.Route("/:username")
+helloEveryone([String username = "world"]) => "hello $username";
+```
+
 ### Query parameters
 
 Use the `@QueryParam` annotation to access a query parameter
