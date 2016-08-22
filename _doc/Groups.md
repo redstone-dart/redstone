@@ -46,3 +46,20 @@ class UserService {
 
 ```
 
+## Extending the group annotation
+
+If you wish to create your own custom groups, you can extend the default Group annotation.
+
+```dart
+class ApiGroup extends app.Group {
+  const ApiGroup(String urlPrefix) : super("/api" + urlPrefix);
+}
+
+@ApiGroup('/todo')
+class ApiTodoService {
+  @app.DefaultRoute()
+  getTodo() {
+    // ...
+  }
+}
+```
