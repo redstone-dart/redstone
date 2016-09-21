@@ -9,6 +9,7 @@
 *.js_
 *.js.deps
 *.js.map
+redstone.iml
 
 # Include when developing application packages
 pubspec.lock
