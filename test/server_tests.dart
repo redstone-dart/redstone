@@ -4,6 +4,7 @@ import 'dart:convert' as conv;
 import 'dart:async';
 import 'dart:mirrors';
 
+import 'package:logging/logging.dart';
 import 'package:test/test.dart';
 
 import 'package:di/di.dart';
@@ -361,9 +362,15 @@ void main() {
 
     test("route error", () async {
       var req = new MockRequest("/route_error");
+      var logRecords = new List<LogRecord>();
+      Logger.root.onRecord.listen(logRecords.add);
       var resp = await dispatch(req);
       expect(resp.statusCode, 500);
       expect(resp.mockContent, "server_error");
+      expect(logRecords.length, 1);
+      expect(logRecords[0].level, Level.SEVERE);
+      expect(logRecords[0].message, "Internal server error.");
+      expect(logRecords[0].stackTrace, isNotNull);
     });
 
     test("async route error", () async {
@@ -403,9 +410,12 @@ void main() {
 
     test("Error response", () async {
       var req = new MockRequest("/error_response");
+      var logRecords = new List<LogRecord>();
+      Logger.root.onRecord.listen(logRecords.add);
       var resp = await dispatch(req);
       expect(resp.statusCode, 400);
       expect(resp.mockContent, "handling: error_response");
+      expect(logRecords.isEmpty, true);
     });
   });
 
