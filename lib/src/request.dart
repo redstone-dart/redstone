@@ -118,4 +118,7 @@ class ErrorResponse {
   final Object error;
 
   ErrorResponse(this.statusCode, this.error);
+
+  @override
+  String toString() => 'HTTP $statusCode${error != null ? ': ${error.toString()}' : ''}';
 }

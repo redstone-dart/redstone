@@ -479,6 +479,9 @@ class _ChainImpl implements Chain {
       int statusCode = 500,
       bool generatePage = false]) async {
     statusCode = statusCode != null ? statusCode : 500;
+    if(err is ErrorResponse) {
+      statusCode = err.statusCode;
+    }
 
     if (stack != null) {
       stack = new st.Chain.forTrace(stack).terse;
