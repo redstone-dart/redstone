@@ -13,6 +13,8 @@ class MockHttpHeaders implements HttpHeaders {
 
   ContentType _contentType;
 
+  bool chunkedTransferEncoding;
+
   MockHttpHeaders([Map<String, List<String>> values]) {
     if (values != null) {
       _headers.addAll(values);
