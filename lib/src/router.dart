@@ -3,6 +3,7 @@ library redstone.src.router;
 import 'dart:io';
 import 'dart:async';
 import 'dart:math';
+import 'dart:mirrors';
 
 import 'package:shelf/shelf.dart' as shelf;
 import 'package:shelf/shelf_io.dart' as shelf_io;
@@ -26,6 +27,13 @@ class Router {
   ServerContext _serverCtx;
   bool showErrorPage;
   bool logSetUp;
+
+  ServerContext get serverCtx {
+    return _serverCtx;
+  }
+  List<_Target> get targets {
+    return _targets;
+  }
 
   _TargetListBuilder _targetListBuilder = new _TargetListBuilder();
   _InterceptorListBuilder _interceptorListBuilder =
@@ -180,7 +188,7 @@ class Router {
   void _loadDynamicHandlers() {
     _serverCtx.serverMetadata.routes.where((r) => r.library == null).forEach(
         (r) => _targetListBuilder.add("/", new UrlTemplate(r.conf.urlTemplate),
-            r.conf.methods, _serverCtx.routeInvokers[r]));
+            r.conf.methods, _serverCtx.routeInvokers[r], r.mirror));
 
     _interceptorListBuilder.add(_serverCtx.serverMetadata.interceptors
         .where((i) => i.library == null)
@@ -216,7 +224,7 @@ class Router {
             "Configured target for $url ${route.conf.methods}: ${route.name}");
       }
       _targetListBuilder.add(_getContextUrl(pathPrefix), urlTemplate,
-          route.conf.methods, _serverCtx.routeInvokers[route]);
+          route.conf.methods, _serverCtx.routeInvokers[route], route.mirror);
     }
 
     for (GroupMetadata group in lib.groups) {
@@ -243,7 +251,7 @@ class Router {
               " (group: ${group.name})");
         }
         _targetListBuilder.add(contextUrl, urlTemplate, route.conf.methods,
-            _serverCtx.routeInvokers[route]);
+            _serverCtx.routeInvokers[route], route.mirror, group.mirror);
       }
 
       for (RouteMetadata route in group.routes) {
@@ -267,7 +275,7 @@ class Router {
               " (group: ${group.name})");
         }
         _targetListBuilder.add(_getContextUrl(contextUrl), urlTemplate,
-            route.conf.methods, _serverCtx.routeInvokers[route]);
+            route.conf.methods, _serverCtx.routeInvokers[route], route.mirror, group.mirror);
       }
     }
   }
@@ -585,11 +593,11 @@ class _TargetListBuilder {
   final Map<String, _Target> mapTargets = {};
 
   void add(String contextUrl, UrlTemplate url, List<String> methods,
-      RouteInvoker invoker) {
+      RouteInvoker invoker, [MethodMirror methodMirror, ClassMirror groupMirror]) {
     var key = url.toString();
     var target = mapTargets[key];
     if (target == null) {
-      target = new _Target(contextUrl, url);
+      target = new _Target(contextUrl, url, methodMirror, groupMirror);
       mapTargets[key] = target;
     }
 
@@ -610,8 +618,10 @@ class _Target {
   final String contextUrl;
   final UrlTemplate template;
   final Map<String, RouteInvoker> routes = {};
+  final ClassMirror groupMirror;
+  final MethodMirror methodMirror;
 
-  _Target(this.contextUrl, this.template);
+  _Target(this.contextUrl, this.template, [this.methodMirror, this.groupMirror]);
 }
 
 class _InterceptorListBuilder {
