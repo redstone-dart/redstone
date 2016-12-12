@@ -1,4 +1,9 @@
+## v.0.6.8
+
+* Exposed endpoint mirrors to let a user create his plugin.
+
 ## v0.6.7
+
 * Fixed issue with query parameters not being managed correctly when the type is `List`.
 * Redirections are not considered as error anymore. When `showError: true`, it won't be an error anymore.
 * Fixed analyzer warnings.
