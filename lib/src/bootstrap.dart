@@ -3,7 +3,7 @@ library redstone.src.bootstrap;
 import 'dart:async';
 import 'dart:io';
 
-import 'package:shelf/shelf.dart' as shelf;
+import 'package:shelf/shelf.dart' hide Request;
 import 'package:di/di.dart';
 
 import 'request.dart';
@@ -37,10 +37,10 @@ bool showErrorPage = true;
 Request get request => currentContext.request;
 
 /// Returns the current response
-shelf.Response get response => currentContext.response;
+Response get response => currentContext.response;
 
 /// Sets a new response object
-void set response(shelf.Response value) {
+void set response(Response value) {
   currentContext.response = value;
 }
 
@@ -50,11 +50,11 @@ Chain get chain => currentContext.chain;
 /// Creates a new response for [statusCode]. If there is an
 /// ErrorHandler registered for this status code, it will
 /// be invoked.
-Future<shelf.Response> abort(int statusCode) =>
+Future<Response> abort(int statusCode) =>
     currentContext.chain.abort(statusCode);
 
 /// Creates a new response with an 302 status code.
-shelf.Response redirect(String url) => currentContext.chain.redirect(url);
+Response redirect(String url) => currentContext.chain.redirect(url);
 
 /// Register a module for dependency injection.
 ///
@@ -75,7 +75,7 @@ void addPlugin(RedstonePlugin plugin) {
 /// Register a Shelf Middleware.
 ///
 /// Middlewares are invoked before any interceptor or route.
-void addShelfMiddleware(shelf.Middleware middleware) {
+void addShelfMiddleware(Middleware middleware) {
   _shelfContext.middlewares.add(middleware);
 }
 
@@ -83,7 +83,7 @@ void addShelfMiddleware(shelf.Middleware middleware) {
 ///
 /// The [handler] will be invoked when all interceptors are
 /// completed, and no route is found for the requested URL.
-void setShelfHandler(shelf.Handler handler) {
+void setShelfHandler(Handler handler) {
   _shelfContext.handler = handler;
 }
 

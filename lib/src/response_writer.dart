@@ -2,9 +2,9 @@ library redstone.src.response_writer;
 
 import 'dart:async';
 import 'dart:io';
-import 'dart:convert' as conv;
+import 'dart:convert';
 
-import 'package:shelf/shelf.dart' as shelf;
+import 'package:shelf/shelf.dart';
 import 'package:di/di.dart';
 import 'package:mime/mime.dart';
 import 'package:stack_trace/stack_trace.dart';
@@ -13,7 +13,7 @@ import 'server_metadata.dart';
 import 'request.dart';
 import 'request_context.dart';
 
-Future<shelf.Response> writeResponse(String handlerName, dynamic response,
+Future<Response> writeResponse(String handlerName, dynamic response,
     {int statusCode: 200,
     String responseType,
     Injector injector,
@@ -23,10 +23,10 @@ Future<shelf.Response> writeResponse(String handlerName, dynamic response,
   }
 
   if (response is RequestException) {
-    return new shelf.Response(response.statusCode,
+    return new Response(response.statusCode,
         body: response.message,
         headers: {"content-type": "text/plain"},
-        encoding: conv.UTF8);
+        encoding: UTF8);
   }
   if (response is ErrorResponse) {
     statusCode = response.statusCode;
@@ -39,30 +39,30 @@ Future<shelf.Response> writeResponse(String handlerName, dynamic response,
           await p.processor(p.metadata, handlerName, response, injector));
 
   if (response == null) {
-    return new shelf.Response(statusCode);
+    return new Response(statusCode);
   }
 
-  if (response is shelf.Response) {
+  if (response is Response) {
     return response;
   } else if (response is Map || response is List) {
     var type = responseType != null ? responseType : "application/json";
-    return new shelf.Response(statusCode,
-        body: conv.JSON.encode(response),
+    return new Response(statusCode,
+        body: JSON.encode(response),
         headers: {"content-type": type},
-        encoding: conv.UTF8);
+        encoding: UTF8);
   } else if (response is File) {
     var type =
         responseType != null ? responseType : lookupMimeType(response.path);
-    return new shelf.Response(statusCode,
+    return new Response(statusCode,
         body: response.openRead(), headers: {"content-type": type});
   } else {
     var type = responseType != null ? responseType : "text/plain";
-    return new shelf.Response(statusCode,
+    return new Response(statusCode,
         body: response.toString(), headers: {"content-type": type});
   }
 }
 
-shelf.Response writeErrorPage(String resource, Object error,
+Response writeErrorPage(String resource, Object error,
     [StackTrace stack, int statusCode]) {
   if (error is RequestException) {
     statusCode = error.statusCode;
@@ -134,10 +134,10 @@ shelf.Response writeErrorPage(String resource, Object error,
 </body>
 </html>''';
 
-  return new shelf.Response(statusCode,
+  return new Response(statusCode,
       body: errorTemplate,
       headers: {"content-type": "text/html"},
-      encoding: conv.UTF8);
+      encoding: UTF8);
 }
 
 String _getStatusDescription(int statusCode) {
