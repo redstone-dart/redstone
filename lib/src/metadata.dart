@@ -1,6 +1,6 @@
 library redstone.src.metadata;
 
-import 'dart:convert' as conv;
+import 'dart:convert';
 
 import 'constants.dart';
 
@@ -13,7 +13,7 @@ abstract class RequestTarget {
 
   bool get allowMultipartRequest;
 
-  conv.Encoding get encoding;
+  Encoding get encoding;
 }
 
 /// An annotation to define targets.
@@ -43,14 +43,14 @@ class Route implements RequestTarget {
 
   final bool allowMultipartRequest;
 
-  final conv.Encoding encoding;
+  final Encoding encoding;
 
   const Route(this.urlTemplate,
       {this.methods: const [GET],
       this.responseType,
       this.statusCode: 200,
       this.allowMultipartRequest: false,
-      this.encoding: conv.UTF8});
+      this.encoding: UTF8});
 }
 
 /// An annotation to define a target parameter.
@@ -211,7 +211,7 @@ class DefaultRoute implements RequestTarget {
 
   final bool allowMultipartRequest;
 
-  final conv.Encoding encoding;
+  final Encoding encoding;
 
   const DefaultRoute(
       {this.pathSuffix,
@@ -219,7 +219,7 @@ class DefaultRoute implements RequestTarget {
       this.responseType,
       this.statusCode: 200,
       this.allowMultipartRequest: false,
-      this.encoding: conv.UTF8});
+      this.encoding: UTF8});
 }
 
 /// An annotation to include handlers from other libraries

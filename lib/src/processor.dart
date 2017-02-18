@@ -4,7 +4,7 @@ import 'dart:async';
 import 'dart:mirrors';
 
 import 'package:di/di.dart';
-import 'package:shelf/shelf.dart' as shelf;
+import 'package:shelf/shelf.dart' hide Request;
 
 import 'metadata.dart';
 import 'server_metadata.dart';
@@ -109,12 +109,12 @@ class Processor implements Manager {
       new ModuleInjector(modules, appInjector);
 
   @override
-  void set shelfHandler(shelf.Handler handler) {
+  void set shelfHandler(Handler handler) {
     shelfContext.handler = handler;
   }
 
   @override
-  shelf.Handler get shelfHandler => shelfContext.handler;
+  Handler get shelfHandler => shelfContext.handler;
 
   @override
   void addRouteWrapper(Type metadataType, RouteWrapper wrapper,

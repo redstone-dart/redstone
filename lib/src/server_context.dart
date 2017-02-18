@@ -2,14 +2,14 @@ library redstone.src.server_context;
 
 import 'dart:async';
 
-import 'package:shelf/shelf.dart' as shelf;
+import 'package:shelf/shelf.dart' hide Request;
 import 'package:di/di.dart';
 
 import 'request.dart';
 import 'request_parser.dart';
 import 'server_metadata.dart';
 
-typedef Future<shelf.Response> RouteInvoker(RequestParser request);
+typedef Future<Response> RouteInvoker(RequestParser request);
 typedef Future InterceptorInvoker(RequestParser request);
 typedef Future ErrorHandlerInvoker(Request request);
 
@@ -31,6 +31,6 @@ class ServerContext {
 }
 
 class ShelfContext {
-  final List<shelf.Middleware> middlewares = [];
-  shelf.Handler handler;
+  final List<Middleware> middlewares = [];
+  Handler handler;
 }

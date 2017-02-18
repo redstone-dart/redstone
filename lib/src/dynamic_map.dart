@@ -2,7 +2,7 @@ library redstone.src.dynamic_map;
 
 import 'dart:mirrors';
 
-import 'package:collection/collection.dart' show DelegatingMap, DelegatingList;
+import 'package:collection/collection.dart';
 
 /// A Map that allows the use of the dot notation to access
 /// its values
@@ -12,7 +12,7 @@ import 'package:collection/collection.dart' show DelegatingMap, DelegatingList;
 ///      DynamicMap map = new DynamicMap({"key": "value"});
 ///      print(map.key); //prints 'value'
 @proxy
-class DynamicMap<String, V> extends DelegatingMap {
+class DynamicMap<K extends String, V> extends DelegatingMap {
   DynamicMap(Map<String, V> map) : super(map);
 
   ///Retrieve a value from this map
