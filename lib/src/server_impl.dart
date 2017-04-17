@@ -337,6 +337,7 @@ class _ChainImpl implements Chain {
   }
 
   dynamic error;
+  dynamic stackTrace;
 
   void next([callback()]) {
     new Future.sync(() {
@@ -368,6 +369,7 @@ class _ChainImpl implements Chain {
                 _currentInterceptor.runInterceptor()).catchError((e, s) {
               if (!_interrupted) {
                 error = e;
+                stackTrace = s;
                 var name = _currentInterceptor.interceptorName;
                 return _handleError("Failed to execute interceptor $name", e,
                     stack: s, req: request).then((_) => _invokeCallbacks());
@@ -377,6 +379,7 @@ class _ChainImpl implements Chain {
             new Future.sync(() => _currentInterceptor.runInterceptor()).catchError((e, s) {
               if (!_interrupted) {
                 error = e;
+                stackTrace = s;
                 var name = _currentInterceptor.interceptorName;
                 return _handleError("Failed to execute interceptor $name", e,
                     stack: s, req: request).then((_) => _invokeCallbacks());
@@ -395,6 +398,7 @@ class _ChainImpl implements Chain {
           }).catchError((e, s) {
             if (!_interrupted) {
               error = e;
+              stackTrace = s;
               var level = e is RequestException ? Level.FINE : Level.SEVERE;
               var name = _target != null ? _target.handlerName : "shelf handler";
               return _handleError("Failed to execute ${name}", e,
