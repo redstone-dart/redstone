@@ -2,8 +2,9 @@
 layout: doc
 menu_item: doc
 title: Feature Tour
-prev: Installation
-next: Routes
+docprev: Installation
+docnext: Routes
+
 ---
 ## Routes
 
