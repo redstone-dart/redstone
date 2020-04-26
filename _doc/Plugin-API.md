@@ -2,8 +2,9 @@
 layout: doc
 menu_item: doc
 title: Plugin API
-prev: Importing-libraries
-next: Shelf-Middlewares
+docprev: Importing-libraries
+docnext: Shelf-Middlewares
+
 ---
 Redstone plugins can dynamically create new routes, interceptors, error handlers, parameter providers and response processors.
 
