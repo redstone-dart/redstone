@@ -2,8 +2,9 @@
 layout: doc
 menu_item: doc
 title: Deploy
-prev: Server-Configuration
-next: redstone_mapper
+docprev: Server-Configuration
+docnext: redstone_mapper
+
 ---
 The easiest way to build your app is using the [Grinder](http://pub.dartlang.org/packages/grinder) build system. Redstone.dart provides a simple task to properly copy the server's files to the build folder, which you can use to create a build script.
 
