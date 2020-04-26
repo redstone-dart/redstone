@@ -2,8 +2,9 @@
 layout: doc
 menu_item: doc
 title: Server Configuration
-prev: Unit-test
-next: Deploy
+docprev: Unit-test
+docnext: Deploy
+
 ---
 If you invoke the `start()` method with no arguments, the server will be configured with default values:
 
