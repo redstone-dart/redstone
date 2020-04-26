@@ -4,6 +4,7 @@ menu_item: doc
 title: Dependency Injection
 prev: Groups
 next: Importing-libraries
+
 ---
 Redstone.dart uses the [di package](http://pub.dartlang.org/packages/di) to provide dependency injection.
 
