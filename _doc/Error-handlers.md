@@ -2,8 +2,9 @@
 layout: doc
 menu_item: doc
 title: Error Handlers
-prev: Interceptors
-next: Groups
+docprev: Interceptors
+docnext: Groups
+
 ---
 Since the version 0.6, Redstone generates an error page whenever a response with status code less than 200, or greater 
 or equal than 300, is returned. To prevent this behavior, set the `showErrorPage` flag to false.
