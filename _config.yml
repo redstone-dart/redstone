@@ -4,7 +4,7 @@ name: Redstone.dart
 email: luiz.mineo@gmail.com
 description: "Redstone.dart website"
 baseurl: ""
-url: "http://redstonedart.org"
+url: "http://redstone-dart.github.io/redstone"
 
 # Github defaults
 kramdown:
