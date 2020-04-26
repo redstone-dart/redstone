@@ -2,8 +2,9 @@
 layout: doc
 menu_item: doc
 title: redstone_mapper
-prev: Deploy
-next: redstone_mapper_mongo
+docprev: Deploy
+docnext: redstone_mapper_mongo
+
 ---
 [redstone_mapper](http://pub.dartlang.org/packages/redstone_mapper) is a set of utilities for handling common tasks in web applications, including:
 
