@@ -2,8 +2,9 @@
 layout: doc
 menu_item: doc
 title: redstone_mapper_mongo
-prev: redstone_mapper
-next: redstone_mapper_pg
+docprev: redstone_mapper
+docnext: redstone_mapper_pg
+
 ---
 [redstone_mapper_mongo](http://pub.dartlang.org/packages/redstone_mapper_mongo) is a MongoDB extension for 
 [redstone_mapper](http://pub.dartlang.org/packages/redstone_mapper).
