@@ -2,8 +2,9 @@
 layout: doc
 menu_item: doc
 title: Installation
-prev: index
-next: Feature-tour
+docprev: index
+docnext: Feature-tour
+
 ---
 Redstone.dart is available as a package at [pub](http://pub.dartlang.org/). So, all you have to do is add it as a dependency to your app.
 
