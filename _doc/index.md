@@ -2,7 +2,8 @@
 layout: doc
 menu_item: doc
 title: Introduction
-next: Installation
+docnext: Installation
+
 ---
 Redstone.dart is a server-side, metadata driven microframework for [Dart](https://www.dartlang.org/). 
 
