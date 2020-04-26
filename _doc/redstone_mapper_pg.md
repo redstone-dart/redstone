@@ -2,8 +2,9 @@
 layout: doc
 menu_item: doc
 title: redstone_mapper_pg
-prev: redstone_mapper_mongo
-next: redstone_web_socket
+docprev: redstone_mapper_mongo
+docnext: redstone_web_socket
+
 ---
 [redstone_mapper_pg](http://pub.dartlang.org/packages/redstone_mapper_pg) is a PostgreSQL extension for [redstone_mapper](http://pub.dartlang.org/packages/redstone_mapper).
 
