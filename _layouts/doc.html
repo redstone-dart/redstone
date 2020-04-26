@@ -51,19 +51,19 @@ layout: default
         <div class="row">
           <div class="col-xs-6">
             <div class="pull-right">
-              {% if page.prev == null%}
+              {% if page.docprev == null%}
               <a href="#" class="btn btn-primary " role="button" disabled="disabled"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
               {% else if %}
-              <a href="/redstone/doc/{{page.prev}}" class="btn btn-primary" role="button"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
+              <a href="/redstone/doc/{{page.docprev}}" class="btn btn-primary" role="button"><span class="glyphicon glyphicon-arrow-left"></span> Back</a>
               {% endif %}
             </div>
           </div>
           <div class="col-xs-6">
             <div class="pull-left">
-              {% if page.next == null%}
+              {% if page.docnext == null%}
               <a href="#" class="btn btn-primary" role="button" disabled="disabled">Next <span class="glyphicon glyphicon-arrow-right"></span></a>
               {% else if %}
-              <a href="/redstone/doc/{{page.next}}" class="btn btn-primary" role="button">Next <span class="glyphicon glyphicon-arrow-right"></span></a>
+              <a href="/redstone/doc/{{page.docnext}}" class="btn btn-primary" role="button">Next <span class="glyphicon glyphicon-arrow-right"></span></a>
               {% endif %}
             </div>
           </div>
