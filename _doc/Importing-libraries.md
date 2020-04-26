@@ -2,8 +2,9 @@
 layout: doc
 menu_item: doc
 title: Importing Libraries
-prev: Dependency-Injection
-next: Plugin-API
+docprev: Dependency-Injection
+docnext: Plugin-API
+
 ---
 Redstone.dart recursively scans all libraries imported by your main script. Example:
 
