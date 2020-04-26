@@ -2,7 +2,8 @@
 layout: doc
 menu_item: doc
 title: redstone_web_socket
-prev: redstone_mapper_pg
+docprev: redstone_mapper_pg
+
 ---
 [redstone_web_socket](http://pub.dartlang.org/packages/redstone_web_socket) is a web socket plugin for [Redstone.dart](http://redstonedart.org). It uses the 
 [shelf_web_socket](http://pub.dartlang.org/packages/shelf_web_socket) package to create web socket handlers.
