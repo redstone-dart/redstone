@@ -2,8 +2,9 @@
 layout: doc
 menu_item: doc
 title: Shelf Middlewares
-prev: Plugin-API
-next: Unit-test
+docprev: Plugin-API
+docnext: Unit-test
+
 ---
 Since v0.5, Redstone.dart is built around the [Shelf](http://pub.dartlang.org/packages/shelf) framework. 
 That means you can use any Shelf middleware or handler in your app:
