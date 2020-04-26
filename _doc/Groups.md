@@ -2,8 +2,9 @@
 layout: doc
 menu_item: doc
 title: Groups
-prev: Error-handlers
-next: Dependency-Injection
+docprev: Error-handlers
+docnext: Dependency-Injection
+
 ---
 The `@app.Group` annotation is used to define a group of routes, interceptors and error handlers:
 
