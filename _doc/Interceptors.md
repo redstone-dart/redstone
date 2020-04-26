@@ -2,8 +2,9 @@
 layout: doc
 menu_item: doc
 title: Interceptors
-prev: Routes
-next: Error-handlers
+docprev: Routes
+docnext: Error-handlers
+
 ---
 The `@Interceptor` annotation is used to define an interceptor:
 
