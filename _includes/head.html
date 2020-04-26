@@ -4,29 +4,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="canonical" href="http://redstonedart.org">
   <link rel="alternate" type="application/rss+xml" title="RSS"
-      href="http://redstonedart.org/feed.xml">
+      href="http://redstone-dart.github.io/redstone/feed.xml">
   <title>Redstone.dart - Server-side microframework for Dart</title>
 
   <!-- Bootstrap -->
-  <link href="/css/bootstrap.min.css" rel="stylesheet">
-  <link href="/css/syntax.css" rel="stylesheet">
+  <link href="/redstone/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/redstone/css/syntax.css" rel="stylesheet">
   {% case page.menu_item%}
     {% when 'index' %}
-  <link href="/css/index.css" rel="stylesheet">
+  <link href="/redstone/css/index.css" rel="stylesheet">
     {% when 'doc' %}
-  <link href="/css/documentation.css" rel="stylesheet">
+  <link href="/redstone/css/documentation.css" rel="stylesheet">
     {% when 'blog' %}
-  <link href="/css/blog.css" rel="stylesheet">
+  <link href="/redstone/css/blog.css" rel="stylesheet">
   {% endcase %}
-  <link href="/css/footer.css" rel="stylesheet">
+  <link href="/redstone/css/footer.css" rel="stylesheet">
 
   <!--[if lt IE 9]>
     <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
     <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
   <![endif]-->
-  <script>
-    if (window.location.href.indexOf('http://redstone-dart.github.io') === 0) {
-      window.location.href = 'http://redstonedart.org{{ page.url }}';
-    }
-  </script>
 </head>
