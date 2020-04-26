@@ -2,8 +2,9 @@
 layout: doc
 menu_item: doc
 title: Routes
-prev: Feature-tour
-next: Interceptors
+docprev: Feature-tour
+docnext: Interceptors
+
 ---
 The `@Route` annotation is used to bind a function or method to an URL:
 
