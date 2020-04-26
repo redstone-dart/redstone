@@ -2,8 +2,9 @@
 layout: doc
 menu_item: doc
 title: Unit Test
-prev: Shelf-Middlewares
-next: Server-Configuration
+docprev: Shelf-Middlewares
+docnext: Server-Configuration
+
 ---
 Basically, to create a test, you just need to:
 
